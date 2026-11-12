@@ -1,12 +1,13 @@
 import { useState } from 'react'
-import { buildSystemPrompt, chat } from '../lib/ollama.js'
+import { chat } from '../lib/ollama.js'
 
 const RECOMMEND = {
   ka: 'ჩემი გრაფიკით რომელი სამსახური მირჩევ?',
   en: 'Which job do you recommend for my schedule?',
 }
 
-export default function Assistant({ user, matches, hasSchedule }) {
+export default function Assistant({ user, matches, busy }) {
+  const hasSchedule = busy.size > 0
   const [lang, setLang] = useState('ka')
   const [model, setModel] = useState('llama3.2')
   const [messages, setMessages] = useState([])
@@ -24,7 +25,7 @@ export default function Assistant({ user, matches, hasSchedule }) {
     try {
       await chat({
         model,
-        system: buildSystemPrompt({ user, matches, lang }),
+        context: { lang, hours: user.hours, busy: [...busy] },
         messages: history,
         onToken: (full) => setMessages([...history, { role: 'assistant', content: full }]),
       })

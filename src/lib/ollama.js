@@ -1,41 +1,20 @@
-import { formatShift } from './match.js'
+import { buildSystemPrompt } from './prompt.js'
 
 // ლოკალურად: Vite-ის proxy /ollama -> http://127.0.0.1:11434 (იხ. vite.config.js)
 // ონლაინ: Vercel-ის ფუნქცია /api/chat -> Groq (იხ. api/chat.js)
 const URL = import.meta.env.DEV ? '/ollama/api/chat' : '/api/chat'
 
-export function buildSystemPrompt({ user, matches, lang }) {
-  const language = lang === 'en' ? 'English' : 'Georgian (ქართული)'
-  const jobs = matches.slice(0, 6).map((m) => ({
-    title: m.job.title,
-    company: m.job.company,
-    district: m.job.district,
-    pay_gel_per_hour: m.job.pay,
-    shifts_that_fit: m.fitting.map((s) => formatShift(s, lang)),
-  }))
-  return [
-    'You are a job assistant for university students in Tbilisi.',
-    `Always answer in ${language}. Be short and friendly.`,
-    'The jobs below were already checked by code: their listed shifts do NOT overlap the student\'s lectures.',
-    'Recommend only jobs from this list. Never invent jobs, companies, pay, contacts or shifts.',
-    'When recommending, pick at most 3 jobs and say which shifts fit and how many hours per week that is.',
-    `The student wants about ${user.hours} hours of work per week.`,
-    jobs.length
-      ? `Matching jobs (JSON): ${JSON.stringify(jobs)}`
-      : 'No job currently fits the student\'s schedule. Say so and suggest freeing some hours or checking again later.',
-  ].join('\n')
-}
-
 // აბრუნებს ტექსტს ნაწილ-ნაწილ (streaming), onToken-ით.
-export async function chat({ model, system, messages, onToken, signal }) {
+// context: { lang, hours, busy } — ონლაინ სისტემურ ინსტრუქციას სერვერი აწყობს.
+export async function chat({ model, context, messages, onToken, signal }) {
   const res = await fetch(URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model,
-      stream: true,
-      messages: [{ role: 'system', content: system }, ...messages],
-    }),
+    body: JSON.stringify(
+      import.meta.env.DEV
+        ? { model, stream: true, messages: [{ role: 'system', content: buildSystemPrompt(context) }, ...messages] }
+        : { context, messages },
+    ),
     signal,
   })
   if (!res.ok) throw new Error(`Ollama ${res.status}: ${await res.text()}`)

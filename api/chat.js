@@ -1,6 +1,8 @@
-// Vercel-ის სერვერული ფუნქცია: ბრაუზერის მოთხოვნას Groq-ს გადასცემს.
+// Vercel-ის სერვერული ფუნქცია: სისტემურ ინსტრუქციას აწყობს და მოთხოვნას Groq-ს გადასცემს.
 // API გასაღები მხოლოდ სერვერზეა (Vercel → Settings → Environment Variables → GROQ_API_KEY).
 // პასუხს Ollama-ს ფორმატში (NDJSON) აბრუნებს, ამიტომ ბრაუზერის კოდი ლოკალურსა და ონლაინს შორის არ იცვლება.
+import { buildSystemPrompt } from '../src/lib/prompt.js'
+
 const MODEL = process.env.GROQ_MODEL || 'openai/gpt-oss-120b'
 const MAX_MESSAGES = 20
 const MAX_CHARS = 6000
@@ -9,17 +11,31 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Method not allowed')
   if (!process.env.GROQ_API_KEY) return res.status(500).send('GROQ_API_KEY is not set on the server')
 
-  const { messages } = typeof req.body === 'string' ? JSON.parse(req.body) : req.body
+  const { messages, context } = typeof req.body === 'string' ? JSON.parse(req.body) : req.body
+  // სისტემურ ინსტრუქციას მხოლოდ სერვერი აწყობს: ბრაუზერიდან 'system' როლი არ მიიღება
   const valid =
     Array.isArray(messages) &&
     messages.length <= MAX_MESSAGES &&
-    messages.every((m) => ['system', 'user', 'assistant'].includes(m.role) && String(m.content).length <= MAX_CHARS)
-  if (!valid) return res.status(400).send('Invalid messages')
+    messages.every((m) => ['user', 'assistant'].includes(m.role) && String(m.content).length <= MAX_CHARS) &&
+    ['ka', 'en'].includes(context?.lang) &&
+    Number.isFinite(context?.hours) &&
+    Array.isArray(context?.busy) &&
+    context.busy.length <= 200 &&
+    context.busy.every((k) => /^[0-6]-\d{1,2}$/.test(k))
+  if (!valid) return res.status(400).send('Invalid request')
+
+  const system = buildSystemPrompt({ lang: context.lang, hours: Math.min(Math.max(context.hours, 1), 60), busy: context.busy })
 
   const upstream = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: { Authorization: `Bearer ${process.env.GROQ_API_KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: MODEL, messages, stream: true, reasoning_effort: 'low' }),
+    body: JSON.stringify({
+      model: MODEL,
+      messages: [{ role: 'system', content: system }, ...messages],
+      stream: true,
+      temperature: 0.3,
+      reasoning_effort: 'low',
+    }),
   })
   if (!upstream.ok) return res.status(upstream.status).send(await upstream.text())
 
