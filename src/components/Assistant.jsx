@@ -1,13 +1,15 @@
 import { useState } from 'react'
 import { chat } from '../lib/ollama.js'
+import { splitJobRefs } from '../lib/prompt.js'
+import JobCard from './JobCard.jsx'
 
 const RECOMMEND = {
   ka: 'ჩემი გრაფიკით რომელი სამსახური მირჩევ?',
   en: 'Which job do you recommend for my schedule?',
 }
 
-export default function Assistant({ user, matches, busy }) {
-  const hasSchedule = busy.size > 0
+export default function Assistant({ profile, jobs, free, matchCount }) {
+  const hasSchedule = free.size > 0
   const [lang, setLang] = useState('ka')
   const [model, setModel] = useState('llama3.2')
   const [messages, setMessages] = useState([])
@@ -25,7 +27,8 @@ export default function Assistant({ user, matches, busy }) {
     try {
       await chat({
         model,
-        context: { lang, hours: user.hours, busy: [...busy] },
+        context: { lang, hours: profile.hours ?? 15, free: [...free] },
+        jobs,
         messages: history,
         onToken: (full) => setMessages([...history, { role: 'assistant', content: full }]),
       })
@@ -65,20 +68,19 @@ export default function Assistant({ user, matches, busy }) {
           <div className="rounded-3xl bg-white p-4 text-muted shadow-sm">
             <p>
               {hasSchedule
-                ? `${matches.length} ვაკანსია ერგება შენს გრაფიკს. სთხოვე რჩევა ან დასვი კითხვა.`
-                : 'ჯერ კალენდარში ლექციები მონიშნე, რომ შენს გრაფიკზე მორგებული რჩევა მოგცე.'}
+                ? `${matchCount} ვაკანსია ერგება შენს თავისუფალ საათებს. სთხოვე რჩევა ან დასვი კითხვა.`
+                : 'ჯერ კალენდარში თავისუფალი საათები მონიშნე, რომ შენზე მორგებული რჩევა მოგცე.'}
             </p>
             {import.meta.env.DEV && lang === 'ka' && <p className="mt-2 text-xs text-quiet">llama3.2 ქართულად შეიძლება უხეშად წეროს. EN უფრო სტაბილურია.</p>}
           </div>
         )}
-        {messages.map((m, i) => (
-          <p
-            key={i}
-            className={`whitespace-pre-wrap rounded-3xl px-4 py-3 ${m.role === 'user' ? 'ml-10 rounded-br-md bg-brand text-white' : 'mr-10 rounded-bl-md bg-white shadow-sm'}`}
-          >
-            {m.content || '…'}
-          </p>
-        ))}
+        {messages.map((m, i) =>
+          m.role === 'user' ? (
+            <p key={i} className="ml-10 whitespace-pre-wrap rounded-3xl rounded-br-md bg-brand px-4 py-3 text-white">{m.content}</p>
+          ) : (
+            <AssistantMessage key={i} content={m.content} jobs={jobs} free={free} />
+          ),
+        )}
         {error && (
           <p className="rounded-3xl bg-coral/10 p-4 text-sm text-coral">
             {import.meta.env.DEV ? (
@@ -111,5 +113,17 @@ export default function Assistant({ user, matches, busy }) {
         </form>
       </div>
     </section>
+  )
+}
+
+// AI-ს ტექსტი + რეკომენდებული ვაკანსიების ბარათები (ბოლო ხაზიდან "JOBS: ...")
+function AssistantMessage({ content, jobs, free }) {
+  const { text, refs } = splitJobRefs(content)
+  const cards = refs.map((r) => jobs.find((j) => j.id.startsWith(r))).filter(Boolean)
+  return (
+    <div className="mr-6 space-y-2">
+      <p className="whitespace-pre-wrap rounded-3xl rounded-bl-md bg-white px-4 py-3 shadow-sm">{text || '…'}</p>
+      {cards.map((job) => <JobCard key={job.id} job={job} free={free} compact />)}
+    </div>
   )
 }

@@ -2,6 +2,7 @@
 // API გასაღები მხოლოდ სერვერზეა (Vercel → Settings → Environment Variables → GROQ_API_KEY).
 // პასუხს Ollama-ს ფორმატში (NDJSON) აბრუნებს, ამიტომ ბრაუზერის კოდი ლოკალურსა და ონლაინს შორის არ იცვლება.
 import { buildSystemPrompt } from '../src/lib/prompt.js'
+import { SUPABASE_URL, SUPABASE_KEY } from '../src/lib/config.js'
 
 const MODEL = process.env.GROQ_MODEL || 'openai/gpt-oss-120b'
 const MAX_MESSAGES = 20
@@ -19,12 +20,17 @@ export default async function handler(req, res) {
     messages.every((m) => ['user', 'assistant'].includes(m.role) && String(m.content).length <= MAX_CHARS) &&
     ['ka', 'en'].includes(context?.lang) &&
     Number.isFinite(context?.hours) &&
-    Array.isArray(context?.busy) &&
-    context.busy.length <= 200 &&
-    context.busy.every((k) => /^[0-6]-\d{1,2}$/.test(k))
+    Array.isArray(context?.free) &&
+    context.free.length <= 200 &&
+    context.free.every((k) => /^[0-6]-\d{1,2}$/.test(k))
   if (!valid) return res.status(400).send('Invalid request')
 
-  const system = buildSystemPrompt({ lang: context.lang, hours: Math.min(Math.max(context.hours, 1), 60), busy: context.busy })
+  // ვაკანსიებს სერვერი თავად იღებს ბაზიდან, ბრაუზერს არ ენდობა
+  const jobsRes = await fetch(`${SUPABASE_URL}/rest/v1/jobs?select=*&is_open=eq.true`, { headers: { apikey: SUPABASE_KEY } })
+  if (!jobsRes.ok) return res.status(502).send('Could not load jobs')
+  const jobs = await jobsRes.json()
+
+  const system = buildSystemPrompt({ lang: context.lang, hours: Math.min(Math.max(context.hours, 1), 60), free: context.free }, jobs)
 
   const upstream = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',

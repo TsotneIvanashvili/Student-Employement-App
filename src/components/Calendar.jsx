@@ -8,15 +8,16 @@ function slotAt(x, y) {
   return el ? { day: Number(el.dataset.day), hour: Number(el.dataset.hour) } : null
 }
 
+// free: თავისუფალი საათები (Set of 'day-hour').
 // selectedShifts: { key -> 'fit' | 'conflict' } არჩეული ვაკანსიის ცვლებისთვის
-export default function Calendar({ busy, setBusy, selectedShifts, selectedJob, onClearJob }) {
+export default function Calendar({ free, setFree, selectedShifts, selectedJob, onClearJob }) {
   const paint = useRef(null) // { mode, day, hour } | null
 
   // გადასმისას შუალედური საათებიც მოინიშნება (იმავე დღეში)
   function apply(day, hour, mode) {
     const from = paint.current?.day === day ? paint.current.hour : hour
     paint.current = { mode, day, hour }
-    setBusy((prev) => {
+    setFree((prev) => {
       const next = new Set(prev)
       for (let h = Math.min(from, hour); h <= Math.max(from, hour); h++) {
         const key = slotKey(day, h)
@@ -30,7 +31,7 @@ export default function Calendar({ busy, setBusy, selectedShifts, selectedJob, o
     const s = slotAt(e.clientX, e.clientY)
     if (!s) return
     paint.current = null
-    apply(s.day, s.hour, busy.has(slotKey(s.day, s.hour)) ? 'remove' : 'add')
+    apply(s.day, s.hour, free.has(slotKey(s.day, s.hour)) ? 'remove' : 'add')
   }
 
   function onPointerMove(e) {
@@ -44,9 +45,9 @@ export default function Calendar({ busy, setBusy, selectedShifts, selectedJob, o
 
   function cellClass(key) {
     const mark = selectedShifts[key]
+    if (mark === 'fit') return 'bg-brand'
     if (mark === 'conflict') return 'bg-coral'
-    if (busy.has(key)) return 'bg-ink'
-    if (mark === 'fit') return 'bg-mint-soft ring-2 ring-inset ring-mint'
+    if (free.has(key)) return 'bg-mint-soft border-mint/60'
     return 'bg-white'
   }
 
@@ -54,10 +55,10 @@ export default function Calendar({ busy, setBusy, selectedShifts, selectedJob, o
     <section className="rounded-3xl bg-white p-4 shadow-sm">
       <div className="mb-3 flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg font-bold">ჩემი ლექციები</h2>
-          <p className="text-sm text-muted">შეეხე ან გადაუსვი თითი საათებს</p>
+          <h2 className="text-lg font-bold">თავისუფალი საათები</h2>
+          <p className="text-sm text-muted">მონიშნე, როდის შეგიძლია მუშაობა</p>
         </div>
-        <button onClick={() => setBusy(new Set())} className="shrink-0 rounded-xl bg-bg px-3 py-2 text-sm font-medium text-muted active:bg-line">
+        <button onClick={() => setFree(new Set())} className="shrink-0 rounded-xl bg-bg px-3 py-2 text-sm font-medium text-muted active:bg-line">
           გასუფთავება
         </button>
       </div>
@@ -103,9 +104,9 @@ export default function Calendar({ busy, setBusy, selectedShifts, selectedJob, o
       </div>
 
       <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs text-muted">
-        <span className="flex items-center gap-1.5"><i className="h-3 w-3 rounded bg-ink" />ლექცია</span>
-        <span className="flex items-center gap-1.5"><i className="h-3 w-3 rounded bg-mint-soft ring-2 ring-mint" />ცვლა ერგება</span>
-        <span className="flex items-center gap-1.5"><i className="h-3 w-3 rounded bg-coral" />ცვლა ეჯახება</span>
+        <span className="flex items-center gap-1.5"><i className="h-3 w-3 rounded border border-mint/60 bg-mint-soft" />თავისუფალი</span>
+        <span className="flex items-center gap-1.5"><i className="h-3 w-3 rounded bg-brand" />ცვლა ერგება</span>
+        <span className="flex items-center gap-1.5"><i className="h-3 w-3 rounded bg-coral" />ცვლა არ ჯდება</span>
       </div>
     </section>
   )
