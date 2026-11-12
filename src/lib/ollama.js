@@ -1,7 +1,7 @@
 import { formatShift } from './match.js'
 
 // ლოკალურად: Vite-ის proxy /ollama -> http://127.0.0.1:11434 (იხ. vite.config.js)
-// ონლაინ: Vercel-ის ფუნქცია /api/chat -> Ollama Cloud (იხ. api/chat.js)
+// ონლაინ: Vercel-ის ფუნქცია /api/chat -> Groq (იხ. api/chat.js)
 const URL = import.meta.env.DEV ? '/ollama/api/chat' : '/api/chat'
 
 export function buildSystemPrompt({ user, matches, lang }) {
