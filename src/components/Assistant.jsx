@@ -41,12 +41,14 @@ export default function Assistant({ user, matches, hasSchedule }) {
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-bold">AI ასისტენტი</h2>
-          <input
-            value={model}
-            onChange={(e) => setModel(e.target.value)}
-            className="mt-1 w-28 rounded-lg border border-line bg-white px-2 py-0.5 text-xs text-muted"
-            aria-label="Ollama model"
-          />
+          {import.meta.env.DEV && (
+            <input
+              value={model}
+              onChange={(e) => setModel(e.target.value)}
+              className="mt-1 w-28 rounded-lg border border-line bg-white px-2 py-0.5 text-xs text-muted"
+              aria-label="Ollama model"
+            />
+          )}
         </div>
         <div className="flex rounded-full bg-white p-1 text-sm shadow-sm">
           {['ka', 'en'].map((l) => (
@@ -65,7 +67,7 @@ export default function Assistant({ user, matches, hasSchedule }) {
                 ? `${matches.length} ვაკანსია ერგება შენს გრაფიკს. სთხოვე რჩევა ან დასვი კითხვა.`
                 : 'ჯერ კალენდარში ლექციები მონიშნე, რომ შენს გრაფიკზე მორგებული რჩევა მოგცე.'}
             </p>
-            {lang === 'ka' && <p className="mt-2 text-xs text-quiet">llama3.2 ქართულად შეიძლება უხეშად წეროს. EN უფრო სტაბილურია.</p>}
+            {import.meta.env.DEV && lang === 'ka' && <p className="mt-2 text-xs text-quiet">llama3.2 ქართულად შეიძლება უხეშად წეროს. EN უფრო სტაბილურია.</p>}
           </div>
         )}
         {messages.map((m, i) => (
@@ -81,7 +83,7 @@ export default function Assistant({ user, matches, hasSchedule }) {
             {import.meta.env.DEV ? (
               <>Ollama-სთან კავშირი ვერ დამყარდა. ტერმინალში გაუშვი <code>ollama serve</code> და <code>ollama pull {model}</code>.</>
             ) : (
-              <>ონლაინ ვერსიაში AI ასისტენტი არ მუშაობს: მას კომპიუტერზე გაშვებული Ollama სჭირდება. გაუშვი პროექტი ლოკალურად (<code>npm run dev</code>).</>
+              <>AI ასისტენტი დროებით მიუწვდომელია. სცადე ცოტა ხანში.<br /><span className="text-xs">{error}</span></>
             )}
           </p>
         )}
