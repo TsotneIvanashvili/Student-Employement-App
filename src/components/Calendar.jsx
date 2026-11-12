@@ -1,19 +1,18 @@
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import { DAYS, FIRST_HOUR, LAST_HOUR, slotKey } from '../lib/match.js'
 
 const HOURS = Array.from({ length: LAST_HOUR - FIRST_HOUR }, (_, i) => FIRST_HOUR + i)
 
+function slotAt(x, y) {
+  const el = document.elementFromPoint(x, y)?.closest('[data-slot]')
+  return el ? { day: Number(el.dataset.day), hour: Number(el.dataset.hour) } : null
+}
+
 // selectedShifts: { key -> 'fit' | 'conflict' } არჩეული ვაკანსიის ცვლებისთვის
-export default function Calendar({ busy, setBusy, selectedShifts }) {
-  const paint = useRef(null) // { mode: 'add' | 'remove', day, hour } | null
+export default function Calendar({ busy, setBusy, selectedShifts, selectedJob, onClearJob }) {
+  const paint = useRef(null) // { mode, day, hour } | null
 
-  useEffect(() => {
-    const stop = () => (paint.current = null)
-    window.addEventListener('mouseup', stop)
-    return () => window.removeEventListener('mouseup', stop)
-  }, [])
-
-  // სწრაფი გადათრევისას შუალედური საათებიც მოინიშნება (იმავე დღეში)
+  // გადასმისას შუალედური საათებიც მოინიშნება (იმავე დღეში)
   function apply(day, hour, mode) {
     const from = paint.current?.day === day ? paint.current.hour : hour
     paint.current = { mode, day, hour }
@@ -27,65 +26,87 @@ export default function Calendar({ busy, setBusy, selectedShifts }) {
     })
   }
 
+  function onPointerDown(e) {
+    const s = slotAt(e.clientX, e.clientY)
+    if (!s) return
+    paint.current = null
+    apply(s.day, s.hour, busy.has(slotKey(s.day, s.hour)) ? 'remove' : 'add')
+  }
+
+  function onPointerMove(e) {
+    if (!paint.current) return
+    const s = slotAt(e.clientX, e.clientY)
+    if (!s || (s.day === paint.current.day && s.hour === paint.current.hour)) return
+    apply(s.day, s.hour, paint.current.mode)
+  }
+
+  const stop = () => (paint.current = null)
+
   function cellClass(key) {
     const mark = selectedShifts[key]
-    if (mark === 'conflict') return 'bg-red-500 text-white'
-    if (busy.has(key)) return 'bg-navy text-white'
-    if (mark === 'fit') return 'bg-accent/25 ring-1 ring-inset ring-accent'
-    return 'bg-white hover:bg-mist'
+    if (mark === 'conflict') return 'bg-coral'
+    if (busy.has(key)) return 'bg-ink'
+    if (mark === 'fit') return 'bg-mint-soft ring-2 ring-inset ring-mint'
+    return 'bg-white'
   }
 
   return (
-    <section data-tour="calendar" className="rounded-3xl border border-line bg-white p-5">
-      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+    <section className="rounded-3xl bg-white p-4 shadow-sm">
+      <div className="mb-3 flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold">ჩემი კვირა</h2>
-          <p className="text-sm text-muted">მონიშნე ლექციები: დააჭირე უჯრას ან გადაათრიე.</p>
+          <h2 className="text-lg font-bold">ჩემი ლექციები</h2>
+          <p className="text-sm text-muted">შეეხე ან გადაუსვი თითი საათებს</p>
         </div>
-        <div className="flex items-center gap-4 text-sm">
-          <span className="flex items-center gap-2"><i className="h-3 w-3 rounded bg-navy" />ლექცია</span>
-          <span className="flex items-center gap-2"><i className="h-3 w-3 rounded bg-accent/25 ring-1 ring-accent" />ცვლა ერგება</span>
-          <span className="flex items-center gap-2"><i className="h-3 w-3 rounded bg-red-500" />ცვლა ეჯახება</span>
-          <button onClick={() => setBusy(new Set())} className="rounded-lg border border-line px-3 py-1 hover:bg-mist">
-            გასუფთავება
-          </button>
-        </div>
+        <button onClick={() => setBusy(new Set())} className="shrink-0 rounded-xl bg-bg px-3 py-2 text-sm font-medium text-muted active:bg-line">
+          გასუფთავება
+        </button>
       </div>
 
-      <div className="select-none overflow-x-auto">
-        <div className="grid min-w-[560px] gap-px rounded-xl bg-line" style={{ gridTemplateColumns: `56px repeat(${DAYS.length}, 1fr)` }}>
-          <div className="bg-white" />
-          {DAYS.map((d) => (
-            <div key={d} className="bg-white py-2 text-center text-sm font-semibold">{d}</div>
-          ))}
-          {HOURS.map((h) => (
-            <Row key={h} hour={h} cellClass={cellClass} busy={busy} paint={paint} apply={apply} />
-          ))}
+      {selectedJob && (
+        <div className="mb-3 flex items-center justify-between gap-2 rounded-2xl bg-brand-soft px-3 py-2 text-sm">
+          <span>ნაჩვენებია: <b>{selectedJob.title}</b></span>
+          <button onClick={onClearJob} className="px-2 text-lg leading-none text-brand" aria-label="დახურვა">×</button>
         </div>
+      )}
+
+      <div
+        data-tour="calendar"
+        className="grid touch-none select-none gap-[3px]"
+        style={{ gridTemplateColumns: `30px repeat(${DAYS.length}, 1fr)` }}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={stop}
+        onPointerCancel={stop}
+        onPointerLeave={stop}
+      >
+        <div />
+        {DAYS.map((d) => (
+          <div key={d} className="pb-1 text-center text-xs font-semibold text-muted">{d}</div>
+        ))}
+        {HOURS.map((h) => [
+          <div key={`h${h}`} className="pr-1 text-right text-[11px] leading-8 text-quiet">{h}</div>,
+          ...DAYS.map((_, day) => {
+            const key = slotKey(day, h)
+            return (
+              <div
+                key={key}
+                data-slot
+                data-day={day}
+                data-hour={h}
+                role="button"
+                aria-label={`${DAYS[day]} ${h}:00`}
+                className={`h-8 rounded-md border border-line/70 transition-colors ${cellClass(key)}`}
+              />
+            )
+          }),
+        ])}
+      </div>
+
+      <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs text-muted">
+        <span className="flex items-center gap-1.5"><i className="h-3 w-3 rounded bg-ink" />ლექცია</span>
+        <span className="flex items-center gap-1.5"><i className="h-3 w-3 rounded bg-mint-soft ring-2 ring-mint" />ცვლა ერგება</span>
+        <span className="flex items-center gap-1.5"><i className="h-3 w-3 rounded bg-coral" />ცვლა ეჯახება</span>
       </div>
     </section>
-  )
-}
-
-function Row({ hour, cellClass, busy, paint, apply }) {
-  return (
-    <>
-      <div className="bg-white pr-2 pt-1 text-right text-xs text-quiet">{String(hour).padStart(2, '0')}:00</div>
-      {DAYS.map((_, day) => {
-        const key = slotKey(day, hour)
-        return (
-          <button
-            key={key}
-            aria-label={`${DAYS[day]} ${hour}:00`}
-            onMouseDown={() => {
-              paint.current = null
-              apply(day, hour, busy.has(key) ? 'remove' : 'add')
-            }}
-            onMouseEnter={() => paint.current && apply(day, hour, paint.current.mode)}
-            className={`h-8 text-[10px] transition-colors ${cellClass(key)}`}
-          />
-        )
-      })}
-    </>
   )
 }

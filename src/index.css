@@ -2,15 +2,19 @@
 
 @theme {
   --font-sans: "Noto Sans Georgian", Inter, system-ui, sans-serif;
-  --color-navy: #14213d;
-  --color-accent: #2e5bff;
-  --color-paper: #fafaf7;
-  --color-mist: #eef2fb;
-  --color-line: #e2e6ef;
-  --color-muted: #4a5568;
-  --color-quiet: #8a94a6;
+  --color-ink: #15142b;
+  --color-brand: #5b4bff;
+  --color-brand-soft: #ecebff;
+  --color-mint: #0f9d6e;
+  --color-mint-soft: #dcf5ea;
+  --color-coral: #e5483a;
+  --color-bg: #f6f7fb;
+  --color-line: #e6e8f0;
+  --color-muted: #5c6275;
+  --color-quiet: #8a90a2;
 }
 
 body {
-  @apply bg-paper text-navy font-sans antialiased;
+  @apply bg-bg text-ink font-sans antialiased;
+  -webkit-tap-highlight-color: transparent;
 }

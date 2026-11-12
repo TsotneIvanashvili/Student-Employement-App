@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import { formatShift, shiftFits } from '../lib/match.js'
 
-export default function JobList({ jobs, busy, selectedId, onSelect, onlyFit, setOnlyFit, applied, onApply }) {
+export default function JobList({ jobs, busy, onShow, onlyFit, setOnlyFit, applied, onApply, onGoCalendar }) {
+  const [openId, setOpenId] = useState(null)
   const hasSchedule = busy.size > 0
   const rows = jobs
     .map((job) => ({ job, fits: job.shifts.map((s) => shiftFits(s, busy)) }))
@@ -8,66 +10,76 @@ export default function JobList({ jobs, busy, selectedId, onSelect, onlyFit, set
     .sort((a, b) => b.fits.filter(Boolean).length - a.fits.filter(Boolean).length)
 
   return (
-    <section data-tour="jobs" className="rounded-3xl border border-line bg-white p-5">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <h2 className="text-xl font-bold">ვაკანსიები</h2>
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={onlyFit} onChange={(e) => setOnlyFit(e.target.checked)} />
+    <section>
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-lg font-bold">ვაკანსიები <span className="font-normal text-quiet">{rows.length}</span></h2>
+        <button
+          onClick={() => setOnlyFit(!onlyFit)}
+          className={`rounded-full px-3 py-1.5 text-sm font-medium ${onlyFit ? 'bg-ink text-white' : 'bg-white text-muted'}`}
+        >
           მხოლოდ შესაფერისი
-        </label>
+        </button>
       </div>
 
       {!hasSchedule && (
-        <p className="mb-4 rounded-xl bg-mist p-3 text-sm text-muted">
-          ჯერ კალენდარში ლექციები მონიშნე, მერე აქ მხოლოდ შენთვის შესაფერისი ვაკანსიები დარჩება.
-        </p>
+        <div className="mb-3 rounded-3xl bg-brand-soft p-4 text-sm">
+          <p>ჯერ ლექციები მონიშნე და აქ მხოლოდ შენთვის შესაფერისი ვაკანსიები დარჩება.</p>
+          <button onClick={onGoCalendar} className="mt-3 rounded-xl bg-brand px-4 py-2 font-semibold text-white">
+            კალენდარის შევსება
+          </button>
+        </div>
       )}
       {hasSchedule && rows.length === 0 && (
-        <p className="rounded-xl bg-mist p-3 text-sm text-muted">ამ გრაფიკს არცერთი ცვლა არ ერგება.</p>
+        <p className="rounded-3xl bg-white p-4 text-sm text-muted">ამ გრაფიკს არცერთი ცვლა არ ერგება.</p>
       )}
 
       <ul className="space-y-3">
         {rows.map(({ job, fits }) => {
           const fitCount = fits.filter(Boolean).length
-          const active = selectedId === job.id
+          const open = openId === job.id
           return (
-            <li key={job.id}>
-              <div
-                onClick={() => onSelect(active ? null : job.id)}
-                className={`cursor-pointer rounded-2xl border p-4 transition ${active ? 'border-accent bg-mist' : 'border-line hover:border-accent/50'}`}
-              >
+            <li key={job.id} className="rounded-3xl bg-white p-4 shadow-sm">
+              <button onClick={() => setOpenId(open ? null : job.id)} className="w-full text-left">
                 <div className="flex items-start justify-between gap-3">
-                  <div>
+                  <div className="min-w-0">
                     <h3 className="font-semibold">{job.title}</h3>
-                    <p className="text-sm text-muted">{job.company} · {job.district}</p>
+                    <p className="truncate text-sm text-muted">{job.company} · {job.district}</p>
                   </div>
-                  <span className="whitespace-nowrap font-bold text-accent">{job.pay} ₾/სთ</span>
+                  <span className="shrink-0 rounded-full bg-bg px-2.5 py-1 text-sm font-bold">{job.pay} ₾/სთ</span>
                 </div>
                 {hasSchedule && (
-                  <p className="mt-2 text-sm font-semibold">
+                  <span className={`mt-3 inline-block rounded-full px-2.5 py-1 text-xs font-semibold ${fitCount ? 'bg-mint-soft text-mint' : 'bg-coral/10 text-coral'}`}>
                     {fitCount}/{job.shifts.length} ცვლა ერგება
-                  </p>
+                  </span>
                 )}
-                <ul className="mt-2 space-y-1 text-sm">
-                  {job.shifts.map((s, i) => (
-                    <li key={i} className="flex justify-between">
-                      <span>{formatShift(s)}</span>
-                      {hasSchedule && (
-                        <span className={fits[i] ? 'text-accent' : 'text-red-600'}>{fits[i] ? 'ერგება' : 'ეჯახება'}</span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-                {active && (
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onApply(job.id) }}
-                    disabled={applied.has(job.id)}
-                    className="mt-3 w-full rounded-xl bg-accent py-2 text-sm font-semibold text-white disabled:bg-quiet"
-                  >
-                    {applied.has(job.id) ? 'განაცხადი გაგზავნილია (დემო)' : 'განაცხადის გაგზავნა'}
-                  </button>
-                )}
-              </div>
+              </button>
+
+              {open && (
+                <div className="mt-3 border-t border-line pt-3">
+                  <ul className="space-y-1.5 text-sm">
+                    {job.shifts.map((s, i) => (
+                      <li key={i} className="flex justify-between">
+                        <span>{formatShift(s)}</span>
+                        {hasSchedule && (
+                          <span className={fits[i] ? 'font-medium text-mint' : 'font-medium text-coral'}>{fits[i] ? 'ერგება' : 'ეჯახება'}</span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="mt-4 grid grid-cols-2 gap-2">
+                    <button onClick={() => onShow(job.id)} className="rounded-xl bg-bg py-2.5 text-sm font-semibold">
+                      კალენდარზე ნახვა
+                    </button>
+                    <button
+                      onClick={() => onApply(job.id)}
+                      disabled={applied.has(job.id)}
+                      className="rounded-xl bg-brand py-2.5 text-sm font-semibold text-white disabled:bg-quiet"
+                    >
+                      {applied.has(job.id) ? 'გაგზავნილია' : 'განაცხადი'}
+                    </button>
+                  </div>
+                </div>
+              )}
             </li>
           )
         })}

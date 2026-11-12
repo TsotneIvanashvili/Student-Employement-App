@@ -4,17 +4,17 @@ const STEPS = [
   {
     target: 'calendar',
     title: '1. დაიწყე აქედან',
-    text: 'მონიშნე საათები, როცა ლექციები გაქვს. დააჭირე უჯრას ან გადაათრიე რამდენიმე საათზე. ეს ყველაზე მთავარია: დანარჩენი ამაზეა დამოკიდებული.',
+    text: 'მონიშნე საათები, როცა ლექციები გაქვს: შეეხე უჯრას ან გადაუსვი თითი რამდენიმე საათზე. ეს ყველაზე მთავარია, დანარჩენი ამაზეა დამოკიდებული.',
   },
   {
     target: 'jobs',
     title: '2. ვაკანსიები',
-    text: 'აქ ჩანს ვაკანსიები და თითო ცვლის გასწვრივ წერია, ერგება თუ ეჯახება შენს ლექციებს. ვაკანსიაზე დაჭერისას მისი ცვლები კალენდარზე გამოჩნდება.',
+    text: 'აქ ჩანს ვაკანსიები და წერია, რამდენი ცვლა ერგება შენს ლექციებს. ვაკანსიას შეგიძლია კალენდარზეც დახედო.',
   },
   {
     target: 'assistant',
     title: '3. AI ასისტენტი',
-    text: 'როცა გრაფიკს შეავსებ, ასისტენტი მხოლოდ შესაფერის ვაკანსიებიდან შეგირჩევს საუკეთესოს და კითხვებს გიპასუხებს.',
+    text: 'როცა ლექციებს მონიშნავ, ასისტენტი შესაფერისი ვაკანსიებიდან საუკეთესოს შეგირჩევს და კითხვებს გიპასუხებს.',
   },
   {
     target: 'help',
@@ -44,12 +44,12 @@ export default function Tour({ onClose }) {
 
   if (!rect) return null
 
-  const pad = 8
-  const boxW = 340
-  const boxH = 210
-  const gap = pad + 12
+  const pad = 6
   const W = window.innerWidth
   const H = window.innerHeight
+  const boxW = Math.min(340, W - 24)
+  const boxH = 220
+  const gap = pad + 10
   const clampTop = (t) => Math.min(Math.max(12, t), H - boxH - 12)
   const clampLeft = (l) => Math.min(Math.max(12, l), W - boxW - 12)
   let top, left
@@ -67,7 +67,7 @@ export default function Tour({ onClose }) {
     left = rect.left - gap - boxW
   } else {
     top = H - boxH - 12
-    left = W - boxW - 12
+    left = clampLeft((W - boxW) / 2)
   }
   const last = step === STEPS.length - 1
 
@@ -80,19 +80,19 @@ export default function Tour({ onClose }) {
           left: rect.left - pad,
           width: rect.width + pad * 2,
           height: rect.height + pad * 2,
-          boxShadow: '0 0 0 9999px rgba(20, 33, 61, 0.6)',
+          boxShadow: '0 0 0 9999px rgba(21, 20, 43, 0.6)',
         }}
       />
-      <div className="absolute rounded-2xl bg-white p-5 shadow-xl" style={{ top, left, width: boxW }}>
+      <div className="absolute rounded-3xl bg-white p-5 shadow-2xl" style={{ top, left, width: boxW }}>
         <h3 className="text-lg font-bold">{current.title}</h3>
-        <p className="mt-2 text-sm text-muted">{current.text}</p>
+        <p className="mt-2 text-sm leading-relaxed text-muted">{current.text}</p>
         <div className="mt-4 flex items-center justify-between">
-          <button onClick={onClose} className="text-sm text-quiet hover:text-navy">გამოტოვება</button>
+          <button onClick={onClose} className="py-2 text-sm text-quiet">გამოტოვება</button>
           <div className="flex items-center gap-3">
             <span className="text-xs text-quiet">{step + 1}/{STEPS.length}</span>
             <button
               onClick={() => (last ? onClose() : setStep(step + 1))}
-              className="rounded-xl bg-accent px-4 py-2 text-sm font-semibold text-white"
+              className="rounded-xl bg-brand px-5 py-2.5 text-sm font-semibold text-white"
             >
               {last ? 'დაწყება' : 'შემდეგი'}
             </button>
