@@ -98,7 +98,7 @@ const Feature = ({ icon, text }) => (
 export function Logo({ light }) {
   return (
     <span className={`text-[26px] font-extrabold tracking-tight ${light ? 'text-white' : 'text-ink'}`} style={{ fontFamily: 'Inter, -apple-system, system-ui, sans-serif' }}>
-      student<span className="text-brand">shifts</span>
+      shift<span className="text-brand">mate</span>
     </span>
   )
 }
