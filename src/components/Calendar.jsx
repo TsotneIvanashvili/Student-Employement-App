@@ -45,28 +45,23 @@ export default function Calendar({ free, setFree, selectedShifts, selectedJob, o
 
   function cellClass(key) {
     const mark = selectedShifts[key]
-    if (mark === 'fit') return 'bg-brand'
+    if (mark === 'fit') return 'bg-ink'
     if (mark === 'conflict') return 'bg-coral'
-    if (free.has(key)) return 'bg-mint-soft border-mint/60'
-    return 'bg-white'
+    if (free.has(key)) return 'bg-brand'
+    return 'bg-bg'
   }
 
   return (
-    <section className="rounded-3xl bg-white p-4 shadow-sm">
-      <div className="mb-3 flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-bold">თავისუფალი საათები</h2>
-          <p className="text-sm text-muted">მონიშნე, როდის შეგიძლია მუშაობა</p>
-        </div>
-        <button onClick={() => setFree(new Set())} className="shrink-0 rounded-xl bg-bg px-3 py-2 text-sm font-medium text-muted active:bg-line">
-          გასუფთავება
-        </button>
+    <section className="rounded-[22px] bg-white p-3.5">
+      <div className="mb-3 flex items-center justify-between gap-3 px-1">
+        <p className="text-[13px] text-muted">შეეხე ან გადაუსვი თითი საათებს</p>
+        <button onClick={() => setFree(new Set())} className="shrink-0 text-[15px] font-medium text-brand">გასუფთავება</button>
       </div>
 
       {selectedJob && (
-        <div className="mb-3 flex items-center justify-between gap-2 rounded-2xl bg-brand-soft px-3 py-2 text-sm">
+        <div className="mb-3 flex items-center justify-between gap-2 rounded-xl bg-ink px-3 py-2 text-sm text-white">
           <span>ნაჩვენებია: <b>{selectedJob.title}</b></span>
-          <button onClick={onClearJob} className="px-2 text-lg leading-none text-brand" aria-label="დახურვა">×</button>
+          <button onClick={onClearJob} className="px-2 text-lg leading-none text-white/70" aria-label="დახურვა">×</button>
         </div>
       )}
 
@@ -96,16 +91,16 @@ export default function Calendar({ free, setFree, selectedShifts, selectedJob, o
                 data-hour={h}
                 role="button"
                 aria-label={`${DAYS[day]} ${h}:00`}
-                className={`h-8 rounded-md border border-line/70 transition-colors ${cellClass(key)}`}
+                className={`h-8 rounded-[7px] transition-colors duration-150 ${cellClass(key)}`}
               />
             )
           }),
         ])}
       </div>
 
-      <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs text-muted">
-        <span className="flex items-center gap-1.5"><i className="h-3 w-3 rounded border border-mint/60 bg-mint-soft" />თავისუფალი</span>
-        <span className="flex items-center gap-1.5"><i className="h-3 w-3 rounded bg-brand" />ცვლა ერგება</span>
+      <div className="mt-3.5 flex flex-wrap gap-x-4 gap-y-2 px-1 text-xs text-muted">
+        <span className="flex items-center gap-1.5"><i className="h-3 w-3 rounded bg-brand" />თავისუფალი</span>
+        <span className="flex items-center gap-1.5"><i className="h-3 w-3 rounded bg-ink" />ცვლა ერგება</span>
         <span className="flex items-center gap-1.5"><i className="h-3 w-3 rounded bg-coral" />ცვლა არ ჯდება</span>
       </div>
     </section>

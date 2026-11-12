@@ -1,20 +1,45 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Noto Sans Georgian", Inter, system-ui, sans-serif;
-  --color-ink: #15142b;
-  --color-brand: #5b4bff;
-  --color-brand-soft: #ecebff;
-  --color-mint: #0f9d6e;
-  --color-mint-soft: #dcf5ea;
-  --color-coral: #e5483a;
-  --color-bg: #f6f7fb;
-  --color-line: #e6e8f0;
-  --color-muted: #5c6275;
-  --color-quiet: #8a90a2;
+  --font-sans: "Noto Sans Georgian", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  --color-ink: #0b0d12;
+  --color-brand: #12a05c;
+  --color-brand-soft: #e3f5eb;
+  --color-mint: #12a05c;
+  --color-mint-soft: #e3f5eb;
+  --color-amber: #b86e00;
+  --color-amber-soft: #fff1d6;
+  --color-coral: #ff3b30;
+  --color-bg: #f2f2f7;
+  --color-fill: #e9e9ef;
+  --color-line: #e3e3e8;
+  --color-muted: #6e6e73;
+  --color-quiet: #8e8e93;
 }
 
 body {
   @apply bg-bg text-ink font-sans antialiased;
   -webkit-tap-highlight-color: transparent;
 }
+
+/* iOS-ის მსგავსი გადახვევა ტელეფონის ჩარჩოში */
+.screen {
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.screen::-webkit-scrollbar {
+  display: none;
+}
+
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+}
+@keyframes float {
+  50% { transform: translateY(-6px); }
+}
+.animate-sheet { animation: sheet-up 0.32s cubic-bezier(0.2, 0.9, 0.3, 1); }
+.animate-fade { animation: fade-in 0.2s ease-out; }
+.animate-float { animation: float 4s ease-in-out infinite; }
