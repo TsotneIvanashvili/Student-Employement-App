@@ -1,0 +1,16 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Noto Sans Georgian", Inter, system-ui, sans-serif;
+  --color-navy: #14213d;
+  --color-accent: #2e5bff;
+  --color-paper: #fafaf7;
+  --color-mist: #eef2fb;
+  --color-line: #e2e6ef;
+  --color-muted: #4a5568;
+  --color-quiet: #8a94a6;
+}
+
+body {
+  @apply bg-paper text-navy font-sans antialiased;
+}
