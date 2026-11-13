@@ -177,7 +177,7 @@ function StudentApp({ profile, patch }) {
         <>
           {tab === 'calendar' && <StudentSchedule busy={busy} setLessons={setLessons} matchCount={matches.length} onSeeJobs={() => go('jobs')} />}
           {tab === 'jobs' && <JobList jobs={jobs} busy={busy} onlyFit={onlyFit} setOnlyFit={setOnlyFit} onGoCalendar={() => go('calendar')} />}
-          {tab === 'ai' && <Assistant profile={profile} jobs={jobs} busy={busy} matchCount={matches.length} />}
+          {tab === 'ai' && <Assistant profile={profile} jobs={jobs} busy={busy} setLessons={setLessons} matchCount={matches.length} />}
           {tab === 'profile' && <StudentProfile profile={profile} onSaved={patch} />}
         </>
       )}

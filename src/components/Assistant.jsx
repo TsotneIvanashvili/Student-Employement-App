@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { chat } from '../lib/ollama.js'
-import { splitJobRefs } from '../lib/prompt.js'
-import { freeSlots } from '../lib/schedule.js'
+import { splitReply } from '../lib/prompt.js'
+import { supabase } from '../lib/supabase.js'
+import { DOTS } from './BigCalendar.jsx'
+import { DAY_NAMES, MONTH_NAMES, dayNumber, fmtMin, freeSlots, monthIndex, weekdayOf } from '../lib/schedule.js'
 import JobCard from './JobCard.jsx'
 import { Icon, Segmented, Title, card, chip } from './ui.jsx'
 
@@ -10,7 +12,7 @@ const RECOMMEND = {
   en: 'Which job do you recommend for my schedule?',
 }
 
-export default function Assistant({ profile, jobs, busy, matchCount }) {
+export default function Assistant({ profile, jobs, busy, setLessons, matchCount }) {
   const free = freeSlots(busy)
   const [lang, setLang] = useState('ka')
   const [model, setModel] = useState('llama3.2')
@@ -73,7 +75,7 @@ export default function Assistant({ profile, jobs, busy, matchCount }) {
           m.role === 'user' ? (
             <div key={i} className="flex justify-end"><p className="max-w-[80%] whitespace-pre-wrap rounded-2xl rounded-br-lg bg-brand px-4 py-3 font-semibold text-white">{m.content}</p></div>
           ) : (
-            <AssistantMessage key={i} content={m.content} jobs={jobs} busy={busy} />
+            <AssistantMessage key={i} content={m.content} jobs={jobs} busy={busy} setLessons={setLessons} />
           ),
         )}
         {error && (
@@ -105,14 +107,52 @@ export default function Assistant({ profile, jobs, busy, matchCount }) {
   )
 }
 
-// AI-ს ტექსტი + რეკომენდებული ვაკანსიების ბარათები (ბოლო ხაზიდან "JOBS: ...")
-function AssistantMessage({ content, jobs, busy }) {
-  const { text, refs } = splitJobRefs(content)
+// AI-ს ტექსტი + ვაკანსიების ბარათები ("JOBS: ...") + ლექციის დამატების დადასტურება ("LESSON: {...}")
+function AssistantMessage({ content, jobs, busy, setLessons }) {
+  const { text, refs, lessons } = splitReply(content)
   const cards = refs.map((r) => jobs.find((j) => j.id.startsWith(r))).filter(Boolean)
   return (
     <div className="mr-8 space-y-2">
       <p className="whitespace-pre-wrap rounded-2xl rounded-bl-lg border border-line bg-white px-4 py-3">{text || '…'}</p>
+      {lessons.map((l, i) => <LessonProposal key={i} lesson={l} setLessons={setLessons} />)}
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">{cards.map((job) => <JobCard key={job.id} job={job} busy={busy} compact />)}</div>
+    </div>
+  )
+}
+
+// AI-ს შემოთავაზებული ლექცია: კალენდარში მხოლოდ სტუდენტის დადასტურების შემდეგ ემატება
+function LessonProposal({ lesson, setLessons }) {
+  const [state, setState] = useState('idle') // idle | saving | added | cancelled | error
+  const when = lesson.date
+    ? `${dayNumber(lesson.date)} ${MONTH_NAMES[monthIndex(lesson.date)]}, ${DAY_NAMES[weekdayOf(lesson.date)]} (ერთჯერადი)`
+    : `ყოველ ${DAY_NAMES[lesson.weekday].replace(/ი$/, '')}ს`
+
+  async function add() {
+    setState('saving')
+    const { data, error } = await supabase.from('events').insert(lesson).select().single()
+    if (error) return setState('error')
+    setLessons((list) => [...list, data])
+    setState('added')
+  }
+
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-white px-4 py-3">
+      <span className="flex items-center gap-2.5">
+        <i className={`h-2.5 w-2.5 shrink-0 rounded-full ${DOTS.lesson}`} />
+        <span>
+          <span className="block text-[15px] font-semibold">{lesson.title} · {fmtMin(lesson.start_min)}–{fmtMin(lesson.end_min)}</span>
+          <span className="block text-[13px] text-muted">{when}</span>
+        </span>
+      </span>
+      {state === 'added' && <span className="text-[14px] font-medium text-mint">✓ დაემატა განრიგში</span>}
+      {state === 'cancelled' && <span className="text-[14px] text-muted">გაუქმდა</span>}
+      {state === 'error' && <span className="text-[14px] text-coral">ვერ დაემატა, სცადე თავიდან</span>}
+      {(state === 'idle' || state === 'saving') && (
+        <span className="flex gap-2">
+          <button onClick={() => setState('cancelled')} className="rounded-lg border border-line px-3 py-1.5 text-[14px] font-medium hover:bg-fill">გაუქმება</button>
+          <button disabled={state === 'saving'} onClick={add} className="rounded-lg bg-ink px-3 py-1.5 text-[14px] font-medium text-white disabled:opacity-50">დამატება</button>
+        </span>
+      )}
     </div>
   )
 }
