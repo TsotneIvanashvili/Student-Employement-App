@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { Icon, Segmented, btn, card, chip, input, label } from './ui.jsx'
+import { TONES } from './BigCalendar.jsx'
 
 const DEMO = {
   student: {
@@ -27,11 +28,11 @@ const errorText = (e) => (e.message === 'Invalid login credentials' ? 'ელფ
 
 export function Logo({ light = false, className = 'text-[26px]' }) {
   return (
-    <span className={`inline-flex items-center gap-2 font-black tracking-tight ${className} ${light ? 'text-white' : 'text-ink'}`}>
-      <span className={`grid h-[1.4em] w-[1.4em] place-items-center rounded-[0.4em] ${light ? 'bg-white text-brand' : 'bg-brand text-white'}`}>
+    <span className={`inline-flex items-center gap-2 font-semibold tracking-tight ${className} ${light ? 'text-white' : 'text-ink'}`}>
+      <span className={`grid h-[1.4em] w-[1.4em] place-items-center rounded-[0.4em] ${light ? 'bg-white text-ink' : 'bg-ink text-white'}`}>
         <Icon name="calendar" className="h-[0.85em] w-[0.85em]" strokeWidth={3} />
       </span>
-      <span>shift<span className={light ? 'text-sun' : 'text-brand'}>mate</span></span>
+      <span>shift<span className="text-muted">mate</span></span>
     </span>
   )
 }
@@ -52,35 +53,33 @@ export default function Auth() {
   )
 }
 
-// მარცხენა ფერადი ნაწილი: სათაური და ილუსტრაცია (ტელეფონზე ზემოთაა)
+// მარცხენა ნაწილი: სათაური და კალენდრის მაგალითი (ტელეფონზე ზემოთაა)
 function Hero({ compact }) {
-  const free = new Set(['0-2', '0-3', '1-3', '2-2', '2-3', '3-0', '4-0', '4-1', '5-1', '5-2', '6-2'])
+  const days = ['ორშ', 'სამ', 'ოთხ', 'ხუთ', 'პარ', 'შაბ', 'კვი']
+  const cells = [
+    [['lesson', 'ვებ დეველოპმენტი']], [['lesson', 'მარკეტინგი']], [['lesson', 'ინგლისური']], [['lesson', 'სტატისტიკა'], ['work', 'ბარისტა']], [['lesson', 'სემინარი']], [['work', 'ღონისძიება']], [],
+  ]
   return (
-    <div className={`relative overflow-hidden bg-brand px-6 pb-12 pt-[max(env(safe-area-inset-top),1.25rem)] text-white lg:min-h-dvh lg:flex-col lg:p-12 ${compact ? 'hidden lg:flex' : 'lg:flex'}`}>
-      <div className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-sky/50 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-24 -left-16 h-72 w-72 rounded-full bg-coral/40 blur-3xl" />
-      <Logo light />
-      <div className="relative mt-8 lg:mt-auto">
-        <h1 className="max-w-lg text-[34px] font-black leading-[1.1] lg:text-[52px]">იმუშავე მაშინ, როცა <span className="text-sun">თავისუფალი ხარ</span></h1>
-        <p className="mt-3 max-w-md text-[17px] font-semibold text-white/85">მონიშნე ლექციებს შორის ფანჯრები და მხოლოდ იმ ვაკანსიებს ნახავ, რომლებიც შენს დროს ერგება.</p>
+    <div className={`border-b border-line bg-white px-6 pb-10 pt-[max(env(safe-area-inset-top),1.25rem)] lg:min-h-dvh lg:flex-col lg:border-b-0 lg:border-r lg:p-12 ${compact ? 'hidden lg:flex' : 'lg:flex'}`}>
+      <Logo />
+      <div className="mt-8 lg:mt-auto">
+        <h1 className="max-w-lg text-[32px] font-semibold leading-[1.15] tracking-tight lg:text-[46px]">იმუშავე მაშინ, როცა თავისუფალი ხარ</h1>
+        <p className="mt-3 max-w-md text-[16px] text-muted">ჩაწერე ლექციები და ვაკანსიებს მხოლოდ შენს თავისუფალ დროში ნახავ. აყვანის შემდეგ ცვლები შენს კალენდარში ჩნდება.</p>
       </div>
-
-      <div className="relative mx-auto mt-10 w-full max-w-md lg:mb-auto lg:mt-14">
-        <div className="rotate-[-3deg] rounded-3xl bg-white/15 p-4 ring-2 ring-white/25 backdrop-blur">
-          <div className="grid grid-cols-7 gap-1.5">
-            {['ორ', 'სა', 'ოთ', 'ხუ', 'პა', 'შა', 'კვ'].map((d) => <span key={d} className="text-center text-[11px] font-extrabold text-white/70">{d}</span>)}
-            {Array.from({ length: 28 }, (_, i) => {
-              const key = `${i % 7}-${Math.floor(i / 7)}`
-              return <span key={key} className={`h-6 rounded-lg ${free.has(key) ? 'bg-mint' : 'bg-white/15'}`} />
-            })}
-          </div>
+      <div className="mt-8 max-w-lg overflow-hidden rounded-2xl border border-line lg:mb-auto lg:mt-12">
+        <div className="grid grid-cols-7 border-b border-line bg-bg">
+          {days.map((d) => <span key={d} className="py-1.5 text-center text-[11px] text-muted">{d}</span>)}
         </div>
-        <div className="animate-float absolute -bottom-8 right-0 w-[210px] rotate-[2deg] rounded-2xl bg-white p-3 text-ink shadow-[0_6px_0_rgba(0,0,0,0.15)]">
-          <div className="flex items-center justify-between font-extrabold"><span>☕ ბარისტა</span><span className="text-brand">9 ₾/სთ</span></div>
-          <p className="text-[12px] font-semibold text-muted">Coffee Lab · ვაკე</p>
-          <p className="mt-2 inline-flex items-center gap-1 rounded-full bg-mint-soft px-2 py-0.5 text-[12px] font-extrabold text-mint-dark"><Icon name="check" className="h-3.5 w-3.5" strokeWidth={3} />3/3 ცვლა ერგება</p>
+        <div className="grid grid-cols-7">
+          {cells.map((list, i) => (
+            <div key={i} className="min-h-[86px] space-y-1 border-r border-line p-1 last:border-r-0">
+              <span className={`inline-grid h-5 w-5 place-items-center rounded-full text-[11px] ${i === 4 ? 'bg-coral text-white' : ''}`}>{16 + i}</span>
+              {list.map(([tone, title]) => (
+                <span key={title} className={`block truncate rounded-[4px] border-l-[3px] px-1 py-0.5 text-[10px] ${TONES[tone]}`}>{title}</span>
+              ))}
+            </div>
+          ))}
         </div>
-        <div className="absolute -left-2 -top-5 rotate-[-6deg] rounded-full bg-sun px-3 py-1.5 text-[13px] font-black text-ink shadow-[0_3px_0_rgba(0,0,0,0.15)]">+126 ₾ ამ კვირაში 💸</div>
       </div>
     </div>
   )
@@ -107,33 +106,33 @@ function Welcome({ go }) {
 
   return (
     <div>
-      <h2 className="text-[26px] font-black">დავიწყოთ 👋</h2>
+      <h2 className="text-[26px] font-semibold">დავიწყოთ 👋</h2>
       <p className="mt-1 font-semibold text-muted">ვინ ხარ?</p>
       <div className="mt-5 space-y-3">
         <RoleCard emoji="🎓" title="სტუდენტი ვარ" text="ვეძებ სამსახურს ლექციებს შორის" onClick={() => go({ name: 'register', role: 'student' })} />
         <RoleCard emoji="🏢" title="დამსაქმებელი ვარ" text="ვეძებ სტუდენტებს ცვლებისთვის" onClick={() => go({ name: 'register', role: 'employer' })} />
       </div>
       <p className="mt-5 text-center font-semibold text-muted">
-        უკვე გაქვს ანგარიში? <button onClick={() => go({ name: 'login' })} className="font-extrabold text-brand hover:underline">შესვლა</button>
+        უკვე გაქვს ანგარიში? <button onClick={() => go({ name: 'login' })} className="font-semibold text-brand hover:underline">შესვლა</button>
       </p>
 
-      <div className="mt-8 rounded-3xl border-2 border-dashed border-line p-4">
-        <p className="text-center text-[13px] font-extrabold uppercase tracking-wide text-quiet">სწრაფი დემო, რეგისტრაციის გარეშე</p>
+      <div className="mt-8 rounded-2xl border border-dashed border-line p-4">
+        <p className="text-center text-[13px] font-semibold uppercase tracking-wide text-quiet">სწრაფი დემო, რეგისტრაციის გარეშე</p>
         <div className="mt-3 grid grid-cols-2 gap-2">
           <button disabled={!!busy} onClick={() => demo('student')} className={`${chip} whitespace-nowrap px-2 text-[13px]`}>{busy === 'student' ? '…' : '🎓 სტუდენტი'}</button>
           <button disabled={!!busy} onClick={() => demo('employer')} className={`${chip} whitespace-nowrap px-2 text-[13px]`}>{busy === 'employer' ? '…' : '🏢 დამსაქმებელი'}</button>
         </div>
-        {error && <p className="mt-2 text-center text-sm font-bold text-coral">{error}</p>}
+        {error && <p className="mt-2 text-center text-sm font-medium text-coral">{error}</p>}
       </div>
     </div>
   )
 }
 
 const RoleCard = ({ emoji, title, text, onClick }) => (
-  <button onClick={onClick} className={`${card} flex w-full items-center gap-4 p-4 text-left shadow-[0_4px_0_var(--color-line)] transition hover:border-brand active:translate-y-[4px] active:shadow-none`}>
-    <span className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-brand-soft text-[28px]">{emoji}</span>
+  <button onClick={onClick} className={`${card} flex w-full items-center gap-4 p-4 text-left transition hover:border-brand`}>
+    <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-fill text-[24px]">{emoji}</span>
     <span className="flex-1">
-      <span className="block text-[18px] font-black">{title}</span>
+      <span className="block text-[18px] font-semibold">{title}</span>
       <span className="block text-[14px] font-semibold text-muted">{text}</span>
     </span>
     <Icon name="chevron" className="h-6 w-6 text-quiet" strokeWidth={2.5} />
@@ -142,7 +141,7 @@ const RoleCard = ({ emoji, title, text, onClick }) => (
 
 function Back({ go }) {
   return (
-    <button onClick={() => go({ name: 'welcome' })} className="mb-5 flex items-center gap-1 font-extrabold text-brand hover:underline">
+    <button onClick={() => go({ name: 'welcome' })} className="mb-5 flex items-center gap-1 font-semibold text-brand hover:underline">
       <Icon name="back" className="h-5 w-5" strokeWidth={2.8} />უკან
     </button>
   )
@@ -185,11 +184,11 @@ function Login({ go }) {
   return (
     <div>
       <Back go={go} />
-      <h2 className="mb-6 text-[30px] font-black">შესვლა</h2>
+      <h2 className="mb-6 text-[30px] font-semibold">შესვლა</h2>
       <form onSubmit={submit} className="space-y-4">
         <Field label="ელფოსტა"><input required type="email" inputMode="email" autoComplete="email" className={input} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></Field>
         <Field label="პაროლი"><input required type="password" autoComplete="current-password" className={input} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></Field>
-        {error && <p className="font-bold text-coral">{error}</p>}
+        {error && <p className="font-medium text-coral">{error}</p>}
         <button disabled={busy} className={btn}>{busy ? 'იტვირთება…' : 'შესვლა'}</button>
       </form>
     </div>
@@ -214,7 +213,7 @@ function Register({ initialRole, go }) {
   return (
     <div>
       <Back go={go} />
-      <h2 className="mb-4 text-[30px] font-black">რეგისტრაცია</h2>
+      <h2 className="mb-4 text-[30px] font-semibold">რეგისტრაცია</h2>
       <div className="mb-5">
         <Segmented value={role} onChange={setRole} options={[['student', '🎓 სტუდენტი'], ['employer', '🏢 დამსაქმებელი']]} />
       </div>
@@ -236,7 +235,7 @@ function Register({ initialRole, go }) {
         )}
         <Field label="ელფოსტა"><input required type="email" inputMode="email" autoComplete="email" className={input} value={form.email} onChange={set('email')} /></Field>
         <Field label="პაროლი (მინ. 6 სიმბოლო)"><input required type="password" minLength={6} autoComplete="new-password" className={input} value={form.password} onChange={set('password')} /></Field>
-        {error && <p className="font-bold text-coral">{error}</p>}
+        {error && <p className="font-medium text-coral">{error}</p>}
         <button disabled={busy} className={btn}>{busy ? 'იტვირთება…' : 'ანგარიშის შექმნა'}</button>
       </form>
     </div>

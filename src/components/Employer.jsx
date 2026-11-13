@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { FIRST_HOUR, LAST_HOUR, formatShift, todayISO } from '../lib/match.js'
 import Calendar, { WEEKDAYS, WEEKEND, preset } from './Calendar.jsx'
+import BigCalendar, { TONES } from './BigCalendar.jsx'
+import { jobEvents } from '../lib/schedule.js'
 import JobCard, { CompanyLogo, openJob } from './JobCard.jsx'
 import { ApplicantCard, jobHours } from './Applicants.jsx'
 import InstallRow from './InstallRow.jsx'
@@ -59,10 +61,39 @@ export function Inbox({ profile, onNew }) {
   )
 }
 
+// დამსაქმებლის კალენდარი: ცვლები თარიღებზე და ვინ მუშაობს თითოეულში
+export function EmployerSchedule({ profile }) {
+  const [jobs, setJobs] = useState([])
+  useEffect(() => {
+    supabase
+      .from('jobs')
+      .select('*, applications(status, profiles(full_name))')
+      .eq('employer_id', profile.id)
+      .eq('is_open', true)
+      .then(({ data }) => setJobs(data ?? []))
+  }, [profile.id])
+
+  const events = jobs.flatMap((job) => {
+    const hired = job.applications.filter((a) => a.status === 'accepted').map((a) => a.profiles.full_name)
+    return jobEvents(job, { tone: hired.length ? 'work' : 'open', subtitle: hired.length ? hired.join(', ') : 'ჯერ არავინ' })
+  })
+
+  return (
+    <div>
+      <Title eyebrow={profile.company_name}>ცვლების კალენდარი</Title>
+      <div className="mb-4 flex flex-wrap gap-4 text-[13px] text-muted">
+        <span className="flex items-center gap-1.5"><i className={`h-3 w-3 rounded-sm border-l-[3px] ${TONES.work}`} />სტუდენტი აყვანილია</span>
+        <span className="flex items-center gap-1.5"><i className={`h-3 w-3 rounded-sm border-l-[3px] ${TONES.open}`} />ჯერ არავინ</span>
+      </div>
+      <BigCalendar events={events} onEvent={(e) => openJob(e.job_id)} />
+    </div>
+  )
+}
+
 const Stat = ({ emoji, label: text, value, tone }) => (
   <div className={`${card} min-w-0 px-3 py-3 sm:px-4`}>
-    <p className="truncate text-[12px] font-bold text-muted sm:text-[13px]">{emoji} {text}</p>
-    <p className={`truncate text-[20px] font-black leading-tight sm:text-[22px] ${tone}`}>{value}</p>
+    <p className="truncate text-[12px] font-medium text-muted sm:text-[13px]">{emoji} {text}</p>
+    <p className={`truncate text-[20px] font-semibold leading-tight sm:text-[22px] ${tone}`}>{value}</p>
   </div>
 )
 
@@ -80,21 +111,21 @@ export function MyJobs({ profile, onNew }) {
 
   return (
     <section>
-      <Title eyebrow={profile.company_name} action={<button onClick={onNew} className={`${btn} flex items-center gap-1.5 px-5`}><Icon name="plus" className="h-5 w-5" strokeWidth={3} />ახალი</button>}>
+      <Title eyebrow={profile.company_name} action={<button onClick={onNew} className={`${btn} flex !w-auto items-center gap-1.5 px-4`}><Icon name="plus" className="h-5 w-5" strokeWidth={2.5} />ახალი</button>}>
         ვაკანსიები
       </Title>
       {jobs?.length === 0 && <Empty emoji="📝" title="ჯერ ვაკანსია არ გაქვს" text="პირველი ვაკანსიის დამატებას ერთი წუთი სჭირდება." action={<button onClick={onNew} className={`${btn} px-6`}>ვაკანსიის დამატება</button>} />}
-      <ul data-tour="myjobs" className="grid gap-3 md:grid-cols-2">
+      <ul data-tour="myjobs" className="grid grid-cols-1 gap-3 md:grid-cols-2">
         {jobs?.map((job) => {
           const fresh = job.applications.filter((a) => a.status === 'sent').length
           return (
             <li key={job.id}>
-              <button onClick={() => openJob(job.id)} className={`${card} flex w-full items-start gap-3 p-4 text-left shadow-[0_3px_0_var(--color-line)] transition hover:border-brand/40 active:translate-y-[3px] active:shadow-none ${job.is_open ? '' : 'opacity-60'}`}>
+              <button onClick={() => openJob(job.id)} className={`${card} flex w-full items-start gap-3 p-4 text-left transition hover:border-brand/40 ${job.is_open ? '' : 'opacity-60'}`}>
                 <CompanyLogo name={job.company} />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-2">
-                    <h3 className="truncate text-[16px] font-extrabold">{job.title}</h3>
-                    {fresh > 0 ? <Badge tone="violet">{fresh} ახალი</Badge> : <span className="shrink-0 text-[13px] font-bold text-quiet">{job.applications.length} განაცხადი</span>}
+                    <h3 className="truncate text-[16px] font-semibold">{job.title}</h3>
+                    {fresh > 0 ? <Badge tone="violet">{fresh} ახალი</Badge> : <span className="shrink-0 text-[13px] font-medium text-quiet">{job.applications.length} განაცხადი</span>}
                   </div>
                   <p className="truncate text-[13px] font-semibold text-muted">{job.shifts.map((s) => formatShift(s)).join(' · ')}</p>
                   <div className="mt-2 flex flex-wrap gap-1.5">
@@ -174,14 +205,14 @@ export function NewJob({ profile, onCreated }) {
   return (
     <form onSubmit={submit}>
       <Title eyebrow="ნაბიჯი ნაბიჯ">ახალი ვაკანსია</Title>
-      <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div className="space-y-5">
           <Step n={1} title="რა ტიპის სამუშაოა?">
             <div className="grid grid-cols-2 gap-3">
               {[['recurring', '🔁', 'მუდმივი ცვლები', 'ყოველ კვირა, იგივე საათებში'], ['gig', '⚡', '1–2 დღიანი', 'ერთჯერადი: ღონისძიება, გადაზიდვა']].map(([k, emoji, title, text]) => (
-                <button type="button" key={k} onClick={() => setKind(k)} className={`rounded-2xl border-2 p-4 text-left transition ${kind === k ? 'border-brand bg-brand-soft shadow-[0_3px_0_var(--color-brand)]' : 'border-line bg-white shadow-[0_3px_0_var(--color-line)]'}`}>
+                <button type="button" key={k} onClick={() => setKind(k)} className={`rounded-2xl border p-4 text-left transition ${kind === k ? 'border-brand bg-brand-soft' : 'border-line bg-white'}`}>
                   <span className="text-[26px]">{emoji}</span>
-                  <span className="mt-1 block text-[16px] font-extrabold">{title}</span>
+                  <span className="mt-1 block text-[16px] font-semibold">{title}</span>
                   <span className="block text-[13px] font-semibold text-muted">{text}</span>
                 </button>
               ))}
@@ -216,12 +247,12 @@ export function NewJob({ profile, onCreated }) {
                       </select>
                     </Field>
                     {gigDays.length > 1 && (
-                      <button type="button" onClick={() => setGigDays(gigDays.filter((_, j) => j !== i))} className="col-span-2 py-2 font-extrabold text-coral sm:col-span-1" aria-label="დღის წაშლა">წაშლა</button>
+                      <button type="button" onClick={() => setGigDays(gigDays.filter((_, j) => j !== i))} className="col-span-2 py-2 font-semibold text-coral sm:col-span-1" aria-label="დღის წაშლა">წაშლა</button>
                     )}
                   </div>
                 ))}
                 {gigDays.length < 2 && (
-                  <button type="button" onClick={() => setGigDays([...gigDays, emptyGigDay()])} className="font-extrabold text-brand">+ მეორე დღის დამატება</button>
+                  <button type="button" onClick={() => setGigDays([...gigDays, emptyGigDay()])} className="font-semibold text-brand">+ მეორე დღის დამატება</button>
                 )}
               </div>
             )}
@@ -231,12 +262,12 @@ export function NewJob({ profile, onCreated }) {
         <aside className="space-y-4 lg:sticky lg:top-6">
           <p className={label}>ასე დაინახავენ სტუდენტები</p>
           <div className="pointer-events-none"><JobCard job={preview} /></div>
-          <div className={`${card} space-y-2 p-4 text-[15px] font-bold`}>
+          <div className={`${card} space-y-2 p-4 text-[15px] font-medium`}>
             <p className="flex justify-between"><span className="text-muted">ცვლები</span><span>{shifts.length}</span></p>
             <p className="flex justify-between"><span className="text-muted">{kind === 'gig' ? 'სულ საათი' : 'საათი კვირაში'}</span><span>{jobHours(preview)} სთ</span></p>
-            <p className="flex justify-between border-t-2 border-line pt-2 text-[17px]"><span>{kind === 'gig' ? 'ჯამური ხარჯი' : 'ხარჯი კვირაში'}</span><span className="font-black text-brand">{money(jobHours(preview) * preview.pay)}</span></p>
+            <p className="flex justify-between border-t-2 border-line pt-2 text-[17px]"><span>{kind === 'gig' ? 'ჯამური ხარჯი' : 'ხარჯი კვირაში'}</span><span className="font-semibold text-brand">{money(jobHours(preview) * preview.pay)}</span></p>
           </div>
-          {error && <p className="rounded-2xl bg-coral-soft p-3 font-bold text-coral">{error}</p>}
+          {error && <p className="rounded-2xl bg-coral-soft p-3 font-medium text-coral">{error}</p>}
           <button disabled={busy} className={btn}>{busy ? 'ქვეყნდება…' : 'გამოქვეყნება'}</button>
         </aside>
       </div>
@@ -247,7 +278,7 @@ export function NewJob({ profile, onCreated }) {
 function Step({ n, title, children }) {
   return (
     <section className={`${card} p-5`}>
-      <h2 className="mb-4 flex items-center gap-2.5 text-[18px] font-black">
+      <h2 className="mb-4 flex items-center gap-2.5 text-[18px] font-semibold">
         <span className="grid h-8 w-8 place-items-center rounded-full bg-brand text-[15px] text-white">{n}</span>{title}
       </h2>
       {children}
@@ -282,7 +313,7 @@ export function EmployerProfile({ profile, onSaved }) {
   return (
     <div>
       <Title eyebrow="დამსაქმებელი">{profile.company_name}</Title>
-      <div className="grid items-start gap-5 lg:grid-cols-2">
+      <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-2">
         <div className="space-y-5">
           <div className="grid grid-cols-2 gap-3">
             <Stat emoji="🔒" label="დაბლოკილი" value={money(sum('held'))} tone="text-amber" />
@@ -291,15 +322,15 @@ export function EmployerProfile({ profile, onSaved }) {
           <p className="px-1 text-[14px] font-semibold text-muted">დაბლოკილი თანხა სტუდენტს მაშინ ერიცხება, როცა სამუშაოს შესრულებას დაადასტურებ.</p>
         </div>
         <form onSubmit={save} className={`${card} space-y-4 p-5`}>
-          <h2 className="text-[18px] font-black">კომპანია</h2>
+          <h2 className="text-[18px] font-semibold">კომპანია</h2>
           <Field label="კომპანიის სახელი"><input className={input} value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} /></Field>
           <Field label="საკონტაქტო პირი"><input className={input} value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} /></Field>
-          {note && <p className="font-bold text-mint-dark">{note}</p>}
+          {note && <p className="font-medium text-mint-dark">{note}</p>}
           <button className={btn}>შენახვა</button>
         </form>
         <div className="space-y-3">
           <InstallRow />
-          <button onClick={() => supabase.auth.signOut()} className="w-full py-2 font-extrabold text-coral">გასვლა</button>
+          <button onClick={() => supabase.auth.signOut()} className="w-full py-2 font-semibold text-coral">გასვლა</button>
         </div>
       </div>
     </div>

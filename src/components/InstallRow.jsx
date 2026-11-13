@@ -7,7 +7,7 @@ export default function InstallRow() {
   const { installed, canPrompt, prompt } = useInstall()
   const [help, setHelp] = useState(false)
 
-  if (installed) return <p className="flex items-center gap-2 rounded-2xl bg-mint-soft px-4 py-3 font-bold text-mint-dark"><Icon name="check" className="h-5 w-5" strokeWidth={3} />აპი დაყენებულია</p>
+  if (installed) return <p className="flex items-center gap-2 rounded-2xl bg-mint-soft px-4 py-3 font-medium text-mint-dark"><Icon name="check" className="h-5 w-5" strokeWidth={3} />აპი დაყენებულია</p>
   return (
     <>
       <button onClick={() => (canPrompt ? prompt() : setHelp(true))} className={`${btn2} flex items-center justify-center gap-2`}>
@@ -15,7 +15,7 @@ export default function InstallRow() {
       </button>
       {help && (
         <Sheet onClose={() => setHelp(false)}>
-          <h2 className="text-[22px] font-black">📲 დააყენე ტელეფონზე</h2>
+          <h2 className="text-[22px] font-semibold">📲 დააყენე ტელეფონზე</h2>
           <p className="mt-1 text-[15px] text-muted">Shiftmate მთავარ ეკრანზე გამოჩნდება და სრულ ეკრანზე გაიხსნება, ჩვეულებრივი აპივით.</p>
           <ol className="mt-4 space-y-3 text-[16px] font-semibold">
             <Step n={1}>iPhone: Safari-ში დააჭირე <b>Share</b> <Icon name="share" className="inline h-5 w-5 align-[-4px] text-sky" /></Step>
@@ -31,7 +31,7 @@ export default function InstallRow() {
 
 const Step = ({ n, children }) => (
   <li className="flex gap-3">
-    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-brand-soft text-sm font-black text-brand">{n}</span>
+    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-brand-soft text-sm font-semibold text-brand">{n}</span>
     <span>{children}</span>
   </li>
 )

@@ -60,27 +60,27 @@ export default function StudentProfile({ profile, onSaved }) {
   return (
     <div>
       <Title eyebrow={`${profile.university ?? ''}${profile.year ? ` · ${profile.year} კურსი` : ''}`}>{profile.full_name}</Title>
-      <div className="grid items-start gap-5 lg:grid-cols-[360px_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[360px_minmax(0,1fr)]">
         <div className="space-y-5">
-          <div data-tour="wallet" className="rounded-3xl bg-gradient-to-br from-brand via-[#7b4dff] to-sky p-5 text-white shadow-[0_5px_0_var(--color-brand-dark)]">
-            <p className="flex items-center gap-2 text-[14px] font-extrabold text-white/80"><Icon name="wallet" className="h-5 w-5" />საფულე</p>
-            <p className="mt-1 text-[38px] font-black leading-none">{money(earned)}</p>
-            <p className="mt-1 text-[14px] font-bold text-white/80">მიღებული შემოსავალი</p>
-            <div className="mt-4 grid grid-cols-2 gap-2 text-[13px] font-bold">
-              <div className="rounded-2xl bg-white/15 px-3 py-2"><p className="text-white/70">🔒 მოლოდინში</p><p className="text-[17px] font-black">{money(pending)}</p></div>
-              <div className="rounded-2xl bg-white/15 px-3 py-2"><p className="text-white/70">საკომისიო 10%</p><p className="text-[17px] font-black">{money(fees)}</p></div>
+          <div data-tour="wallet" className={`${card} p-5`}>
+            <p className="flex items-center gap-2 text-[14px] text-muted"><Icon name="wallet" className="h-5 w-5" />საფულე</p>
+            <p className="mt-1 text-[34px] font-semibold leading-none">{money(earned)}</p>
+            <p className="mt-1 text-[13px] text-muted">მიღებული შემოსავალი</p>
+            <div className="mt-4 grid grid-cols-2 gap-2 text-[13px]">
+              <div className="rounded-xl bg-bg px-3 py-2"><p className="text-muted">მოლოდინში</p><p className="text-[16px] font-semibold">{money(pending)}</p></div>
+              <div className="rounded-xl bg-bg px-3 py-2"><p className="text-muted">საკომისიო 10%</p><p className="text-[16px] font-semibold">{money(fees)}</p></div>
             </div>
           </div>
 
           <section className={`${card} p-5`}>
-            <h2 className="mb-3 text-[18px] font-black">ჩემი განაცხადები</h2>
+            <h2 className="mb-3 text-[18px] font-semibold">ჩემი განაცხადები</h2>
             {applications.length === 0 && <p className="font-semibold text-muted">ჯერ არცერთი არ გაგიგზავნია.</p>}
             <ul className="space-y-2">
               {applications.map((a) => (
                 <li key={a.id}>
                   <button onClick={() => openJob(a.jobs.id)} className="flex w-full items-center gap-3 rounded-2xl bg-bg px-4 py-3 text-left hover:bg-fill">
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate font-extrabold">{a.jobs.title}</span>
+                      <span className="block truncate font-semibold">{a.jobs.title}</span>
                       <span className="block truncate text-[13px] font-semibold text-muted">{a.jobs.company}</span>
                     </span>
                     <Badge tone={STATUS_TONE[a.status]}>{STATUS_STUDENT[a.status]}</Badge>
@@ -91,13 +91,13 @@ export default function StudentProfile({ profile, onSaved }) {
           </section>
           <div className="hidden space-y-3 lg:block">
             <InstallRow />
-            <button onClick={() => supabase.auth.signOut()} className="w-full py-2 font-extrabold text-coral">გასვლა</button>
+            <button onClick={() => supabase.auth.signOut()} className="w-full py-2 font-semibold text-coral">გასვლა</button>
           </div>
         </div>
 
         <form onSubmit={save} className={`${card} space-y-4 p-5`} data-tour="cv">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-[18px] font-black">სივი</h2>
+            <h2 className="text-[18px] font-semibold">სივი</h2>
             <Badge tone={cvDone ? 'green' : 'amber'}>{cvDone ? '✓ შევსებულია' : 'შესავსებია'}</Badge>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -117,18 +117,18 @@ export default function StudentProfile({ profile, onSaved }) {
             <Field label="უნარები"><input className={input} value={form.cv_skills} onChange={set('cv_skills')} placeholder="კომუნიკაცია, Excel" /></Field>
             <Field label="ენები"><input className={input} value={form.cv_languages} onChange={set('cv_languages')} placeholder="ინგლისური B2" /></Field>
           </div>
-          <label className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl border-2 border-dashed border-line px-4 py-4 hover:border-brand">
-            <span className="flex items-center gap-2 font-bold"><Icon name="doc" className="h-5 w-5 text-brand" />{profile.cv_path ? 'PDF სივი ატვირთულია' : 'PDF სივი (არასავალდებულო)'}</span>
-            <span className="font-extrabold text-brand">{profile.cv_path ? 'შეცვლა' : 'ატვირთვა'}</span>
+          <label className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl border border-dashed border-line px-4 py-4 hover:border-brand">
+            <span className="flex items-center gap-2 font-medium"><Icon name="doc" className="h-5 w-5 text-brand" />{profile.cv_path ? 'PDF სივი ატვირთულია' : 'PDF სივი (არასავალდებულო)'}</span>
+            <span className="font-semibold text-brand">{profile.cv_path ? 'შეცვლა' : 'ატვირთვა'}</span>
             <input type="file" accept="application/pdf" className="hidden" onChange={upload} />
           </label>
-          {note && <p className="font-bold text-mint-dark">{note}</p>}
+          {note && <p className="font-medium text-mint-dark">{note}</p>}
           <button className={btn}>შენახვა</button>
         </form>
 
         <div className="space-y-3 lg:hidden">
           <InstallRow />
-          <button onClick={() => supabase.auth.signOut()} className="w-full py-2 font-extrabold text-coral">გასვლა</button>
+          <button onClick={() => supabase.auth.signOut()} className="w-full py-2 font-semibold text-coral">გასვლა</button>
         </div>
       </div>
     </div>

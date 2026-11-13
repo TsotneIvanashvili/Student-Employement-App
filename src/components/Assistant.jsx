@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { chat } from '../lib/ollama.js'
 import { splitJobRefs } from '../lib/prompt.js'
+import { freeSlots } from '../lib/schedule.js'
 import JobCard from './JobCard.jsx'
 import { Icon, Segmented, Title, card, chip } from './ui.jsx'
 
@@ -9,8 +10,8 @@ const RECOMMEND = {
   en: 'Which job do you recommend for my schedule?',
 }
 
-export default function Assistant({ profile, jobs, free, matchCount }) {
-  const hasSchedule = free.size > 0
+export default function Assistant({ profile, jobs, busy, matchCount }) {
+  const free = freeSlots(busy)
   const [lang, setLang] = useState('ka')
   const [model, setModel] = useState('llama3.2')
   const [messages, setMessages] = useState([])
@@ -56,27 +57,27 @@ export default function Assistant({ profile, jobs, free, matchCount }) {
       <div className="min-h-[40vh] space-y-3 text-[16px]">
         {messages.length === 0 && (
           <div className={`${card} flex flex-col items-center px-6 py-8 text-center`}>
-            <span className="grid h-16 w-16 place-items-center rounded-3xl bg-gradient-to-br from-brand to-sky text-white shadow-[0_4px_0_var(--color-brand-dark)]"><Icon name="ai" className="h-9 w-9" /></span>
-            <p className="mt-4 text-[20px] font-black">{hasSchedule ? `${matchCount} ვაკანსია ერგება შენს დროს` : 'ჯერ თავისუფალი საათები მონიშნე'}</p>
+            <span className="grid h-14 w-14 place-items-center rounded-2xl bg-fill text-ink"><Icon name="ai" className="h-9 w-9" /></span>
+            <p className="mt-4 text-[20px] font-semibold">{matchCount} ვაკანსია ერგება შენს დროს</p>
             <p className="mt-1 max-w-md text-[15px] font-semibold text-muted">
-              {hasSchedule ? 'შეგირჩევ საუკეთესოს, ან მკითხე ნებისმიერი რამ ვაკანსიებზე.' : 'კალენდრის მიხედვით შეგირჩევ შენზე მორგებულ ვაკანსიებს.'}
+              შეგირჩევ საუკეთესოს, ან მკითხე ნებისმიერი რამ ვაკანსიებზე.
             </p>
             <div className="mt-5 flex flex-wrap justify-center gap-2">
               {[RECOMMEND[lang], lang === 'en' ? 'Which one pays the most?' : 'რომელი იხდის ყველაზე მეტს?', lang === 'en' ? 'Any 1–2 day gigs?' : 'არის 1–2 დღიანი სამუშაო?'].map((q) => (
-                <button key={q} disabled={!hasSchedule || loading} onClick={() => send(q)} className={`${chip} disabled:opacity-50`}>{q}</button>
+                <button key={q} disabled={loading} onClick={() => send(q)} className={`${chip} disabled:opacity-50`}>{q}</button>
               ))}
             </div>
           </div>
         )}
         {messages.map((m, i) =>
           m.role === 'user' ? (
-            <div key={i} className="flex justify-end"><p className="max-w-[80%] whitespace-pre-wrap rounded-3xl rounded-br-lg bg-brand px-4 py-3 font-semibold text-white">{m.content}</p></div>
+            <div key={i} className="flex justify-end"><p className="max-w-[80%] whitespace-pre-wrap rounded-2xl rounded-br-lg bg-brand px-4 py-3 font-semibold text-white">{m.content}</p></div>
           ) : (
-            <AssistantMessage key={i} content={m.content} jobs={jobs} free={free} />
+            <AssistantMessage key={i} content={m.content} jobs={jobs} busy={busy} />
           ),
         )}
         {error && (
-          <p className="rounded-3xl bg-coral-soft p-4 text-[15px] font-semibold text-coral">
+          <p className="rounded-2xl bg-coral-soft p-4 text-[15px] font-semibold text-coral">
             {import.meta.env.DEV ? (
               <>Ollama-სთან კავშირი ვერ დამყარდა. ტერმინალში გაუშვი <code>ollama serve</code> და <code>ollama pull {model}</code>.</>
             ) : (
@@ -88,7 +89,7 @@ export default function Assistant({ profile, jobs, free, matchCount }) {
 
       <form
         onSubmit={(e) => { e.preventDefault(); send(input) }}
-        className="sticky bottom-24 mt-5 flex items-center gap-2 rounded-full border-2 border-line bg-white py-1.5 pl-5 pr-1.5 shadow-[0_3px_0_var(--color-line)] lg:bottom-6"
+        className="sticky bottom-24 mt-5 flex items-center gap-2 rounded-full border border-line bg-white py-1.5 pl-5 pr-1.5 lg:bottom-6"
       >
         <input
           value={input}
@@ -105,13 +106,13 @@ export default function Assistant({ profile, jobs, free, matchCount }) {
 }
 
 // AI-ს ტექსტი + რეკომენდებული ვაკანსიების ბარათები (ბოლო ხაზიდან "JOBS: ...")
-function AssistantMessage({ content, jobs, free }) {
+function AssistantMessage({ content, jobs, busy }) {
   const { text, refs } = splitJobRefs(content)
   const cards = refs.map((r) => jobs.find((j) => j.id.startsWith(r))).filter(Boolean)
   return (
     <div className="mr-8 space-y-2">
-      <p className="whitespace-pre-wrap rounded-3xl rounded-bl-lg border-2 border-line bg-white px-4 py-3">{text || '…'}</p>
-      <div className="grid gap-2 sm:grid-cols-2">{cards.map((job) => <JobCard key={job.id} job={job} free={free} compact />)}</div>
+      <p className="whitespace-pre-wrap rounded-2xl rounded-bl-lg border border-line bg-white px-4 py-3">{text || '…'}</p>
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">{cards.map((job) => <JobCard key={job.id} job={job} busy={busy} compact />)}</div>
     </div>
   )
 }

@@ -1,6 +1,6 @@
 // მარტივი service worker: აპის გარსი ოფლაინაც იხსნება.
 // მონაცემები (Supabase) და AI (/api) ყოველთვის ქსელიდან მოდის და არ ინახება.
-const CACHE = 'shiftmate-v2'
+const CACHE = 'shiftmate-v3'
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['/', '/manifest.webmanifest', '/icons/icon-192.png'])))

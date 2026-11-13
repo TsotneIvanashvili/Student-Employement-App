@@ -1,26 +1,26 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Nunito", "Noto Sans Georgian", system-ui, sans-serif;
-  --color-ink: #1d1b2e;
-  --color-brand: #6c3cff;
-  --color-brand-dark: #4f22d6;
-  --color-brand-soft: #efe9ff;
-  --color-mint: #1fbf6a;
-  --color-mint-dark: #149553;
-  --color-mint-soft: #e0f7ea;
-  --color-sun: #ffc61a;
-  --color-amber: #a26500;
-  --color-amber-soft: #fff3c9;
-  --color-coral: #ff4d6d;
-  --color-coral-soft: #ffe5eb;
-  --color-sky: #1ca7ff;
-  --color-sky-soft: #e0f3ff;
-  --color-bg: #f6f5fb;
-  --color-fill: #eeedf5;
-  --color-line: #e6e4f0;
-  --color-muted: #6b6880;
-  --color-quiet: #9a97ad;
+  --font-sans: "Inter", "Noto Sans Georgian", system-ui, sans-serif;
+  --color-ink: #1a1a1a;
+  --color-brand: #1a1a1a;
+  --color-brand-dark: #000000;
+  --color-brand-soft: #f1f1f1;
+  --color-mint: #2c6e66;
+  --color-mint-dark: #235750;
+  --color-mint-soft: #dcebe9;
+  --color-sun: #efe3cd;
+  --color-amber: #8a5a14;
+  --color-amber-soft: #f3e8d4;
+  --color-coral: #d0453a;
+  --color-coral-soft: #fbe7e5;
+  --color-sky: #4a5bc4;
+  --color-sky-soft: #e9ebf8;
+  --color-bg: #f7f7f7;
+  --color-fill: #f0f0f0;
+  --color-line: #e7e7e7;
+  --color-muted: #6b6b6b;
+  --color-quiet: #9b9b9b;
 }
 
 body {

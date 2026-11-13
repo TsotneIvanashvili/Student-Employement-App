@@ -65,13 +65,13 @@ export default function Calendar({ value, setValue, presets = [], marks = {}, ba
   }
 
   return (
-    <section className="rounded-3xl border-2 border-line bg-white p-3 sm:p-4">
+    <section className="rounded-2xl border border-line bg-white p-3 sm:p-4">
       <div className="mb-3 flex items-center justify-between gap-3">
-        <p className="text-[15px] font-extrabold">
+        <p className="text-[15px] font-semibold">
           <span className={tone === 'mint' ? 'text-mint-dark' : 'text-brand'}>{value.size}</span> {unit}
         </p>
         {value.size > 0 && (
-          <button type="button" onClick={() => setValue(new Set())} className="text-[14px] font-bold text-muted hover:text-coral">გასუფთავება</button>
+          <button type="button" onClick={() => setValue(new Set())} className="text-[14px] font-medium text-muted hover:text-coral">გასუფთავება</button>
         )}
       </div>
 
@@ -107,7 +107,7 @@ export default function Calendar({ value, setValue, presets = [], marks = {}, ba
             key={d}
             onClick={() => toggleKeys(HOURS.map((h) => slotKey(day, h)))}
             title="მთელი დღის მონიშვნა"
-            className={`rounded-lg pb-1 pt-0.5 text-center text-[13px] font-extrabold hover:bg-fill ${day > 4 ? 'text-coral' : 'text-muted'}`}
+            className={`rounded-lg pb-1 pt-0.5 text-center text-[13px] font-semibold hover:bg-fill ${day > 4 ? 'text-coral' : 'text-muted'}`}
           >
             {d}
           </button>
@@ -118,7 +118,7 @@ export default function Calendar({ value, setValue, presets = [], marks = {}, ba
             key={`h${h}`}
             onClick={() => toggleKeys(DAYS.map((_, day) => slotKey(day, h)))}
             title="მთელი მწკრივის მონიშვნა"
-            className="rounded-lg pr-1 text-right text-[12px] font-bold text-quiet hover:bg-fill"
+            className="rounded-lg pr-1 text-right text-[12px] font-medium text-quiet hover:bg-fill"
           >
             {h}:00
           </button>,
@@ -142,7 +142,7 @@ export default function Calendar({ value, setValue, presets = [], marks = {}, ba
         ])}
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-[13px] font-bold text-muted">
+      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-[13px] font-medium text-muted">
         <span className="flex items-center gap-1.5"><i className={`h-3.5 w-3.5 rounded ${on}`} />{tone === 'mint' ? 'თავისუფალი' : 'ცვლა'}</span>
         {Object.keys(marks).length > 0 && (
           <>

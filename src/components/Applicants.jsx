@@ -29,9 +29,9 @@ export function ApplicantCard({ app, job, showJob = false, onChanged }) {
   return (
     <li className={`${card} p-4 sm:p-5`}>
       <button onClick={() => setOpen(!open)} className="flex w-full items-center gap-3 text-left">
-        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-sky-soft text-[18px] font-black text-sky">{p.full_name.slice(0, 1)}</span>
+        <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-sky-soft text-[18px] font-semibold text-sky">{p.full_name.slice(0, 1)}</span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[16px] font-extrabold">{p.full_name}</p>
+          <p className="truncate text-[16px] font-semibold">{p.full_name}</p>
           <p className="truncate text-[14px] font-semibold text-muted">
             {showJob ? job.title : `${p.university ?? ''}${p.year ? `, ${p.year} კურსი` : ''}`}
           </p>
@@ -43,7 +43,7 @@ export function ApplicantCard({ app, job, showJob = false, onChanged }) {
       {open && (
         <div className="mt-4 space-y-3">
           {showJob && (
-            <button onClick={() => openJob(job.id)} className="text-[14px] font-bold text-brand hover:underline">
+            <button onClick={() => openJob(job.id)} className="text-[14px] font-medium text-brand hover:underline">
               {p.university}{p.year ? `, ${p.year} კურსი` : ''} · ვაკანსიის ნახვა →
             </button>
           )}
@@ -51,13 +51,13 @@ export function ApplicantCard({ app, job, showJob = false, onChanged }) {
           <dl className="grid gap-2 sm:grid-cols-3">
             {[['გამოცდილება', p.cv_experience], ['უნარები', p.cv_skills], ['ენები', p.cv_languages]].filter(([, v]) => v).map(([k, v]) => (
               <div key={k} className="rounded-2xl bg-bg p-3">
-                <dt className="text-[12px] font-extrabold uppercase text-quiet">{k}</dt>
+                <dt className="text-[12px] font-semibold uppercase text-quiet">{k}</dt>
                 <dd className="whitespace-pre-wrap text-[15px] font-semibold">{v}</dd>
               </div>
             ))}
           </dl>
           {p.cv_path && (
-            <button onClick={openPdf} className="flex items-center gap-1.5 text-[15px] font-extrabold text-brand"><Icon name="doc" className="h-5 w-5" />სივის PDF</button>
+            <button onClick={openPdf} className="flex items-center gap-1.5 text-[15px] font-semibold text-brand"><Icon name="doc" className="h-5 w-5" />სივის PDF</button>
           )}
 
           {app.status === 'sent' && (
@@ -68,9 +68,9 @@ export function ApplicantCard({ app, job, showJob = false, onChanged }) {
           )}
           {pay && (
             <div className={`rounded-2xl p-3 ${pay.status === 'held' ? 'bg-amber-soft' : 'bg-mint-soft'}`}>
-              <div className="flex items-center justify-between text-[15px] font-bold">
+              <div className="flex items-center justify-between text-[15px] font-medium">
                 <span>{pay.status === 'held' ? '🔒 დაბლოკილია' : '✅ ჩარიცხულია სტუდენტზე'}</span>
-                <span className="font-black">{money(pay.status === 'held' ? pay.amount : pay.amount - pay.fee)}</span>
+                <span className="font-semibold">{money(pay.status === 'held' ? pay.amount : pay.amount - pay.fee)}</span>
               </div>
               {pay.status === 'held' && (
                 <button onClick={() => setReleasing(true)} className={`${btnDark} mt-3`}>სამუშაო შესრულდა · ჩარიცხვა</button>
@@ -110,7 +110,7 @@ function PaySheet({ job, app, onClose, onDone }) {
       <Sheet onClose={onDone}>
         <div className="flex flex-col items-center pb-2 pt-4 text-center">
           <span className="grid h-20 w-20 place-items-center rounded-full bg-mint text-white animate-pop"><Icon name="check" className="h-11 w-11" strokeWidth={3} /></span>
-          <h2 className="mt-4 text-[24px] font-black">გადახდილია!</h2>
+          <h2 className="mt-4 text-[24px] font-semibold">გადახდილია!</h2>
           <p className="mt-1 text-[15px] text-muted">{money(amount)} დაბლოკილია. {app.profiles.full_name} თანხას სამუშაოს დასრულების შემდეგ მიიღებს.</p>
           <button onClick={onDone} className={`${btn} mt-6`}>მშვენიერია</button>
         </div>
@@ -120,9 +120,9 @@ function PaySheet({ job, app, onClose, onDone }) {
 
   return (
     <Sheet onClose={state === 'paying' ? undefined : onClose}>
-      <h2 className="text-[24px] font-black">აყვანა და გადახდა</h2>
+      <h2 className="text-[24px] font-semibold">აყვანა და გადახდა</h2>
       <p className="text-[15px] font-semibold text-muted">{app.profiles.full_name} · {job.title}</p>
-      <div className={`${card} mt-4 divide-y-2 divide-line`}>
+      <div className={`${card} mt-4 divide-y divide-line`}>
         <Pair label={`${hours} სთ × ${Number(job.pay)} ₾`} value={money(amount)} strong />
         <Pair label="სტუდენტი მიიღებს (90%)" value={money(amount - fee)} />
         <Pair label="Shiftmate-ის საკომისიო (10%)" value={money(fee)} muted />
@@ -131,15 +131,15 @@ function PaySheet({ job, app, onClose, onDone }) {
         {job.kind === 'gig' ? 'მთლიანი სამუშაოს ღირებულება.' : '1 კვირის ცვლების ღირებულება.'} თანხა დაბლოკილი რჩება, სანამ სამუშაოს შესრულებას არ დაადასტურებ.
       </p>
       <div className={`${card} mt-4 flex items-center gap-3 p-3`}>
-        <span className="grid h-10 w-14 place-items-center rounded-lg bg-gradient-to-br from-brand to-sky text-[10px] font-black tracking-widest text-white">DEMO</span>
+        <span className="grid h-10 w-14 place-items-center rounded-lg bg-ink text-[10px] font-semibold tracking-widest text-white">DEMO</span>
         <div className="flex-1">
-          <p className="text-[15px] font-extrabold">სატესტო ბარათი •••• 4242</p>
+          <p className="text-[15px] font-semibold">სატესტო ბარათი •••• 4242</p>
           <p className="text-[12px] font-semibold text-muted">დემო რეჟიმი: ნამდვილი თანხა არ ჩამოიჭრება</p>
         </div>
       </div>
-      {error && <p className="mt-2 text-sm font-bold text-coral">{error}</p>}
+      {error && <p className="mt-2 text-sm font-medium text-coral">{error}</p>}
       <button disabled={state === 'paying'} onClick={pay} className={`${btnDark} mt-5 flex items-center justify-center gap-2`}>
-        {state === 'paying' ? <><span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />მუშავდება…</> : `გადახდა ${money(amount)}`}
+        {state === 'paying' ? <><span className="h-4 w-4 animate-spin rounded-full border border-white/30 border-t-white" />მუშავდება…</> : `გადახდა ${money(amount)}`}
       </button>
     </Sheet>
   )
@@ -157,13 +157,13 @@ function ReleaseSheet({ pay, onClose, onDone }) {
   }
   return (
     <Sheet onClose={onClose}>
-      <h2 className="text-[24px] font-black">სამუშაო შესრულდა?</h2>
+      <h2 className="text-[24px] font-semibold">სამუშაო შესრულდა?</h2>
       <p className="mt-1 text-[15px] text-muted">დადასტურების შემდეგ დაბლოკილი თანხა სტუდენტს ჩაერიცხება.</p>
-      <div className={`${card} mt-4 divide-y-2 divide-line`}>
+      <div className={`${card} mt-4 divide-y divide-line`}>
         <Pair label="სტუდენტს ჩაერიცხება" value={money(pay.amount - pay.fee)} strong />
         <Pair label="საკომისიო (10%)" value={money(pay.fee)} muted />
       </div>
-      {error && <p className="mt-2 text-sm font-bold text-coral">{error}</p>}
+      {error && <p className="mt-2 text-sm font-medium text-coral">{error}</p>}
       <div className="mt-5 grid grid-cols-2 gap-3">
         <button onClick={onClose} className={btn2}>გაუქმება</button>
         <button disabled={busy} onClick={release} className={btn}>დადასტურება</button>
@@ -173,8 +173,8 @@ function ReleaseSheet({ pay, onClose, onDone }) {
 }
 
 const Pair = ({ label, value, muted, strong }) => (
-  <div className={`flex items-center justify-between gap-3 px-4 py-3 text-[15px] font-bold ${muted ? 'text-muted' : ''}`}>
+  <div className={`flex items-center justify-between gap-3 px-4 py-3 text-[15px] font-medium ${muted ? 'text-muted' : ''}`}>
     <span>{label}</span>
-    <span className={strong ? 'text-[17px] font-black' : 'font-extrabold'}>{value}</span>
+    <span className={strong ? 'text-[17px] font-semibold' : 'font-semibold'}>{value}</span>
   </div>
 )

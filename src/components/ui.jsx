@@ -1,14 +1,14 @@
-// საერთო საშენი ბლოკები: ფერადი, „სქელი“ ღილაკები და ბარათები.
+// საერთო საშენი ბლოკები: მინიმალისტური ღილაკები და ბარათები.
 
-const press = 'transition active:translate-y-[3px] active:shadow-none disabled:opacity-50 disabled:active:translate-y-0'
-export const btn = `w-full rounded-2xl bg-brand py-3.5 text-[16px] font-extrabold text-white shadow-[0_4px_0_var(--color-brand-dark)] ${press}`
-export const btnMint = `w-full rounded-2xl bg-mint py-3.5 text-[16px] font-extrabold text-white shadow-[0_4px_0_var(--color-mint-dark)] ${press}`
-export const btn2 = `w-full rounded-2xl border-2 border-line bg-white py-3 text-[16px] font-extrabold text-ink shadow-[0_3px_0_var(--color-line)] ${press}`
-export const btnDark = `w-full rounded-2xl bg-ink py-3.5 text-[16px] font-extrabold text-white shadow-[0_4px_0_#000] ${press}`
-export const chip = `rounded-full border-2 border-line bg-white px-3.5 py-1.5 text-[14px] font-bold text-ink shadow-[0_2px_0_var(--color-line)] ${press}`
-export const card = 'rounded-3xl border-2 border-line bg-white'
-export const input = 'w-full rounded-2xl border-2 border-line bg-white px-4 py-3 text-[16px] outline-none transition placeholder:text-quiet focus:border-brand'
-export const label = 'mb-1.5 block text-[14px] font-bold text-muted'
+const press = 'transition active:scale-[0.99] disabled:opacity-50'
+export const btn = `w-full rounded-xl bg-ink py-3 text-[15px] font-semibold text-white hover:bg-black ${press}`
+export const btnMint = `w-full rounded-xl bg-mint py-3 text-[15px] font-semibold text-white hover:bg-mint-dark ${press}`
+export const btn2 = `w-full rounded-xl border border-line bg-white py-3 text-[15px] font-semibold text-ink hover:bg-fill ${press}`
+export const btnDark = btn
+export const chip = `rounded-lg border border-line bg-white px-3 py-1.5 text-[14px] font-medium text-ink hover:bg-fill ${press}`
+export const card = 'rounded-2xl border border-line bg-white'
+export const input = 'w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-[15px] outline-none transition placeholder:text-quiet focus:border-ink'
+export const label = 'mb-1.5 block text-[13px] font-medium text-muted'
 
 export const ICONS = {
   home: 'M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z',
@@ -47,8 +47,8 @@ export function Title({ eyebrow, children, action }) {
   return (
     <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div className="min-w-0">
-        {eyebrow && <p className="text-[15px] font-bold text-muted">{eyebrow}</p>}
-        <h1 className="text-[28px] font-black leading-tight tracking-tight lg:text-[34px]">{children}</h1>
+        {eyebrow && <p className="text-[14px] text-muted">{eyebrow}</p>}
+        <h1 className="text-[26px] font-semibold leading-tight tracking-tight lg:text-[30px]">{children}</h1>
       </div>
       {action}
     </div>
@@ -57,13 +57,13 @@ export function Title({ eyebrow, children, action }) {
 
 export function Segmented({ value, onChange, options }) {
   return (
-    <div className="inline-grid w-full rounded-2xl bg-fill p-1 sm:w-auto" style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}>
+    <div className="inline-grid w-full rounded-xl bg-fill p-1 sm:w-auto" style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}>
       {options.map(([v, text]) => (
         <button
           type="button"
           key={v}
           onClick={() => onChange(v)}
-          className={`whitespace-nowrap rounded-xl px-3 py-2 text-[14px] font-extrabold transition ${value === v ? 'bg-white text-brand shadow-[0_2px_0_var(--color-line)]' : 'text-muted hover:text-ink'}`}
+          className={`min-w-0 truncate whitespace-nowrap rounded-lg px-2 py-1.5 text-[14px] font-medium transition sm:px-3 ${value === v ? 'bg-white text-ink shadow-sm' : 'text-muted hover:text-ink'}`}
         >
           {text}
         </button>
@@ -75,8 +75,8 @@ export function Segmented({ value, onChange, options }) {
 // ტელეფონზე ქვემოდან ამოდის, კომპიუტერზე ეკრანის შუაში ჩნდება
 export function Sheet({ onClose, children }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/50 animate-fade sm:items-center sm:p-6" onClick={onClose}>
-      <div className="max-h-[92dvh] w-full overflow-y-auto rounded-t-[32px] bg-bg px-5 pb-[max(env(safe-area-inset-bottom),1.5rem)] pt-3 animate-sheet sm:max-w-md sm:rounded-[32px] sm:pt-5" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 animate-fade sm:items-center sm:p-6" onClick={onClose}>
+      <div className="max-h-[92dvh] w-full overflow-y-auto rounded-t-3xl bg-white px-5 pb-[max(env(safe-area-inset-bottom),1.5rem)] pt-3 animate-sheet sm:max-w-md sm:rounded-2xl sm:pt-5" onClick={(e) => e.stopPropagation()}>
         <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-line sm:hidden" />
         {children}
       </div>
@@ -98,17 +98,17 @@ export const Badge = ({ tone = 'gray', children }) => {
     green: 'bg-mint-soft text-mint-dark',
     amber: 'bg-amber-soft text-amber',
     red: 'bg-coral-soft text-coral',
-    violet: 'bg-brand-soft text-brand',
+    violet: 'bg-[#ebe6f7] text-[#4b3a8a]',
     sky: 'bg-sky-soft text-sky',
   }
-  return <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-[12px] font-extrabold ${tones[tone]}`}>{children}</span>
+  return <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-md px-2 py-0.5 text-[12px] font-medium ${tones[tone]}`}>{children}</span>
 }
 
 export function Empty({ emoji, title, text, action }) {
   return (
     <div className={`${card} flex flex-col items-center px-6 py-8 text-center`}>
-      <p className="text-[40px] leading-none">{emoji}</p>
-      <p className="mt-3 text-[18px] font-extrabold">{title}</p>
+      <p className="text-[32px] leading-none">{emoji}</p>
+      <p className="mt-3 text-[17px] font-semibold">{title}</p>
       {text && <p className="mt-1 max-w-sm text-[15px] text-muted">{text}</p>}
       {action && <div className="mt-4">{action}</div>}
     </div>
