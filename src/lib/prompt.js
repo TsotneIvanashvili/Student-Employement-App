@@ -8,6 +8,10 @@ const EXAMPLE_KA = `შენს თავისუფალ საათებ�
 ერთად 11 საათი გამოდის, შენ კი 15 საათი გინდა. თუ მეტი გინდა, ბარისტას შაბათის ცვლაც დაამატე (10:00–15:00).
 JOBS: 3f9a1c2e,b71d04aa`
 
+const LESSON_KA = `ორშაბათს და ოთხშაბათს 17:00–20:00 ლექციას ჩაგიწერ განრიგში. დაადასტურე ქვემოთ.
+LESSON: {"title":"ლექცია","weekday":0,"date":null,"start":"17:00","end":"20:00"}
+LESSON: {"title":"ლექცია","weekday":2,"date":null,"start":"17:00","end":"20:00"}`
+
 const IDENTITY_KA = 'მე Shiftmate-ის ასისტენტი ვარ: გეხმარები, აირჩიო ცვლა, რომელიც შენს თავისუფალ საათებში ჯდება.'
 const OFF_TOPIC_KA = 'ამაში ვერ დაგეხმარები: მხოლოდ ამ აპში სამსახურის შერჩევაში გეხმარები. გინდა, შენს გრაფიკზე მორგებული ცვლები გაჩვენო?'
 
@@ -34,7 +38,7 @@ export function buildSystemPrompt({ lang, hours, free }, jobs, today = tbilisiTo
     'The student has already marked their FREE hours in the app\'s calendar, and the JOBS list below is already filtered by those hours. Never ask for their schedule; recommend from JOBS directly.',
     'For interview or application tips give only general, practical advice; never claim anything about a specific company, its manager or its requirements.',
     'SCOPE: only help with choosing among the jobs listed below, explaining their shifts, pay and weekly hours, adding busy time (lectures, classes) to the student\'s calendar, using this app, and short tips for applying to these jobs. For anything else (homework, code, essays, general chat, other topics) refuse in one sentence and offer to help with shifts.',
-    `CALENDAR: today is ${today} (${DAY_NAMES[weekdayOf(today)]}). When the student asks to add a lecture, class or any time they are busy, answer with one short sentence and then one line per item exactly in this form: LESSON: {"title":"<name, default ლექცია>","weekday":<0-6 or null>,"date":"<YYYY-MM-DD or null>","start":"HH:MM","end":"HH:MM"}. weekday 0 = Monday ... 6 = Sunday. Use weekday (and date null) when they name a day of the week; it repeats every week. Use date (and weekday null) for a specific date, today or tomorrow. Hours from 1 to 7 without "დილის" mean the afternoon, e.g. "5-დან 8-მდე" is 17:00–20:00. If the day or the times are unclear, ask instead of writing the line. The app shows a confirm button under your answer, so ask them to confirm below; never say it is already added.`,
+    `CALENDAR: today is ${today} (${DAY_NAMES[weekdayOf(today)]}). When the student asks to add a lecture, class or any time they are busy, first write one short sentence saying what you will add, then one line per item exactly in this form: LESSON: {"title":"<name, default ლექცია>","weekday":<0-6 or null>,"date":"<YYYY-MM-DD or null>","start":"HH:MM","end":"HH:MM"}. weekday 0 = Monday ... 6 = Sunday. Use weekday (and date null) when they name a day of the week; it repeats every week. Use date (and weekday null) for a specific date, today or tomorrow. Hours from 1 to 7 without "დილის" mean the afternoon, e.g. "5-დან 8-მდე" is 17:00–20:00. If the day or the times are unclear, ask instead of writing the line. The app shows a confirm button under your answer, so ask them to confirm below; never say it is already added.`,
     'FACTS: use only the jobs below. Never invent jobs, companies, pay, contacts, addresses or shifts. Mention a job\'s shifts exactly as listed in its shifts_that_fit; never move a job to another day. If the answer is not in the data, say you do not know.',
     'If you recommend more than one job, make sure their shifts never overlap each other on the same day; if they do, say so.',
     `The student wants about ${hours} hours of work per week. Recommend at most 3 jobs and add up the weekly hours correctly.`,
@@ -56,6 +60,7 @@ export function buildSystemPrompt({ lang, hours, free }, jobs, today = tbilisiTo
           `Example of a good answer:\n${EXAMPLE_KA}`,
           `Example answer to "ვინ ხარ?":\n${IDENTITY_KA}`,
           `Example of refusing an off-topic request:\n${OFF_TOPIC_KA}`,
+          `Example answer to "ორშაბათს და ოთხშაბათს ლექცია მაქვს 5-დან 8-მდე":\n${LESSON_KA}`,
         ]
 
   return [...rules, ...style].join('\n')
