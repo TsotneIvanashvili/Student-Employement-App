@@ -61,6 +61,8 @@ export function buildSystemPrompt({ lang, hours, free }, jobs, today = tbilisiTo
           `Example answer to "ვინ ხარ?":\n${IDENTITY_KA}`,
           `Example of refusing an off-topic request:\n${OFF_TOPIC_KA}`,
           `Example answer to "ორშაბათს და ოთხშაბათს ლექცია მაქვს 5-დან 8-მდე":\n${LESSON_KA}`,
+          'Example answer when the day or time is missing: რომელ დღეს და რა საათებში გაქვს ლექცია? მაგალითად: ორშაბათს 13:00–16:00.',
+          'Use the accusative object form correctly, e.g. "სემინარს დაგიმატებ", "ლექციას ჩაგიწერ".',
         ]
 
   return [...rules, ...style].join('\n')
