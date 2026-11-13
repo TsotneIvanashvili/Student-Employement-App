@@ -11,9 +11,9 @@ const SHORT = ['ორშ', 'სამ', 'ოთხ', 'ხუთ', 'პარ', 
 
 // ფერები მოვლენის ტიპის მიხედვით: ლექცია, სამუშაო, თავისუფალი ცვლა (დამსაქმებლისთვის)
 export const TONES = {
-  lesson: 'bg-[#d8e8e6] border-[#2c6e66] text-[#123b36]',
-  work: 'bg-[#efe3cd] border-[#a0701f] text-[#4a3208]',
-  open: 'bg-[#ebe6f7] border-[#7a5cc4] text-[#33255c]',
+  lesson: 'bg-[#e6edfd] border-[#3d6ee0] text-[#173a85]',
+  work: 'bg-[#ddf3e6] border-[#1f9d5a] text-[#0e4a2a]',
+  open: 'bg-[#fdf0da] border-[#d98a14] text-[#5f3a05]',
 }
 const tone = (e) => TONES[e.tone ?? e.kind] ?? TONES.lesson
 
