@@ -32,6 +32,12 @@ export const ICONS = {
   pin: 'M12 21s-6-5.3-6-11a6 6 0 0 1 12 0c0 5.7-6 11-6 11zm0-9a2 2 0 1 0 0-4 2 2 0 0 0 0 4z',
   clock: 'M12 7v5l3 2m6-2a9 9 0 1 1-18 0 9 9 0 0 1 18 0z',
   x: 'M6 6l12 12M18 6L6 18',
+  search: 'M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm9 16l-4.35-4.35',
+  users: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm13 10v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75',
+  lock: 'M6 11h12a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1zm2 0V7a4 4 0 1 1 8 0v4',
+  repeat: 'M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4m14-1v2a3 3 0 0 1-3 3H3',
+  sun: 'M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4l1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4',
+  moon: 'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z',
   help: 'M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14m0 3h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z',
 }
 
@@ -63,7 +69,7 @@ export function Segmented({ value, onChange, options }) {
           type="button"
           key={v}
           onClick={() => onChange(v)}
-          className={`min-w-0 truncate whitespace-nowrap rounded-lg px-2 py-1.5 text-[14px] font-medium transition sm:px-3 ${value === v ? 'bg-white text-ink shadow-sm' : 'text-muted hover:text-ink'}`}
+          className={`flex min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1.5 text-[14px] font-medium transition sm:px-3 ${value === v ? 'bg-white text-ink shadow-sm' : 'text-muted hover:text-ink'}`}
         >
           {text}
         </button>
@@ -104,10 +110,10 @@ export const Badge = ({ tone = 'gray', children }) => {
   return <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-md px-2 py-0.5 text-[12px] font-medium ${tones[tone]}`}>{children}</span>
 }
 
-export function Empty({ emoji, title, text, action }) {
+export function Empty({ icon, title, text, action }) {
   return (
     <div className={`${card} flex flex-col items-center px-6 py-8 text-center`}>
-      <p className="text-[32px] leading-none">{emoji}</p>
+      <span className="grid h-12 w-12 place-items-center rounded-full bg-fill text-muted"><Icon name={icon} className="h-6 w-6" /></span>
       <p className="mt-3 text-[17px] font-semibold">{title}</p>
       {text && <p className="mt-1 max-w-sm text-[15px] text-muted">{text}</p>}
       {action && <div className="mt-4">{action}</div>}

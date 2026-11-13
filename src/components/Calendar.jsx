@@ -6,7 +6,7 @@ const HOURS = Array.from({ length: LAST_HOUR - FIRST_HOUR }, (_, i) => FIRST_HOU
 const range = (a, b) => Array.from({ length: b - a + 1 }, (_, i) => a + i)
 
 // შაბლონი: [სათაური, დღეები, საათები (პირველი, ბოლო ჩათვლით)]
-export const preset = (title, days, from, to) => ({ title, keys: days.flatMap((d) => range(from, to).map((h) => slotKey(d, h))) })
+export const preset = (title, days, from, to, icon = 'clock') => ({ title, icon, keys: days.flatMap((d) => range(from, to).map((h) => slotKey(d, h))) })
 export const WEEKDAYS = [0, 1, 2, 3, 4]
 export const WEEKEND = [5, 6]
 export const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6]
@@ -81,7 +81,7 @@ export default function Calendar({ value, setValue, presets = [], marks = {}, ba
             const active = p.keys.every((k) => value.has(k))
             return (
               <button type="button" key={p.title} onClick={() => toggleKeys(p.keys)} className={`${chip} ${active ? '!border-mint !bg-mint-soft !text-mint-dark' : ''}`}>
-                {active && '✓ '}{p.title}
+                <span className="flex items-center gap-1.5"><Icon name={active ? 'check' : p.icon} className="h-4 w-4" />{p.title}</span>
               </button>
             )
           })}

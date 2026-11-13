@@ -40,18 +40,18 @@ export function Inbox({ profile, onNew }) {
     <section>
       <Title eyebrow={profile.company_name}>განაცხადები</Title>
       <div className="mb-5 grid grid-cols-3 gap-2 sm:gap-3">
-        <Stat emoji="📬" label="ახალი" value={count('sent')} tone="text-brand" />
-        <Stat emoji="🤝" label="აყვანილი" value={count('accepted')} tone="text-mint-dark" />
-        <Stat emoji="🔒" label="დაბლოკილი" value={money(held)} tone="text-amber" />
+        <Stat icon="inbox" label="ახალი" value={count('sent')} tone="text-brand" />
+        <Stat icon="users" label="აყვანილი" value={count('accepted')} tone="text-mint-dark" />
+        <Stat icon="lock" label="დაბლოკილი" value={money(held)} tone="text-amber" />
       </div>
       <div className="mb-4">
         <Segmented value={filter} onChange={setFilter} options={[['sent', `ახალი (${count('sent')})`], ['accepted', 'აყვანილი'], ['all', 'ყველა']]} />
       </div>
       {shown.length === 0 && (
         rows.length === 0 ? (
-          <Empty emoji="📭" title="ჯერ განაცხადი არ შემოსულა" text="დაამატე ვაკანსია და ის ხალხი, ვისაც შენი ცვლის დროს სცალია, სივს გამოგიგზავნის." action={<button onClick={onNew} className={`${btn} px-6`}>ვაკანსიის დამატება</button>} />
+          <Empty icon="inbox" title="ჯერ განაცხადი არ შემოსულა" text="დაამატე ვაკანსია და ის ხალხი, ვისაც შენი ცვლის დროს სცალია, სივს გამოგიგზავნის." action={<button onClick={onNew} className={`${btn} px-6`}>ვაკანსიის დამატება</button>} />
         ) : (
-          <Empty emoji="✨" title="აქ ცარიელია" text="ამ ფილტრით განაცხადი არ არის." />
+          <Empty icon="search" title="აქ ცარიელია" text="ამ ფილტრით განაცხადი არ არის." />
         )
       )}
       <ul className="space-y-3">
@@ -90,9 +90,9 @@ export function EmployerSchedule({ profile }) {
   )
 }
 
-const Stat = ({ emoji, label: text, value, tone }) => (
+const Stat = ({ icon, label: text, value, tone }) => (
   <div className={`${card} min-w-0 px-3 py-3 sm:px-4`}>
-    <p className="truncate text-[12px] font-medium text-muted sm:text-[13px]">{emoji} {text}</p>
+    <p className="flex items-center gap-1.5 truncate text-[12px] font-medium text-muted sm:text-[13px]"><Icon name={icon} className="h-4 w-4 shrink-0" />{text}</p>
     <p className={`truncate text-[20px] font-semibold leading-tight sm:text-[22px] ${tone}`}>{value}</p>
   </div>
 )
@@ -114,7 +114,7 @@ export function MyJobs({ profile, onNew }) {
       <Title eyebrow={profile.company_name} action={<button onClick={onNew} className={`${btn} flex !w-auto items-center gap-1.5 px-4`}><Icon name="plus" className="h-5 w-5" strokeWidth={2.5} />ახალი</button>}>
         ვაკანსიები
       </Title>
-      {jobs?.length === 0 && <Empty emoji="📝" title="ჯერ ვაკანსია არ გაქვს" text="პირველი ვაკანსიის დამატებას ერთი წუთი სჭირდება." action={<button onClick={onNew} className={`${btn} px-6`}>ვაკანსიის დამატება</button>} />}
+      {jobs?.length === 0 && <Empty icon="jobs" title="ჯერ ვაკანსია არ გაქვს" text="პირველი ვაკანსიის დამატებას ერთი წუთი სჭირდება." action={<button onClick={onNew} className={`${btn} px-6`}>ვაკანსიის დამატება</button>} />}
       <ul data-tour="myjobs" className="grid grid-cols-1 gap-3 md:grid-cols-2">
         {jobs?.map((job) => {
           const fresh = job.applications.filter((a) => a.status === 'sent').length
@@ -129,7 +129,7 @@ export function MyJobs({ profile, onNew }) {
                   </div>
                   <p className="truncate text-[13px] font-semibold text-muted">{job.shifts.map((s) => formatShift(s)).join(' · ')}</p>
                   <div className="mt-2 flex flex-wrap gap-1.5">
-                    <Badge tone={job.kind === 'gig' ? 'amber' : 'sky'}>{job.kind === 'gig' ? '⚡ 1–2 დღიანი' : '🔁 მუდმივი'}</Badge>
+                    <Badge tone={job.kind === 'gig' ? 'amber' : 'sky'}><Icon name={job.kind === 'gig' ? 'bolt' : 'repeat'} className="h-3.5 w-3.5" />{job.kind === 'gig' ? '1–2 დღიანი' : 'მუდმივი'}</Badge>
                     <Badge>{Number(job.pay)} ₾/სთ</Badge>
                     {!job.is_open && <Badge tone="red">დახურული</Badge>}
                   </div>
@@ -144,9 +144,9 @@ export function MyJobs({ profile, onNew }) {
 }
 
 const EMPLOYER_PRESETS = [
-  preset('🌆 სამუშაო დღეებში 18–22', WEEKDAYS, 18, 21),
-  preset('☀️ სამუშაო დღეებში 9–13', WEEKDAYS, 9, 12),
-  preset('🎉 შაბათ-კვირა 10–18', WEEKEND, 10, 17),
+  preset('სამუშაო დღეებში 18–22', WEEKDAYS, 18, 21, 'moon'),
+  preset('სამუშაო დღეებში 9–13', WEEKDAYS, 9, 12, 'sun'),
+  preset('შაბათ-კვირა 10–18', WEEKEND, 10, 17, 'calendar'),
 ]
 
 // მონიშნული საათები → ცვლები: ყოველ დღეში მიმდევრობითი საათები ერთ ცვლად ერთიანდება
@@ -209,9 +209,9 @@ export function NewJob({ profile, onCreated }) {
         <div className="space-y-5">
           <Step n={1} title="რა ტიპის სამუშაოა?">
             <div className="grid grid-cols-2 gap-3">
-              {[['recurring', '🔁', 'მუდმივი ცვლები', 'ყოველ კვირა, იგივე საათებში'], ['gig', '⚡', '1–2 დღიანი', 'ერთჯერადი: ღონისძიება, გადაზიდვა']].map(([k, emoji, title, text]) => (
+              {[['recurring', 'repeat', 'მუდმივი ცვლები', 'ყოველ კვირა, იგივე საათებში'], ['gig', 'bolt', '1–2 დღიანი', 'ერთჯერადი: ღონისძიება, გადაზიდვა']].map(([k, emoji, title, text]) => (
                 <button type="button" key={k} onClick={() => setKind(k)} className={`rounded-2xl border p-4 text-left transition ${kind === k ? 'border-brand bg-brand-soft' : 'border-line bg-white'}`}>
-                  <span className="text-[26px]">{emoji}</span>
+                  <span className="grid h-9 w-9 place-items-center rounded-lg bg-white text-ink"><Icon name={emoji} className="h-5 w-5" /></span>
                   <span className="mt-1 block text-[16px] font-semibold">{title}</span>
                   <span className="block text-[13px] font-semibold text-muted">{text}</span>
                 </button>
@@ -295,7 +295,7 @@ const Field = ({ label: text, children, className = '' }) => (
 
 export function EmployerProfile({ profile, onSaved }) {
   const [form, setForm] = useState({ full_name: profile.full_name ?? '', company_name: profile.company_name ?? '' })
-  const [note, setNote] = useState('')
+  const [note, setNote] = useState(null)
   const [pays, setPays] = useState([])
 
   useEffect(() => {
@@ -306,7 +306,7 @@ export function EmployerProfile({ profile, onSaved }) {
   async function save(e) {
     e.preventDefault()
     const { error } = await supabase.from('profiles').update(form).eq('id', profile.id)
-    setNote(error ? error.message : 'შენახულია ✓')
+    setNote(error ? { text: error.message } : { ok: true, text: 'შენახულია' })
     if (!error) onSaved(form)
   }
 
@@ -316,8 +316,8 @@ export function EmployerProfile({ profile, onSaved }) {
       <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-2">
         <div className="space-y-5">
           <div className="grid grid-cols-2 gap-3">
-            <Stat emoji="🔒" label="დაბლოკილი" value={money(sum('held'))} tone="text-amber" />
-            <Stat emoji="✅" label="ჩარიცხული" value={money(sum('released'))} tone="text-mint-dark" />
+            <Stat icon="lock" label="დაბლოკილი" value={money(sum('held'))} tone="text-amber" />
+            <Stat icon="check" label="ჩარიცხული" value={money(sum('released'))} tone="text-mint-dark" />
           </div>
           <p className="px-1 text-[14px] font-semibold text-muted">დაბლოკილი თანხა თანამშრომელს მაშინ ერიცხება, როცა სამუშაოს შესრულებას დაადასტურებ.</p>
         </div>
@@ -325,7 +325,7 @@ export function EmployerProfile({ profile, onSaved }) {
           <h2 className="text-[18px] font-semibold">კომპანია</h2>
           <Field label="კომპანიის სახელი"><input className={input} value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} /></Field>
           <Field label="საკონტაქტო პირი"><input className={input} value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} /></Field>
-          {note && <p className="font-medium text-mint-dark">{note}</p>}
+          {note && <p className={`flex items-center gap-1.5 font-medium ${note.ok ? 'text-mint-dark' : 'text-coral'}`}>{note.ok && <Icon name="check" className="h-4 w-4" strokeWidth={2.5} />}{note.text}</p>}
           <button className={btn}>შენახვა</button>
         </form>
         <div className="space-y-3">

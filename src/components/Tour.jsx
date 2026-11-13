@@ -1,7 +1,8 @@
 import { useLayoutEffect, useState } from 'react'
+import { Icon } from './ui.jsx'
 
 export const STUDENT_STEPS = [
-  { target: null, emoji: '👋', title: 'მოგესალმები Shiftmate-ში!', text: 'ერთ წუთში გაჩვენებ, როგორ იპოვო დამატებითი სამუშაო, რომელიც შენს სხვა საქმეებს არ ეჯახება.' },
+  { target: null, icon: 'calendar', title: 'მოგესალმები Shiftmate-ში!', text: 'ერთ წუთში გაჩვენებ, როგორ იპოვო დამატებითი სამუშაო, რომელიც შენს სხვა საქმეებს არ ეჯახება.' },
   { target: 'calendar', title: 'ჩაწერე, როდის ხარ დაკავებული', text: 'დააჭირე დღეს ან საათს და ჩაწერე სწავლა, ძირითადი სამსახური ან სხვა საქმე, მაგალითად 10:00–18:00. ყოველ კვირა გამეორდება, კონკრეტულ დღეს კი შეგიძლია გამოტოვო. დანარჩენი დრო თავისუფალია.' },
   { target: 'matches', title: 'შესაფერისი ვაკანსიები', text: 'აქ ჩანს, რამდენი ვაკანსია ერგება შენს თავისუფალ დროს.' },
   { target: 'tab-jobs', title: 'ვაკანსიები', text: 'ვაკანსიაზე დაჭერით სივს გაგზავნი. თუ აგიყვანენ, ცვლები თავისით გამოჩნდება შენს განრიგში.' },
@@ -11,11 +12,11 @@ export const STUDENT_STEPS = [
 ]
 
 export const EMPLOYER_STEPS = [
-  { target: null, emoji: '🏢', title: 'მოგესალმებით Shiftmate-ში!', text: 'ერთ წუთში გაჩვენებთ, როგორ იპოვოთ ხალხი, ვისაც თქვენი ცვლის დროს ნამდვილად სცალია.' },
+  { target: null, icon: 'users', title: 'მოგესალმებით Shiftmate-ში!', text: 'ერთ წუთში გაჩვენებთ, როგორ იპოვოთ ხალხი, ვისაც თქვენი ცვლის დროს ნამდვილად სცალია.' },
   { target: 'tab-plus', title: 'დაამატეთ ვაკანსია', text: 'ცვლის საათებს კალენდარზე მონიშნავთ. მაძიებლები ვაკანსიას მხოლოდ მაშინ ნახავენ, თუ მათ დროს ერგება.' },
   { target: 'tab-inbox', title: 'ყველა განაცხადი ერთ ადგილას', text: 'ახალი სივები ყველა ვაკანსიიდან აქ გროვდება. აქედანვე აიყვანთ ან უარს ეტყვით.' },
   { target: 'tab-calendar', title: 'ცვლების კალენდარი', text: 'დღე, კვირა ან თვე: რომელ დღეს რომელი ცვლაა და ვინ მუშაობს.' },
-  { target: null, emoji: '🔒', title: 'დაცული გადახდა', text: '„აყვანა“-ზე დაჭერით გადაიხდით და თანხა სამუშაოს დასრულებამდე იბლოკება. დადასტურების შემდეგ თანამშრომელი იღებს 90%-ს, Shiftmate 10%-ს.' },
+  { target: null, icon: 'lock', title: 'დაცული გადახდა', text: '„აყვანა“-ზე დაჭერით გადაიხდით და თანხა სამუშაოს დასრულებამდე იბლოკება. დადასტურების შემდეგ თანამშრომელი იღებს 90%-ს, Shiftmate 10%-ს.' },
   { target: 'help', title: 'ყოველთვის აქ არის', text: 'გზამკვლევის თავიდან ნახვა ამ ღილაკით შეგიძლიათ.' },
 ]
 
@@ -72,7 +73,7 @@ export default function Tour({ steps, onClose }) {
         <div className="absolute inset-0 bg-ink/60" />
       )}
       <div className="absolute rounded-2xl border border-line bg-white p-5 transition-all duration-300" style={{ top, left, width: cardW }}>
-        {current.emoji && <p className="mb-1 text-[34px] leading-none">{current.emoji}</p>}
+        {current.icon && <span className="mb-2 grid h-11 w-11 place-items-center rounded-full bg-fill"><Icon name={current.icon} className="h-6 w-6" /></span>}
         <h3 className="text-[20px] font-semibold">{current.title}</h3>
         <p className="mt-1.5 text-[15px] leading-relaxed text-muted">{current.text}</p>
         <div className="mt-4 flex items-center justify-between">

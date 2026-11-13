@@ -15,7 +15,7 @@ export default function InstallRow() {
       </button>
       {help && (
         <Sheet onClose={() => setHelp(false)}>
-          <h2 className="text-[22px] font-semibold">📲 დააყენე ტელეფონზე</h2>
+          <h2 className="flex items-center gap-2 text-[22px] font-semibold"><Icon name="phone" className="h-6 w-6" />დააყენე ტელეფონზე</h2>
           <p className="mt-1 text-[15px] text-muted">Shiftmate მთავარ ეკრანზე გამოჩნდება და სრულ ეკრანზე გაიხსნება, ჩვეულებრივი აპივით.</p>
           <ol className="mt-4 space-y-3 text-[16px] font-semibold">
             <Step n={1}>iPhone: Safari-ში დააჭირე <b>Share</b> <Icon name="share" className="inline h-5 w-5 align-[-4px] text-sky" /></Step>

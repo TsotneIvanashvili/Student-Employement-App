@@ -14,7 +14,7 @@ export default function StudentProfile({ profile, onSaved }) {
     cv_skills: profile.cv_skills ?? '',
     cv_languages: profile.cv_languages ?? '',
   })
-  const [note, setNote] = useState('')
+  const [note, setNote] = useState(null)
   const [applications, setApplications] = useState([])
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value })
 
@@ -37,21 +37,21 @@ export default function StudentProfile({ profile, onSaved }) {
     e.preventDefault()
     const changes = { ...form }
     const { error } = await supabase.from('profiles').update(changes).eq('id', profile.id)
-    setNote(error ? error.message : 'შენახულია ✓')
+    setNote(error ? { text: error.message } : { ok: true, text: 'შენახულია' })
     if (!error) onSaved(changes)
   }
 
   async function upload(e) {
     const file = e.target.files?.[0]
     if (!file) return
-    if (file.type !== 'application/pdf') return setNote('მხოლოდ PDF ფაილი.')
-    if (file.size > 5 * 1024 * 1024) return setNote('ფაილი 5 MB-ზე მეტია.')
+    if (file.type !== 'application/pdf') return setNote({ text: 'მხოლოდ PDF ფაილი.' })
+    if (file.size > 5 * 1024 * 1024) return setNote({ text: 'ფაილი 5 MB-ზე მეტია.' })
     const path = `${profile.id}/cv.pdf`
     const { error } = await supabase.storage.from('cvs').upload(path, file, { upsert: true, contentType: 'application/pdf' })
-    if (error) return setNote(error.message)
+    if (error) return setNote({ text: error.message })
     await supabase.from('profiles').update({ cv_path: path }).eq('id', profile.id)
     onSaved({ cv_path: path })
-    setNote('PDF ატვირთულია ✓')
+    setNote({ ok: true, text: 'PDF ატვირთულია' })
   }
 
   return (
@@ -95,7 +95,7 @@ export default function StudentProfile({ profile, onSaved }) {
         <form onSubmit={save} className={`${card} space-y-4 p-5`} data-tour="cv">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-[18px] font-semibold">სივი</h2>
-            <Badge tone={cvDone ? 'green' : 'amber'}>{cvDone ? '✓ შევსებულია' : 'შესავსებია'}</Badge>
+            <Badge tone={cvDone ? 'green' : 'amber'}>{cvDone ? <><Icon name="check" className="h-3.5 w-3.5" strokeWidth={2.5} />შევსებულია</> : 'შესავსებია'}</Badge>
           </div>
           <Field label="სახელი და გვარი"><input className={input} value={form.full_name} onChange={set('full_name')} /></Field>
           <Field label="გამოცდილება">
@@ -110,7 +110,7 @@ export default function StudentProfile({ profile, onSaved }) {
             <span className="font-semibold text-brand">{profile.cv_path ? 'შეცვლა' : 'ატვირთვა'}</span>
             <input type="file" accept="application/pdf" className="hidden" onChange={upload} />
           </label>
-          {note && <p className="font-medium text-mint-dark">{note}</p>}
+          {note && <p className={`flex items-center gap-1.5 font-medium ${note.ok ? 'text-mint-dark' : 'text-coral'}`}>{note.ok && <Icon name="check" className="h-4 w-4" strokeWidth={2.5} />}{note.text}</p>}
           <button className={btn}>შენახვა</button>
         </form>
 

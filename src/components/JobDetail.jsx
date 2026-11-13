@@ -42,7 +42,7 @@ export default function JobDetail({ id, profile, busy, onBack, onGoProfile }) {
               <span className="flex items-center gap-1"><Icon name="pin" className="h-4 w-4" />{job.district}</span>
             </p>
             <div className="mt-3 flex flex-wrap gap-1.5">
-              <Badge tone={job.kind === 'gig' ? 'amber' : 'sky'}>{job.kind === 'gig' ? '⚡ 1–2 დღიანი' : '🔁 მუდმივი ცვლები'}</Badge>
+              <Badge tone={job.kind === 'gig' ? 'amber' : 'sky'}><Icon name={job.kind === 'gig' ? 'bolt' : 'repeat'} className="h-3.5 w-3.5" />{job.kind === 'gig' ? '1–2 დღიანი' : 'მუდმივი ცვლები'}</Badge>
               {!job.is_open && <Badge tone="red">დახურულია</Badge>}
               {m && m.shifts.length > 0 && (
                 <Badge tone={m.fitting.length ? 'green' : 'red'}>{m.fitting.length}/{m.shifts.length} ცვლა ერგება შენს დროს</Badge>
@@ -162,9 +162,9 @@ function Apply({ job, profile, onGoProfile }) {
         <p className="text-[13px] font-medium text-muted">შენი განაცხადი</p>
         <div className="mt-1.5"><Badge tone={STATUS_TONE[application.status]}>{application.status === 'sent' ? 'გაგზავნილია' : STATUS[application.status]}</Badge></div>
         {pay && (pay.status === 'released' ? (
-          <p className="mt-3 text-[15px] font-medium">🎉 ჩაგერიცხა <span className="text-mint-dark">{money(pay.amount - pay.fee)}</span></p>
+          <p className="mt-3 flex items-center justify-center gap-1.5 text-[15px] font-medium"><Icon name="check" className="h-5 w-5 text-mint" />ჩაგერიცხა <span className="text-mint-dark">{money(pay.amount - pay.fee)}</span></p>
         ) : (
-          <p className="mt-3 text-[15px] font-semibold">🔒 {money(pay.amount)} დაბლოკილია სამუშაოს დასრულებამდე. შენ მიიღებ {money(pay.amount - pay.fee)} (−10%).</p>
+          <p className="mt-3 text-[15px] font-semibold"><Icon name="lock" className="mr-1 inline h-4 w-4 align-[-2px]" />{money(pay.amount)} დაბლოკილია სამუშაოს დასრულებამდე. შენ მიიღებ {money(pay.amount - pay.fee)} (−10%).</p>
         ))}
       </div>
     )
@@ -178,7 +178,7 @@ function Apply({ job, profile, onGoProfile }) {
         <Sheet onClose={() => setSheet(false)}>
           {!hasCv ? (
             <div className="text-center">
-              <p className="text-[40px]">📄</p>
+              <span className="mx-auto mb-2 grid h-12 w-12 place-items-center rounded-full bg-fill"><Icon name="doc" className="h-6 w-6" /></span>
               <h2 className="text-[22px] font-semibold">ჯერ სივი შეავსე</h2>
               <p className="mt-1 text-[15px] text-muted">დამსაქმებელს უნდა ჰქონდეს შენი გამოცდილება, უნარები ან PDF ფაილი. ერთხელ შეავსებ და ყველა ვაკანსიაზე გამოიყენება.</p>
               <button onClick={onGoProfile} className={`${btn} mt-5`}>სივის შევსება</button>

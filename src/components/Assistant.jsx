@@ -144,7 +144,7 @@ function LessonProposal({ lesson, setLessons }) {
           <span className="block text-[13px] text-muted">{when}</span>
         </span>
       </span>
-      {state === 'added' && <span className="text-[14px] font-medium text-mint">✓ დაემატა განრიგში</span>}
+      {state === 'added' && <span className="flex items-center gap-1 text-[14px] font-medium text-mint"><Icon name="check" className="h-4 w-4" strokeWidth={2.5} />დაემატა განრიგში</span>}
       {state === 'cancelled' && <span className="text-[14px] text-muted">გაუქმდა</span>}
       {state === 'error' && <span className="text-[14px] text-coral">ვერ დაემატა, სცადე თავიდან</span>}
       {(state === 'idle' || state === 'saving') && (

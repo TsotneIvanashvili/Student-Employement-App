@@ -27,7 +27,7 @@ export default function JobCard({ job, busy, compact = false }) {
         </div>
         <p className="truncate text-[14px] font-semibold text-muted">{job.company} · {job.district}</p>
         <div className="mt-2 flex flex-wrap gap-1.5">
-          {job.kind === 'gig' && <Badge tone="amber">⚡ 1–2 დღიანი</Badge>}
+          {job.kind === 'gig' && <Badge tone="amber"><Icon name="bolt" className="h-3.5 w-3.5" />1–2 დღიანი</Badge>}
           {m && m.shifts.length > 0 && (
             <Badge tone={m.fitting.length ? 'green' : 'red'}>
               {m.fitting.length ? <Icon name="check" className="h-3.5 w-3.5" strokeWidth={3} /> : null}

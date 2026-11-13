@@ -106,11 +106,11 @@ function Welcome({ go }) {
 
   return (
     <div>
-      <h2 className="text-[26px] font-semibold">დავიწყოთ 👋</h2>
+      <h2 className="text-[26px] font-semibold">დავიწყოთ</h2>
       <p className="mt-1 text-muted">რას ეძებ?</p>
       <div className="mt-5 space-y-3">
-        <RoleCard emoji="🔎" title="ვეძებ სამსახურს" text="დამატებითი შემოსავალი შენს თავისუფალ დროს" onClick={() => go({ name: 'register', role: 'student' })} />
-        <RoleCard emoji="🤝" title="ვეძებ თანამშრომლებს" text="იპოვე ხალხი, ვისაც შენი ცვლის დროს სცალია" onClick={() => go({ name: 'register', role: 'employer' })} />
+        <RoleCard icon="search" title="ვეძებ სამსახურს" text="დამატებითი შემოსავალი შენს თავისუფალ დროს" onClick={() => go({ name: 'register', role: 'student' })} />
+        <RoleCard icon="users" title="ვეძებ თანამშრომლებს" text="იპოვე ხალხი, ვისაც შენი ცვლის დროს სცალია" onClick={() => go({ name: 'register', role: 'employer' })} />
       </div>
       <p className="mt-5 text-center font-semibold text-muted">
         უკვე გაქვს ანგარიში? <button onClick={() => go({ name: 'login' })} className="font-semibold text-brand hover:underline">შესვლა</button>
@@ -119,8 +119,8 @@ function Welcome({ go }) {
       <div className="mt-8 rounded-2xl border border-dashed border-line p-4">
         <p className="text-center text-[13px] font-semibold uppercase tracking-wide text-quiet">სწრაფი დემო, რეგისტრაციის გარეშე</p>
         <div className="mt-3 grid grid-cols-2 gap-2">
-          <button disabled={!!busy} onClick={() => demo('student')} className={`${chip} whitespace-nowrap px-2 text-[13px]`}>{busy === 'student' ? '…' : '🔎 მაძიებელი'}</button>
-          <button disabled={!!busy} onClick={() => demo('employer')} className={`${chip} whitespace-nowrap px-2 text-[13px]`}>{busy === 'employer' ? '…' : '🤝 დამსაქმებელი'}</button>
+          <button disabled={!!busy} onClick={() => demo('student')} className={`${chip} whitespace-nowrap px-2 text-[13px]`}>{busy === 'student' ? '…' : <span className="flex items-center justify-center gap-1.5"><Icon name="search" className="h-4 w-4" />მაძიებელი</span>}</button>
+          <button disabled={!!busy} onClick={() => demo('employer')} className={`${chip} whitespace-nowrap px-2 text-[13px]`}>{busy === 'employer' ? '…' : <span className="flex items-center justify-center gap-1.5"><Icon name="users" className="h-4 w-4" />დამსაქმებელი</span>}</button>
         </div>
         {error && <p className="mt-2 text-center text-sm font-medium text-coral">{error}</p>}
       </div>
@@ -128,9 +128,9 @@ function Welcome({ go }) {
   )
 }
 
-const RoleCard = ({ emoji, title, text, onClick }) => (
+const RoleCard = ({ icon, title, text, onClick }) => (
   <button onClick={onClick} className={`${card} flex w-full items-center gap-4 p-4 text-left transition hover:border-brand`}>
-    <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-fill text-[24px]">{emoji}</span>
+    <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-fill"><Icon name={icon} className="h-6 w-6" /></span>
     <span className="flex-1">
       <span className="block text-[18px] font-semibold">{title}</span>
       <span className="block text-[14px] font-semibold text-muted">{text}</span>
@@ -214,7 +214,7 @@ function Register({ initialRole, go }) {
       <Back go={go} />
       <h2 className="mb-4 text-[30px] font-semibold">რეგისტრაცია</h2>
       <div className="mb-5">
-        <Segmented value={role} onChange={setRole} options={[['student', '🔎 ვეძებ სამსახურს'], ['employer', '🤝 ვეძებ თანამშრომელს']]} />
+        <Segmented value={role} onChange={setRole} options={[['student', <><Icon name="search" className="h-4 w-4" />ვეძებ სამსახურს</>], ['employer', <><Icon name="users" className="h-4 w-4" />ვეძებ თანამშრომელს</>]]} />
       </div>
       <form onSubmit={submit} className="space-y-4">
         {role === 'employer' && <Field label="კომპანია"><input required className={input} value={form.company_name} onChange={set('company_name')} placeholder="მაგ. Coffee Lab" /></Field>}

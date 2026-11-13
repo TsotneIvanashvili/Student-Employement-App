@@ -69,7 +69,7 @@ export function ApplicantCard({ app, job, showJob = false, onChanged }) {
           {pay && (
             <div className={`rounded-2xl p-3 ${pay.status === 'held' ? 'bg-amber-soft' : 'bg-mint-soft'}`}>
               <div className="flex items-center justify-between text-[15px] font-medium">
-                <span>{pay.status === 'held' ? '🔒 დაბლოკილია' : '✅ ჩარიცხულია თანამშრომელზე'}</span>
+                <span className="flex items-center gap-1.5"><Icon name={pay.status === 'held' ? 'lock' : 'check'} className="h-4 w-4" />{pay.status === 'held' ? 'დაბლოკილია' : 'ჩარიცხულია თანამშრომელზე'}</span>
                 <span className="font-semibold">{money(pay.status === 'held' ? pay.amount : pay.amount - pay.fee)}</span>
               </div>
               {pay.status === 'held' && (
