@@ -1,20 +1,26 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Noto Sans Georgian", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
-  --color-ink: #0b0d12;
-  --color-brand: #12a05c;
-  --color-brand-soft: #e3f5eb;
-  --color-mint: #12a05c;
-  --color-mint-soft: #e3f5eb;
-  --color-amber: #b86e00;
-  --color-amber-soft: #fff1d6;
-  --color-coral: #ff3b30;
-  --color-bg: #f2f2f7;
-  --color-fill: #e9e9ef;
-  --color-line: #e3e3e8;
-  --color-muted: #6e6e73;
-  --color-quiet: #8e8e93;
+  --font-sans: "Nunito", "Noto Sans Georgian", system-ui, sans-serif;
+  --color-ink: #1d1b2e;
+  --color-brand: #6c3cff;
+  --color-brand-dark: #4f22d6;
+  --color-brand-soft: #efe9ff;
+  --color-mint: #1fbf6a;
+  --color-mint-dark: #149553;
+  --color-mint-soft: #e0f7ea;
+  --color-sun: #ffc61a;
+  --color-amber: #a26500;
+  --color-amber-soft: #fff3c9;
+  --color-coral: #ff4d6d;
+  --color-coral-soft: #ffe5eb;
+  --color-sky: #1ca7ff;
+  --color-sky-soft: #e0f3ff;
+  --color-bg: #f6f5fb;
+  --color-fill: #eeedf5;
+  --color-line: #e6e4f0;
+  --color-muted: #6b6880;
+  --color-quiet: #9a97ad;
 }
 
 body {
@@ -22,24 +28,20 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
-/* iOS-ის მსგავსი გადახვევა ტელეფონის ჩარჩოში */
-.screen {
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-}
-.screen::-webkit-scrollbar {
-  display: none;
-}
-
 @keyframes sheet-up {
-  from { transform: translateY(100%); }
+  from { transform: translateY(40px); opacity: 0; }
 }
 @keyframes fade-in {
   from { opacity: 0; }
 }
 @keyframes float {
-  50% { transform: translateY(-6px); }
+  50% { transform: translateY(-8px); }
 }
-.animate-sheet { animation: sheet-up 0.32s cubic-bezier(0.2, 0.9, 0.3, 1); }
+@keyframes pop {
+  0% { transform: scale(0.6); }
+  70% { transform: scale(1.1); }
+}
+.animate-sheet { animation: sheet-up 0.28s cubic-bezier(0.2, 0.9, 0.3, 1); }
 .animate-fade { animation: fade-in 0.2s ease-out; }
 .animate-float { animation: float 4s ease-in-out infinite; }
+.animate-pop { animation: pop 0.35s ease-out; }

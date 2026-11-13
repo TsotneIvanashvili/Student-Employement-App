@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { chat } from '../lib/ollama.js'
 import { splitJobRefs } from '../lib/prompt.js'
 import JobCard from './JobCard.jsx'
-import { Icon, Segmented, Title } from './ui.jsx'
+import { Icon, Segmented, Title, card, chip } from './ui.jsx'
 
 const RECOMMEND = {
   ka: 'ჩემი გრაფიკით რომელი სამსახური მირჩევ?',
@@ -42,42 +42,41 @@ export default function Assistant({ profile, jobs, free, matchCount }) {
   }
 
   return (
-    <section className="flex min-h-[calc(100%-7rem)] flex-col">
+    <section className="mx-auto flex max-w-3xl flex-col">
       <Title
-        eyebrow="AI · Groq"
-        action={
-          <div className="mb-1.5 w-24">
-            <Segmented value={lang} onChange={setLang} options={[['ka', 'ქა'], ['en', 'EN']]} />
-          </div>
-        }
+        eyebrow="AI ასისტენტი"
+        action={<div className="w-28"><Segmented value={lang} onChange={setLang} options={[['ka', 'ქა'], ['en', 'EN']]} /></div>}
       >
-        ასისტენტი
+        რა გაინტერესებს?
       </Title>
       {import.meta.env.DEV && (
         <input value={model} onChange={(e) => setModel(e.target.value)} className="mb-2 w-28 rounded-lg bg-white px-2 py-0.5 text-xs text-muted" aria-label="Ollama model" />
       )}
 
-      <div className="flex-1 space-y-2.5 text-[16px]">
+      <div className="min-h-[40vh] space-y-3 text-[16px]">
         {messages.length === 0 && (
-          <div className="flex flex-col items-center px-6 pb-4 pt-6 text-center">
-            <span className="grid h-16 w-16 place-items-center rounded-[20px] bg-gradient-to-br from-brand to-[#0b5e36] text-white shadow-lg shadow-brand/30"><Icon name="ai" className="h-8 w-8" /></span>
-            <p className="mt-4 text-[17px] font-semibold">
-              {hasSchedule ? `${matchCount} ვაკანსია ერგება შენს დროს` : 'ჯერ თავისუფალი საათები მონიშნე'}
+          <div className={`${card} flex flex-col items-center px-6 py-8 text-center`}>
+            <span className="grid h-16 w-16 place-items-center rounded-3xl bg-gradient-to-br from-brand to-sky text-white shadow-[0_4px_0_var(--color-brand-dark)]"><Icon name="ai" className="h-9 w-9" /></span>
+            <p className="mt-4 text-[20px] font-black">{hasSchedule ? `${matchCount} ვაკანსია ერგება შენს დროს` : 'ჯერ თავისუფალი საათები მონიშნე'}</p>
+            <p className="mt-1 max-w-md text-[15px] font-semibold text-muted">
+              {hasSchedule ? 'შეგირჩევ საუკეთესოს, ან მკითხე ნებისმიერი რამ ვაკანსიებზე.' : 'კალენდრის მიხედვით შეგირჩევ შენზე მორგებულ ვაკანსიებს.'}
             </p>
-            <p className="mt-1 text-[15px] text-muted">
-              {hasSchedule ? 'შემირჩიე სამსახური, ან დასვი კითხვა ვაკანსიებზე.' : 'კალენდარის მიხედვით შეგირჩევ შენზე მორგებულ ვაკანსიებს.'}
-            </p>
+            <div className="mt-5 flex flex-wrap justify-center gap-2">
+              {[RECOMMEND[lang], lang === 'en' ? 'Which one pays the most?' : 'რომელი იხდის ყველაზე მეტს?', lang === 'en' ? 'Any 1–2 day gigs?' : 'არის 1–2 დღიანი სამუშაო?'].map((q) => (
+                <button key={q} disabled={!hasSchedule || loading} onClick={() => send(q)} className={`${chip} disabled:opacity-50`}>{q}</button>
+              ))}
+            </div>
           </div>
         )}
         {messages.map((m, i) =>
           m.role === 'user' ? (
-            <div key={i} className="flex justify-end"><p className="max-w-[80%] whitespace-pre-wrap rounded-[20px] rounded-br-[6px] bg-brand px-4 py-2.5 text-white">{m.content}</p></div>
+            <div key={i} className="flex justify-end"><p className="max-w-[80%] whitespace-pre-wrap rounded-3xl rounded-br-lg bg-brand px-4 py-3 font-semibold text-white">{m.content}</p></div>
           ) : (
             <AssistantMessage key={i} content={m.content} jobs={jobs} free={free} />
           ),
         )}
         {error && (
-          <p className="rounded-[20px] bg-coral/10 p-4 text-[15px] text-coral">
+          <p className="rounded-3xl bg-coral-soft p-4 text-[15px] font-semibold text-coral">
             {import.meta.env.DEV ? (
               <>Ollama-სთან კავშირი ვერ დამყარდა. ტერმინალში გაუშვი <code>ollama serve</code> და <code>ollama pull {model}</code>.</>
             ) : (
@@ -87,28 +86,20 @@ export default function Assistant({ profile, jobs, free, matchCount }) {
         )}
       </div>
 
-      <div className="sticky bottom-[84px] mt-4 space-y-2 bg-bg/90 pb-1 pt-2 backdrop-blur">
-        {messages.length === 0 && (
-          <button
-            onClick={() => send(RECOMMEND[lang])}
-            disabled={!hasSchedule || loading}
-            className="w-full rounded-full bg-white py-3 text-[15px] font-semibold text-brand shadow-sm disabled:opacity-50"
-          >
-            ✨ შემირჩიე სამსახური
-          </button>
-        )}
-        <form onSubmit={(e) => { e.preventDefault(); send(input) }} className="flex items-center gap-2 rounded-full bg-white py-1.5 pl-4 pr-1.5 shadow-sm">
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder={lang === 'en' ? 'Message' : 'შეტყობინება'}
-            className="min-w-0 flex-1 bg-transparent text-[16px] outline-none"
-          />
-          <button disabled={loading || !input.trim()} aria-label="გაგზავნა" className="grid h-8 w-8 place-items-center rounded-full bg-brand text-white disabled:opacity-40">
-            <Icon name="send" className="h-5 w-5" strokeWidth={2.5} />
-          </button>
-        </form>
-      </div>
+      <form
+        onSubmit={(e) => { e.preventDefault(); send(input) }}
+        className="sticky bottom-24 mt-5 flex items-center gap-2 rounded-full border-2 border-line bg-white py-1.5 pl-5 pr-1.5 shadow-[0_3px_0_var(--color-line)] lg:bottom-6"
+      >
+        <input
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder={lang === 'en' ? 'Ask about jobs…' : 'დაწერე კითხვა…'}
+          className="min-w-0 flex-1 bg-transparent text-[16px] font-semibold outline-none"
+        />
+        <button disabled={loading || !input.trim()} aria-label="გაგზავნა" className="grid h-10 w-10 place-items-center rounded-full bg-brand text-white disabled:opacity-40">
+          <Icon name="send" className="h-5 w-5" strokeWidth={2.8} />
+        </button>
+      </form>
     </section>
   )
 }
@@ -119,8 +110,8 @@ function AssistantMessage({ content, jobs, free }) {
   const cards = refs.map((r) => jobs.find((j) => j.id.startsWith(r))).filter(Boolean)
   return (
     <div className="mr-8 space-y-2">
-      <p className="whitespace-pre-wrap rounded-[20px] rounded-bl-[6px] bg-white px-4 py-2.5">{text || '…'}</p>
-      {cards.map((job) => <JobCard key={job.id} job={job} free={free} compact />)}
+      <p className="whitespace-pre-wrap rounded-3xl rounded-bl-lg border-2 border-line bg-white px-4 py-3">{text || '…'}</p>
+      <div className="grid gap-2 sm:grid-cols-2">{cards.map((job) => <JobCard key={job.id} job={job} free={free} compact />)}</div>
     </div>
   )
 }

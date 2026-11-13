@@ -1,40 +1,48 @@
 import { matchJob } from '../lib/match.js'
 import JobCard from './JobCard.jsx'
-import { Segmented, Switch, Title, card } from './ui.jsx'
+import { Empty, Segmented, Switch, Title, btn, card } from './ui.jsx'
+
+// ფილტრები + ვაკანსიების სია. დალაგება: ჯერ მეტი შესაფერისი ცვლა, მერე ანაზღაურება.
+export function filterJobs(jobs, free, { on, kind }) {
+  const hasSchedule = free.size > 0
+  return jobs
+    .map((job) => matchJob(job, free))
+    .filter((m) => m.shifts.length > 0)
+    .filter((m) => !on || !hasSchedule || m.fitting.length > 0)
+    .filter((m) => kind === 'all' || m.job.kind === kind)
+    .sort((a, b) => b.fitting.length - a.fitting.length || b.job.pay - a.job.pay)
+}
 
 export default function JobList({ jobs, free, onlyFit, setOnlyFit, onGoCalendar }) {
   const hasSchedule = free.size > 0
-  const rows = jobs
-    .map((job) => matchJob(job, free))
-    .filter((m) => m.shifts.length > 0)
-    .filter((m) => !onlyFit.on || !hasSchedule || m.fitting.length > 0)
-    .filter((m) => onlyFit.kind === 'all' || m.job.kind === onlyFit.kind)
-    .sort((a, b) => b.fitting.length - a.fitting.length || b.job.pay - a.job.pay)
+  const rows = filterJobs(jobs, free, onlyFit)
 
   return (
     <section>
-      <Title eyebrow={`${rows.length} შედეგი`}>ვაკანსიები</Title>
-      <div className="mb-4 space-y-2.5">
+      <Title eyebrow={`${rows.length} ვაკანსია`}>ვაკანსიები</Title>
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Segmented value={onlyFit.kind} onChange={(kind) => setOnlyFit({ ...onlyFit, kind })} options={[['all', 'ყველა'], ['recurring', 'მუდმივი'], ['gig', '⚡ 1–2 დღიანი']]} />
         {hasSchedule && (
-          <div className={`${card} flex items-center justify-between gap-3 px-4 py-2.5`}>
-            <span className="text-[16px]">მხოლოდ ჩემს თავისუფალ დროში</span>
+          <label className={`${card} flex items-center justify-between gap-3 px-4 py-2`}>
+            <span className="text-[15px] font-bold">მხოლოდ ჩემს თავისუფალ დროში</span>
             <Switch on={onlyFit.on} onChange={(on) => setOnlyFit({ ...onlyFit, on })} label="მხოლოდ შესაფერისი" />
-          </div>
+          </label>
         )}
       </div>
 
       {!hasSchedule && (
-        <div className={`${card} mb-4 p-4`}>
-          <p className="text-[15px]">ჯერ თავისუფალი საათები მონიშნე და აქ მხოლოდ შენთვის შესაფერისი ვაკანსიები დარჩება.</p>
-          <button onClick={onGoCalendar} className="mt-3 rounded-full bg-brand px-4 py-2 text-sm font-semibold text-white">კალენდარის შევსება</button>
+        <div className="mb-5">
+          <Empty
+            emoji="🗓️"
+            title="ჯერ თავისუფალი დრო მონიშნე"
+            text="მერე აქ დარჩება მხოლოდ ის ვაკანსიები, რომლებიც შენს ლექციებს არ ეჯახება."
+            action={<button onClick={onGoCalendar} className={`${btn} px-6`}>კალენდარზე გადასვლა</button>}
+          />
         </div>
       )}
-      {hasSchedule && rows.length === 0 && (
-        <p className={`${card} p-4 text-[15px] text-muted`}>შენს თავისუფალ საათებში ჯერ არცერთი ცვლა არ ჯდება.</p>
-      )}
+      {hasSchedule && rows.length === 0 && <Empty emoji="🔍" title="ვერაფერი მოიძებნა" text="შენს თავისუფალ საათებში არცერთი ცვლა არ ჯდება. სცადე მეტი საათის მონიშვნა." />}
 
-      <ul className="space-y-2.5">
+      <ul className="grid gap-3 md:grid-cols-2">
         {rows.map(({ job }) => (
           <li key={job.id}><JobCard job={job} free={free} /></li>
         ))}

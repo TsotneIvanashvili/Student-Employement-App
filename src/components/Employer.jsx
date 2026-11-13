@@ -1,12 +1,70 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase.js'
-import { DAYS, FIRST_HOUR, LAST_HOUR, formatShift, todayISO } from '../lib/match.js'
-import { CompanyLogo, openJob } from './JobCard.jsx'
+import { FIRST_HOUR, LAST_HOUR, formatShift, todayISO } from '../lib/match.js'
+import Calendar, { WEEKDAYS, WEEKEND, preset } from './Calendar.jsx'
+import JobCard, { CompanyLogo, openJob } from './JobCard.jsx'
+import { ApplicantCard, jobHours } from './Applicants.jsx'
 import InstallRow from './InstallRow.jsx'
-import { Badge, Group, Icon, Row, Segmented, Title, btn, card, input, money } from './ui.jsx'
+import { Badge, Empty, Icon, Segmented, Title, btn, card, input, label, money } from './ui.jsx'
 
 const HOURS = Array.from({ length: LAST_HOUR - FIRST_HOUR + 1 }, (_, i) => FIRST_HOUR + i)
-const select = 'bg-transparent text-[17px] text-muted outline-none'
+const APP_FIELDS = '*, payments(*), profiles(full_name, university, year, cv_experience, cv_skills, cv_languages, cv_path), jobs!inner(*)'
+
+// ყველა განაცხადი ერთ ადგილას, ყველა ვაკანსიიდან
+export function Inbox({ profile, onNew }) {
+  const [rows, setRows] = useState(null)
+  const [filter, setFilter] = useState('sent')
+  const load = () =>
+    supabase
+      .from('applications')
+      .select(APP_FIELDS)
+      .eq('jobs.employer_id', profile.id)
+      .order('created_at', { ascending: false })
+      .then(({ data }) => {
+        setRows(data ?? [])
+        return data ?? []
+      })
+  useEffect(() => {
+    // ახალი განაცხადი თუ არ არის, პირდაპირ ყველას ვაჩვენებთ
+    load().then((data) => !data.some((x) => x.status === 'sent') && setFilter('all'))
+  }, [profile.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!rows) return <Title eyebrow={profile.company_name}>განაცხადები</Title>
+  const count = (s) => rows.filter((r) => r.status === s).length
+  const held = rows.flatMap((r) => r.payments).filter((p) => p?.status === 'held').reduce((s, p) => s + Number(p.amount), 0)
+  const shown = filter === 'all' ? rows : rows.filter((r) => r.status === filter)
+
+  return (
+    <section>
+      <Title eyebrow={profile.company_name}>განაცხადები</Title>
+      <div className="mb-5 grid grid-cols-3 gap-2 sm:gap-3">
+        <Stat emoji="📬" label="ახალი" value={count('sent')} tone="text-brand" />
+        <Stat emoji="🤝" label="აყვანილი" value={count('accepted')} tone="text-mint-dark" />
+        <Stat emoji="🔒" label="დაბლოკილი" value={money(held)} tone="text-amber" />
+      </div>
+      <div className="mb-4">
+        <Segmented value={filter} onChange={setFilter} options={[['sent', `ახალი (${count('sent')})`], ['accepted', 'აყვანილი'], ['all', 'ყველა']]} />
+      </div>
+      {shown.length === 0 && (
+        rows.length === 0 ? (
+          <Empty emoji="📭" title="ჯერ განაცხადი არ შემოსულა" text="დაამატე ვაკანსია და სტუდენტები, რომლებსაც შენი ცვლის დროს სცალიათ, სივს გამოგიგზავნიან." action={<button onClick={onNew} className={`${btn} px-6`}>ვაკანსიის დამატება</button>} />
+        ) : (
+          <Empty emoji="✨" title="აქ ცარიელია" text="ამ ფილტრით განაცხადი არ არის." />
+        )
+      )}
+      <ul className="space-y-3">
+        {shown.map((r) => <ApplicantCard key={r.id} app={r} job={r.jobs} showJob onChanged={load} />)}
+      </ul>
+    </section>
+  )
+}
+
+const Stat = ({ emoji, label: text, value, tone }) => (
+  <div className={`${card} min-w-0 px-3 py-3 sm:px-4`}>
+    <p className="truncate text-[12px] font-bold text-muted sm:text-[13px]">{emoji} {text}</p>
+    <p className={`truncate text-[20px] font-black leading-tight sm:text-[22px] ${tone}`}>{value}</p>
+  </div>
+)
 
 export function MyJobs({ profile, onNew }) {
   const [jobs, setJobs] = useState(null)
@@ -14,50 +72,37 @@ export function MyJobs({ profile, onNew }) {
   useEffect(() => {
     supabase
       .from('jobs')
-      .select('*, applications(status), payments(amount, status)')
+      .select('*, applications(status)')
       .eq('employer_id', profile.id)
       .order('created_at', { ascending: false })
       .then(({ data }) => setJobs(data ?? []))
   }, [profile.id])
 
-  if (!jobs) return <Title eyebrow={profile.company_name}>ვაკანსიები</Title>
-  const waiting = jobs.reduce((s, j) => s + j.applications.filter((a) => a.status === 'sent').length, 0)
-  const held = jobs.reduce((s, j) => s + j.payments.filter((p) => p.status === 'held').reduce((x, p) => x + Number(p.amount), 0), 0)
-
   return (
     <section>
-      <Title eyebrow={profile.company_name}>ვაკანსიები</Title>
-      <div className="mb-6 grid grid-cols-3 gap-2">
-        <Stat label="აქტიური" value={jobs.filter((j) => j.is_open).length} />
-        <Stat label="ახალი განაცხადი" value={waiting} accent={waiting > 0} />
-        <Stat label="დაბლოკილი" value={money(held)} />
-      </div>
-
-      {jobs.length === 0 && (
-        <div className={`${card} p-5 text-center`}>
-          <p className="text-[15px] text-muted">ჯერ ვაკანსია არ გამოგიქვეყნებია.</p>
-          <button onClick={onNew} className="mt-3 rounded-full bg-brand px-5 py-2.5 text-[15px] font-semibold text-white">ვაკანსიის დამატება</button>
-        </div>
-      )}
-      <ul data-tour="myjobs" className="space-y-2.5">
-        {jobs.map((job) => {
+      <Title eyebrow={profile.company_name} action={<button onClick={onNew} className={`${btn} flex items-center gap-1.5 px-5`}><Icon name="plus" className="h-5 w-5" strokeWidth={3} />ახალი</button>}>
+        ვაკანსიები
+      </Title>
+      {jobs?.length === 0 && <Empty emoji="📝" title="ჯერ ვაკანსია არ გაქვს" text="პირველი ვაკანსიის დამატებას ერთი წუთი სჭირდება." action={<button onClick={onNew} className={`${btn} px-6`}>ვაკანსიის დამატება</button>} />}
+      <ul data-tour="myjobs" className="grid gap-3 md:grid-cols-2">
+        {jobs?.map((job) => {
           const fresh = job.applications.filter((a) => a.status === 'sent').length
           return (
             <li key={job.id}>
-              <button onClick={() => openJob(job.id)} className={`${card} flex w-full items-center gap-3 p-3.5 text-left transition active:scale-[0.98]`}>
+              <button onClick={() => openJob(job.id)} className={`${card} flex w-full items-start gap-3 p-4 text-left shadow-[0_3px_0_var(--color-line)] transition hover:border-brand/40 active:translate-y-[3px] active:shadow-none ${job.is_open ? '' : 'opacity-60'}`}>
                 <CompanyLogo name={job.company} />
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center justify-between gap-2">
-                    <h3 className="truncate text-[16px] font-semibold">{job.title}</h3>
-                    {fresh > 0 ? <Badge tone="green">{fresh} ახალი</Badge> : <span className="shrink-0 text-[13px] text-quiet">{job.applications.length} განაცხადი</span>}
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="truncate text-[16px] font-extrabold">{job.title}</h3>
+                    {fresh > 0 ? <Badge tone="violet">{fresh} ახალი</Badge> : <span className="shrink-0 text-[13px] font-bold text-quiet">{job.applications.length} განაცხადი</span>}
                   </div>
-                  <p className="truncate text-[13px] text-muted">{job.shifts.map((s) => formatShift(s)).join(' · ')}</p>
-                  <div className="mt-1.5 flex gap-1.5">
-                    <Badge tone={job.kind === 'gig' ? 'amber' : 'gray'}>{job.kind === 'gig' ? '⚡ 1–2 დღიანი' : 'მუდმივი'}</Badge>
+                  <p className="truncate text-[13px] font-semibold text-muted">{job.shifts.map((s) => formatShift(s)).join(' · ')}</p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    <Badge tone={job.kind === 'gig' ? 'amber' : 'sky'}>{job.kind === 'gig' ? '⚡ 1–2 დღიანი' : '🔁 მუდმივი'}</Badge>
                     <Badge>{Number(job.pay)} ₾/სთ</Badge>
+                    {!job.is_open && <Badge tone="red">დახურული</Badge>}
                   </div>
                 </div>
-                <Icon name="chevron" className="h-4 w-4 shrink-0 text-quiet" strokeWidth={2.5} />
               </button>
             </li>
           )
@@ -67,105 +112,155 @@ export function MyJobs({ profile, onNew }) {
   )
 }
 
-const Stat = ({ label, value, accent }) => (
-  <div className={`${card} px-3 py-3`}>
-    <p className={`text-[20px] font-bold leading-tight ${accent ? 'text-brand' : ''}`}>{value}</p>
-    <p className="text-[12px] leading-tight text-muted">{label}</p>
-  </div>
-)
+const EMPLOYER_PRESETS = [
+  preset('🌆 სამუშაო დღეებში 18–22', WEEKDAYS, 18, 21),
+  preset('☀️ სამუშაო დღეებში 9–13', WEEKDAYS, 9, 12),
+  preset('🎉 შაბათ-კვირა 10–18', WEEKEND, 10, 17),
+]
 
-const emptyShift = (kind) => (kind === 'gig' ? { date: todayISO(), start: 10, end: 16 } : { day: 0, start: 16, end: 20 })
+// მონიშნული საათები → ცვლები: ყოველ დღეში მიმდევრობითი საათები ერთ ცვლად ერთიანდება
+export function slotsToShifts(slots) {
+  const shifts = []
+  for (let day = 0; day < 7; day++) {
+    let start = null
+    for (let h = FIRST_HOUR; h <= LAST_HOUR; h++) {
+      const on = h < LAST_HOUR && slots.has(`${day}-${h}`)
+      if (on && start === null) start = h
+      if (!on && start !== null) {
+        shifts.push({ day, start, end: h })
+        start = null
+      }
+    }
+  }
+  return shifts
+}
+
+const emptyGigDay = () => ({ date: todayISO(), start: 10, end: 16 })
 
 export function NewJob({ profile, onCreated }) {
   const [form, setForm] = useState({ title: '', district: '', pay: '', description: '' })
   const [kind, setKind] = useState('recurring')
-  const [shifts, setShifts] = useState([emptyShift('recurring')])
+  const [slots, setSlots] = useState(new Set())
+  const [gigDays, setGigDays] = useState([emptyGigDay()])
   const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value })
+  const setGig = (i, key, value) => setGigDays(gigDays.map((s, j) => (j === i ? { ...s, [key]: key === 'date' ? value : Number(value) } : s)))
 
-  function changeKind(k) {
-    setKind(k)
-    setShifts([emptyShift(k)])
+  const shifts = kind === 'gig' ? gigDays : slotsToShifts(slots)
+  const preview = {
+    id: 'preview',
+    company: profile.company_name || profile.full_name,
+    title: form.title || 'პოზიცია',
+    district: form.district || 'უბანი',
+    pay: Number(form.pay) || 0,
+    kind,
+    shifts,
   }
-  const setShift = (i, key, value) => setShifts(shifts.map((s, j) => (j === i ? { ...s, [key]: key === 'date' ? value : Number(value) } : s)))
 
   async function submit(e) {
     e.preventDefault()
     setError('')
+    if (shifts.length === 0) return setError('მონიშნე ცვლის საათები კალენდარზე.')
     if (shifts.some((s) => s.start >= s.end)) return setError('ცვლის დასასრული დაწყებაზე გვიან უნდა იყოს.')
     if (kind === 'gig' && shifts.some((s) => s.date < todayISO())) return setError('თარიღი წარსულშია.')
-    const { error } = await supabase.from('jobs').insert({
-      employer_id: profile.id,
-      company: profile.company_name || profile.full_name,
-      title: form.title,
-      district: form.district,
-      pay: Number(form.pay),
-      description: form.description,
-      kind,
-      shifts,
-    })
+    setBusy(true)
+    const { error } = await supabase.from('jobs').insert({ employer_id: profile.id, company: preview.company, title: form.title, district: form.district, pay: Number(form.pay), description: form.description, kind, shifts })
+    setBusy(false)
     if (error) return setError(error.message)
     onCreated()
   }
 
   return (
     <form onSubmit={submit}>
-      <Title>ახალი ვაკანსია</Title>
-      <div className="mb-6">
-        <Segmented value={kind} onChange={changeKind} options={[['recurring', 'მუდმივი ცვლები'], ['gig', '⚡ 1–2 დღიანი']]} />
-      </div>
-      <Group title="ვაკანსია">
-        <input required className={input} value={form.title} onChange={set('title')} placeholder="პოზიცია, მაგ. ბარისტა" />
-        <input required className={input} value={form.district} onChange={set('district')} placeholder="უბანი, მაგ. ვაკე" />
-        <label className="flex items-center justify-between pr-4">
-          <span className="px-4 py-3.5 text-[17px]">ანაზღაურება</span>
-          <span className="flex items-center gap-1 text-[17px] text-muted">
-            <input required type="number" inputMode="decimal" min="1" step="0.5" className="w-16 bg-transparent text-right outline-none" value={form.pay} onChange={set('pay')} placeholder="0" aria-label="ლარი საათში" />
-            ₾/სთ
-          </span>
-        </label>
-        <textarea className={`${input} resize-none`} rows={3} value={form.description} onChange={set('description')} placeholder="აღწერა: რას გააკეთებს, რა სჭირდება" />
-      </Group>
+      <Title eyebrow="ნაბიჯი ნაბიჯ">ახალი ვაკანსია</Title>
+      <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="space-y-5">
+          <Step n={1} title="რა ტიპის სამუშაოა?">
+            <div className="grid grid-cols-2 gap-3">
+              {[['recurring', '🔁', 'მუდმივი ცვლები', 'ყოველ კვირა, იგივე საათებში'], ['gig', '⚡', '1–2 დღიანი', 'ერთჯერადი: ღონისძიება, გადაზიდვა']].map(([k, emoji, title, text]) => (
+                <button type="button" key={k} onClick={() => setKind(k)} className={`rounded-2xl border-2 p-4 text-left transition ${kind === k ? 'border-brand bg-brand-soft shadow-[0_3px_0_var(--color-brand)]' : 'border-line bg-white shadow-[0_3px_0_var(--color-line)]'}`}>
+                  <span className="text-[26px]">{emoji}</span>
+                  <span className="mt-1 block text-[16px] font-extrabold">{title}</span>
+                  <span className="block text-[13px] font-semibold text-muted">{text}</span>
+                </button>
+              ))}
+            </div>
+          </Step>
 
-      <h2 className="mb-1.5 px-4 text-[13px] font-medium uppercase tracking-wide text-muted">{kind === 'gig' ? 'სამუშაო დღეები' : 'ცვლები კვირაში'}</h2>
-      {shifts.map((s, i) => (
-        <div key={i} className={`${card} mb-2.5 divide-y divide-line`}>
-          <label className="flex items-center justify-between pr-4">
-            <span className="px-4 py-3.5 text-[17px]">{kind === 'gig' ? 'თარიღი' : 'დღე'}</span>
-            {kind === 'gig' ? (
-              <input type="date" min={todayISO()} required className={select} value={s.date} onChange={(e) => setShift(i, 'date', e.target.value)} />
+          <Step n={2} title="დეტალები">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="პოზიცია"><input required className={input} value={form.title} onChange={set('title')} placeholder="მაგ. ბარისტა" /></Field>
+              <Field label="უბანი"><input required className={input} value={form.district} onChange={set('district')} placeholder="მაგ. ვაკე" /></Field>
+              <Field label="ანაზღაურება (₾ საათში)"><input required type="number" inputMode="decimal" min="1" step="0.5" className={input} value={form.pay} onChange={set('pay')} placeholder="მაგ. 9" aria-label="ლარი საათში" /></Field>
+            </div>
+            <Field label="აღწერა" className="mt-4"><textarea className={`${input} resize-none`} rows={3} value={form.description} onChange={set('description')} placeholder="რას გააკეთებს, რა სჭირდება" /></Field>
+          </Step>
+
+          <Step n={3} title={kind === 'gig' ? 'როდის?' : 'რომელ საათებში?'}>
+            {kind === 'recurring' ? (
+              <Calendar value={slots} setValue={setSlots} presets={EMPLOYER_PRESETS} tone="brand" unit="სთ კვირაში" />
             ) : (
-              <select className={select} value={s.day} onChange={(e) => setShift(i, 'day', e.target.value)}>
-                {DAYS.map((d, n) => <option key={d} value={n}>{d}</option>)}
-              </select>
+              <div className="space-y-3">
+                {gigDays.map((s, i) => (
+                  <div key={i} className="grid grid-cols-2 gap-3 rounded-2xl bg-bg p-3 sm:grid-cols-[1fr_110px_110px_auto] sm:items-end">
+                    <Field label={`დღე ${i + 1}`} className="col-span-2 sm:col-span-1"><input type="date" min={todayISO()} required className={input} value={s.date} onChange={(e) => setGig(i, 'date', e.target.value)} /></Field>
+                    <Field label="დან">
+                      <select className={input} value={s.start} onChange={(e) => setGig(i, 'start', e.target.value)} aria-label="დაწყება">
+                        {HOURS.slice(0, -1).map((h) => <option key={h} value={h}>{h}:00</option>)}
+                      </select>
+                    </Field>
+                    <Field label="მდე">
+                      <select className={input} value={s.end} onChange={(e) => setGig(i, 'end', e.target.value)} aria-label="დასრულება">
+                        {HOURS.slice(1).map((h) => <option key={h} value={h}>{h}:00</option>)}
+                      </select>
+                    </Field>
+                    {gigDays.length > 1 && (
+                      <button type="button" onClick={() => setGigDays(gigDays.filter((_, j) => j !== i))} className="col-span-2 py-2 font-extrabold text-coral sm:col-span-1" aria-label="დღის წაშლა">წაშლა</button>
+                    )}
+                  </div>
+                ))}
+                {gigDays.length < 2 && (
+                  <button type="button" onClick={() => setGigDays([...gigDays, emptyGigDay()])} className="font-extrabold text-brand">+ მეორე დღის დამატება</button>
+                )}
+              </div>
             )}
-          </label>
-          <div className="flex items-center justify-between pr-4">
-            <span className="px-4 py-3.5 text-[17px]">დრო</span>
-            <span className="flex items-center gap-2">
-              <select className={select} value={s.start} onChange={(e) => setShift(i, 'start', e.target.value)} aria-label="დაწყება">
-                {HOURS.slice(0, -1).map((h) => <option key={h} value={h}>{h}:00</option>)}
-              </select>
-              <span className="text-quiet">–</span>
-              <select className={select} value={s.end} onChange={(e) => setShift(i, 'end', e.target.value)} aria-label="დასრულება">
-                {HOURS.slice(1).map((h) => <option key={h} value={h}>{h}:00</option>)}
-              </select>
-            </span>
-          </div>
-          {shifts.length > 1 && (
-            <button type="button" onClick={() => setShifts(shifts.filter((_, j) => j !== i))} className="w-full px-4 py-3 text-left text-[17px] text-coral">წაშლა</button>
-          )}
+          </Step>
         </div>
-      ))}
-      <button type="button" onClick={() => setShifts([...shifts, emptyShift(kind)])} className="mb-6 px-4 py-1 text-[17px] text-brand">
-        + {kind === 'gig' ? 'დღის დამატება' : 'ცვლის დამატება'}
-      </button>
 
-      {error && <p className="mb-3 px-4 text-[15px] text-coral">{error}</p>}
-      <button className={`${btn} mb-4`}>გამოქვეყნება</button>
+        <aside className="space-y-4 lg:sticky lg:top-6">
+          <p className={label}>ასე დაინახავენ სტუდენტები</p>
+          <div className="pointer-events-none"><JobCard job={preview} /></div>
+          <div className={`${card} space-y-2 p-4 text-[15px] font-bold`}>
+            <p className="flex justify-between"><span className="text-muted">ცვლები</span><span>{shifts.length}</span></p>
+            <p className="flex justify-between"><span className="text-muted">{kind === 'gig' ? 'სულ საათი' : 'საათი კვირაში'}</span><span>{jobHours(preview)} სთ</span></p>
+            <p className="flex justify-between border-t-2 border-line pt-2 text-[17px]"><span>{kind === 'gig' ? 'ჯამური ხარჯი' : 'ხარჯი კვირაში'}</span><span className="font-black text-brand">{money(jobHours(preview) * preview.pay)}</span></p>
+          </div>
+          {error && <p className="rounded-2xl bg-coral-soft p-3 font-bold text-coral">{error}</p>}
+          <button disabled={busy} className={btn}>{busy ? 'ქვეყნდება…' : 'გამოქვეყნება'}</button>
+        </aside>
+      </div>
     </form>
   )
 }
+
+function Step({ n, title, children }) {
+  return (
+    <section className={`${card} p-5`}>
+      <h2 className="mb-4 flex items-center gap-2.5 text-[18px] font-black">
+        <span className="grid h-8 w-8 place-items-center rounded-full bg-brand text-[15px] text-white">{n}</span>{title}
+      </h2>
+      {children}
+    </section>
+  )
+}
+
+const Field = ({ label: text, children, className = '' }) => (
+  <label className={`block ${className}`}>
+    <span className={label}>{text}</span>
+    {children}
+  </label>
+)
 
 export function EmployerProfile({ profile, onSaved }) {
   const [form, setForm] = useState({ full_name: profile.full_name ?? '', company_name: profile.company_name ?? '' })
@@ -186,23 +281,27 @@ export function EmployerProfile({ profile, onSaved }) {
 
   return (
     <div>
-      <Title>პროფილი</Title>
-      <Group title="გადახდები" footer="დაბლოკილი თანხა სტუდენტს მაშინ ერიცხება, როცა სამუშაოს შესრულებას დაადასტურებ.">
-        <Row icon="shield" label="დაბლოკილი" value={money(sum('held'))} />
-        <Row icon="check" label="ჩარიცხული" value={money(sum('released'))} />
-      </Group>
-      <form onSubmit={save}>
-        <Group title="კომპანია">
-          <input className={input} value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} placeholder="კომპანია" />
-          <input className={input} value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} placeholder="საკონტაქტო პირი" />
-        </Group>
-        {note && <p className="-mt-3 mb-4 px-4 text-[15px] text-brand">{note}</p>}
-        <button className={`${btn} mb-6`}>შენახვა</button>
-      </form>
-      <Group>
-        <InstallRow />
-        <Row icon="logout" iconBg="bg-coral" label="გასვლა" danger onClick={() => supabase.auth.signOut()} chevron={false} />
-      </Group>
+      <Title eyebrow="დამსაქმებელი">{profile.company_name}</Title>
+      <div className="grid items-start gap-5 lg:grid-cols-2">
+        <div className="space-y-5">
+          <div className="grid grid-cols-2 gap-3">
+            <Stat emoji="🔒" label="დაბლოკილი" value={money(sum('held'))} tone="text-amber" />
+            <Stat emoji="✅" label="ჩარიცხული" value={money(sum('released'))} tone="text-mint-dark" />
+          </div>
+          <p className="px-1 text-[14px] font-semibold text-muted">დაბლოკილი თანხა სტუდენტს მაშინ ერიცხება, როცა სამუშაოს შესრულებას დაადასტურებ.</p>
+        </div>
+        <form onSubmit={save} className={`${card} space-y-4 p-5`}>
+          <h2 className="text-[18px] font-black">კომპანია</h2>
+          <Field label="კომპანიის სახელი"><input className={input} value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} /></Field>
+          <Field label="საკონტაქტო პირი"><input className={input} value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} /></Field>
+          {note && <p className="font-bold text-mint-dark">{note}</p>}
+          <button className={btn}>შენახვა</button>
+        </form>
+        <div className="space-y-3">
+          <InstallRow />
+          <button onClick={() => supabase.auth.signOut()} className="w-full py-2 font-extrabold text-coral">გასვლა</button>
+        </div>
+      </div>
     </div>
   )
 }

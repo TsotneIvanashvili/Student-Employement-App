@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { openJob } from './JobCard.jsx'
-import { STATUS } from './JobDetail.jsx'
+import { STATUS_TONE } from './Applicants.jsx'
 import InstallRow from './InstallRow.jsx'
-import { Group, Icon, Row, Title, btn, input, money } from './ui.jsx'
+import { Badge, Icon, Title, btn, card, input, label, money } from './ui.jsx'
+
+const STATUS_STUDENT = { sent: 'გაგზავნილია', accepted: 'აგიყვანეს', rejected: 'უარი' }
 
 export default function StudentProfile({ profile, onSaved }) {
   const [form, setForm] = useState({
@@ -32,6 +34,7 @@ export default function StudentProfile({ profile, onSaved }) {
   const earned = pays.filter((p) => p.status === 'released').reduce((s, p) => s + (p.amount - p.fee), 0)
   const pending = pays.filter((p) => p.status === 'held').reduce((s, p) => s + (p.amount - p.fee), 0)
   const fees = pays.reduce((s, p) => s + Number(p.fee), 0)
+  const cvDone = Boolean(profile.cv_experience || profile.cv_skills || profile.cv_path)
 
   async function save(e) {
     e.preventDefault()
@@ -56,61 +59,85 @@ export default function StudentProfile({ profile, onSaved }) {
 
   return (
     <div>
-      <Title>პროფილი</Title>
+      <Title eyebrow={`${profile.university ?? ''}${profile.year ? ` · ${profile.year} კურსი` : ''}`}>{profile.full_name}</Title>
+      <div className="grid items-start gap-5 lg:grid-cols-[360px_minmax(0,1fr)]">
+        <div className="space-y-5">
+          <div data-tour="wallet" className="rounded-3xl bg-gradient-to-br from-brand via-[#7b4dff] to-sky p-5 text-white shadow-[0_5px_0_var(--color-brand-dark)]">
+            <p className="flex items-center gap-2 text-[14px] font-extrabold text-white/80"><Icon name="wallet" className="h-5 w-5" />საფულე</p>
+            <p className="mt-1 text-[38px] font-black leading-none">{money(earned)}</p>
+            <p className="mt-1 text-[14px] font-bold text-white/80">მიღებული შემოსავალი</p>
+            <div className="mt-4 grid grid-cols-2 gap-2 text-[13px] font-bold">
+              <div className="rounded-2xl bg-white/15 px-3 py-2"><p className="text-white/70">🔒 მოლოდინში</p><p className="text-[17px] font-black">{money(pending)}</p></div>
+              <div className="rounded-2xl bg-white/15 px-3 py-2"><p className="text-white/70">საკომისიო 10%</p><p className="text-[17px] font-black">{money(fees)}</p></div>
+            </div>
+          </div>
 
-      <div data-tour="wallet" className="mb-6 overflow-hidden rounded-[22px] bg-[radial-gradient(120%_120%_at_100%_0%,#1d7a4c_0%,#0b0d12_70%)] p-5 text-white">
-        <div className="flex items-center gap-2 text-[13px] font-medium text-white/70"><Icon name="wallet" className="h-4 w-4" />საფულე</div>
-        <p className="mt-1 text-[34px] font-bold tracking-tight">{money(earned)}</p>
-        <p className="text-[13px] text-white/70">მიღებული შემოსავალი</p>
-        <div className="mt-4 grid grid-cols-2 gap-2 text-[13px]">
-          <div className="rounded-xl bg-white/10 px-3 py-2"><p className="text-white/60">მოლოდინში</p><p className="text-[16px] font-semibold">{money(pending)}</p></div>
-          <div className="rounded-xl bg-white/10 px-3 py-2"><p className="text-white/60">საკომისიო (10%)</p><p className="text-[16px] font-semibold">{money(fees)}</p></div>
+          <section className={`${card} p-5`}>
+            <h2 className="mb-3 text-[18px] font-black">ჩემი განაცხადები</h2>
+            {applications.length === 0 && <p className="font-semibold text-muted">ჯერ არცერთი არ გაგიგზავნია.</p>}
+            <ul className="space-y-2">
+              {applications.map((a) => (
+                <li key={a.id}>
+                  <button onClick={() => openJob(a.jobs.id)} className="flex w-full items-center gap-3 rounded-2xl bg-bg px-4 py-3 text-left hover:bg-fill">
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate font-extrabold">{a.jobs.title}</span>
+                      <span className="block truncate text-[13px] font-semibold text-muted">{a.jobs.company}</span>
+                    </span>
+                    <Badge tone={STATUS_TONE[a.status]}>{STATUS_STUDENT[a.status]}</Badge>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+          <div className="hidden space-y-3 lg:block">
+            <InstallRow />
+            <button onClick={() => supabase.auth.signOut()} className="w-full py-2 font-extrabold text-coral">გასვლა</button>
+          </div>
+        </div>
+
+        <form onSubmit={save} className={`${card} space-y-4 p-5`} data-tour="cv">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-[18px] font-black">სივი</h2>
+            <Badge tone={cvDone ? 'green' : 'amber'}>{cvDone ? '✓ შევსებულია' : 'შესავსებია'}</Badge>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="სახელი და გვარი"><input className={input} value={form.full_name} onChange={set('full_name')} /></Field>
+            <Field label="უნივერსიტეტი"><input className={input} value={form.university} onChange={set('university')} /></Field>
+            <Field label="კურსი">
+              <select className={input} value={form.year} onChange={set('year')}>
+                {[1, 2, 3, 4].map((y) => <option key={y} value={y}>{y}</option>)}
+              </select>
+            </Field>
+            <Field label="რამდენი საათი გინდა კვირაში"><input type="number" inputMode="numeric" min="2" max="40" className={input} value={form.hours} onChange={set('hours')} /></Field>
+          </div>
+          <Field label="გამოცდილება">
+            <textarea className={`${input} resize-none`} rows={3} value={form.cv_experience} onChange={set('cv_experience')} placeholder="მაგ. 3 თვე ბარისტად, მოხალისეობა ფესტივალზე" />
+          </Field>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="უნარები"><input className={input} value={form.cv_skills} onChange={set('cv_skills')} placeholder="კომუნიკაცია, Excel" /></Field>
+            <Field label="ენები"><input className={input} value={form.cv_languages} onChange={set('cv_languages')} placeholder="ინგლისური B2" /></Field>
+          </div>
+          <label className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl border-2 border-dashed border-line px-4 py-4 hover:border-brand">
+            <span className="flex items-center gap-2 font-bold"><Icon name="doc" className="h-5 w-5 text-brand" />{profile.cv_path ? 'PDF სივი ატვირთულია' : 'PDF სივი (არასავალდებულო)'}</span>
+            <span className="font-extrabold text-brand">{profile.cv_path ? 'შეცვლა' : 'ატვირთვა'}</span>
+            <input type="file" accept="application/pdf" className="hidden" onChange={upload} />
+          </label>
+          {note && <p className="font-bold text-mint-dark">{note}</p>}
+          <button className={btn}>შენახვა</button>
+        </form>
+
+        <div className="space-y-3 lg:hidden">
+          <InstallRow />
+          <button onClick={() => supabase.auth.signOut()} className="w-full py-2 font-extrabold text-coral">გასვლა</button>
         </div>
       </div>
-
-      <Group title="ჩემი განაცხადები">
-        {applications.length === 0 && <p className="px-4 py-3 text-[15px] text-muted">ჯერ არცერთი არ გაგიგზავნია.</p>}
-        {applications.map((a) => (
-          <Row key={a.id} label={<><b className="font-semibold">{a.jobs.title}</b><span className="block text-[13px] text-muted">{a.jobs.company}</span></>} value={STATUS[a.status]} onClick={() => openJob(a.jobs.id)} />
-        ))}
-      </Group>
-
-      <form onSubmit={save}>
-        <Group title="შენ შესახებ">
-          <input className={input} value={form.full_name} onChange={set('full_name')} placeholder="სახელი და გვარი" />
-          <input className={input} value={form.university} onChange={set('university')} placeholder="უნივერსიტეტი" />
-          <label className="flex items-center justify-between pr-4">
-            <span className="px-4 py-3.5 text-[17px]">კურსი</span>
-            <select className="bg-transparent text-[17px] text-muted outline-none" value={form.year} onChange={set('year')}>
-              {[1, 2, 3, 4].map((y) => <option key={y} value={y}>{y}</option>)}
-            </select>
-          </label>
-          <label className="flex items-center justify-between pr-4">
-            <span className="px-4 py-3.5 text-[17px]">საათი კვირაში</span>
-            <input type="number" inputMode="numeric" min="2" max="40" className="w-16 bg-transparent text-right text-[17px] text-muted outline-none" value={form.hours} onChange={set('hours')} />
-          </label>
-        </Group>
-
-        <div data-tour="cv">
-          <Group title="სივი" footer="დამსაქმებელი ამას ნახავს, როცა განაცხადს გაუგზავნი.">
-            <textarea className={`${input} resize-none`} rows={3} value={form.cv_experience} onChange={set('cv_experience')} placeholder="გამოცდილება (მაგ. 3 თვე ბარისტად)" />
-            <input className={input} value={form.cv_skills} onChange={set('cv_skills')} placeholder="უნარები (მაგ. კომუნიკაცია, Excel)" />
-            <input className={input} value={form.cv_languages} onChange={set('cv_languages')} placeholder="ენები (მაგ. ინგლისური B2)" />
-            <label className="flex cursor-pointer items-center justify-between px-4 py-3.5 text-[17px]">
-              <span>{profile.cv_path ? 'PDF სივი ✓' : 'PDF სივი (არასავალდებულო)'}</span>
-              <span className="text-brand">{profile.cv_path ? 'შეცვლა' : 'ატვირთვა'}</span>
-              <input type="file" accept="application/pdf" className="hidden" onChange={upload} />
-            </label>
-          </Group>
-        </div>
-        {note && <p className="-mt-3 mb-4 px-4 text-[15px] text-brand">{note}</p>}
-        <button className={`${btn} mb-6`}>შენახვა</button>
-      </form>
-
-      <Group>
-        <InstallRow />
-        <Row icon="logout" iconBg="bg-coral" label="გასვლა" danger onClick={() => supabase.auth.signOut()} chevron={false} />
-      </Group>
     </div>
   )
 }
+
+const Field = ({ label: text, children }) => (
+  <label className="block">
+    <span className={label}>{text}</span>
+    {children}
+  </label>
+)

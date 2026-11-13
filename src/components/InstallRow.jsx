@@ -1,29 +1,28 @@
 import { useState } from 'react'
 import { useInstall } from '../lib/pwa.js'
-import { Icon, Row, Sheet, btn } from './ui.jsx'
+import { Icon, Sheet, btn, btn2 } from './ui.jsx'
 
-// "აპად დაყენება" პროფილში: Android-ზე პირდაპირ ფანჯარას ხსნის, iPhone-ზე ინსტრუქციას აჩვენებს.
+// "აპად დაყენება": Android/Chrome-ზე პირდაპირ ფანჯარას ხსნის, iPhone-ზე ინსტრუქციას აჩვენებს.
 export default function InstallRow() {
   const { installed, canPrompt, prompt } = useInstall()
   const [help, setHelp] = useState(false)
 
-  if (installed) return <Row icon="phone" iconBg="bg-ink" label="აპი დაყენებულია" value="✓" />
+  if (installed) return <p className="flex items-center gap-2 rounded-2xl bg-mint-soft px-4 py-3 font-bold text-mint-dark"><Icon name="check" className="h-5 w-5" strokeWidth={3} />აპი დაყენებულია</p>
   return (
     <>
-      <Row icon="phone" iconBg="bg-ink" label="აპად დაყენება" onClick={() => (canPrompt ? prompt() : setHelp(true))} />
+      <button onClick={() => (canPrompt ? prompt() : setHelp(true))} className={`${btn2} flex items-center justify-center gap-2`}>
+        <Icon name="phone" className="h-5 w-5" />ტელეფონზე აპად დაყენება
+      </button>
       {help && (
         <Sheet onClose={() => setHelp(false)}>
-          <div className="px-1 pb-2">
-            <h2 className="text-[22px] font-bold">დააყენე ტელეფონზე</h2>
-            <p className="mt-1 text-[15px] text-muted">აპი მთავარ ეკრანზე გამოჩნდება და სრულ ეკრანზე გაიხსნება, ჩვეულებრივი აპივით.</p>
-            <ol className="mt-4 space-y-3 text-[16px]">
-              <Step n={1}>Safari-ში დააჭირე <b>Share</b> ღილაკს <Icon name="share" className="inline h-5 w-5 align-[-4px] text-[#2f6bff]" /></Step>
-              <Step n={2}>აირჩიე <b>Add to Home Screen</b> („მთავარ ეკრანზე დამატება“)</Step>
-              <Step n={3}>დააჭირე <b>Add</b>-ს</Step>
-            </ol>
-            <p className="mt-4 text-[13px] text-muted">Android-ზე Chrome-ის მენიუში (⋮) აირჩიე „Install app“.</p>
-            <button onClick={() => setHelp(false)} className={`${btn} mt-5`}>გასაგებია</button>
-          </div>
+          <h2 className="text-[22px] font-black">📲 დააყენე ტელეფონზე</h2>
+          <p className="mt-1 text-[15px] text-muted">Shiftmate მთავარ ეკრანზე გამოჩნდება და სრულ ეკრანზე გაიხსნება, ჩვეულებრივი აპივით.</p>
+          <ol className="mt-4 space-y-3 text-[16px] font-semibold">
+            <Step n={1}>iPhone: Safari-ში დააჭირე <b>Share</b> <Icon name="share" className="inline h-5 w-5 align-[-4px] text-sky" /></Step>
+            <Step n={2}>აირჩიე <b>Add to Home Screen</b></Step>
+            <Step n={3}>Android: Chrome-ის მენიუში (⋮) აირჩიე <b>Install app</b></Step>
+          </ol>
+          <button onClick={() => setHelp(false)} className={`${btn} mt-6`}>გასაგებია</button>
         </Sheet>
       )}
     </>
@@ -32,7 +31,7 @@ export default function InstallRow() {
 
 const Step = ({ n, children }) => (
   <li className="flex gap-3">
-    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-brand-soft text-sm font-bold text-brand">{n}</span>
+    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-brand-soft text-sm font-black text-brand">{n}</span>
     <span>{children}</span>
   </li>
 )
