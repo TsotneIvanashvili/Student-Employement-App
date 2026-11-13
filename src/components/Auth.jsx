@@ -7,7 +7,7 @@ const DEMO = {
   student: {
     email: 'demo.student@studentshifts.ge',
     meta: { role: 'student', full_name: 'ნინო ბერიძე' },
-    profile: { university: 'თსუ', year: 2, hours: 15 },
+    profile: {},
   },
   employer: {
     email: 'demo.employer@studentshifts.ge',
@@ -57,14 +57,14 @@ export default function Auth() {
 function Hero({ compact }) {
   const days = ['ორშ', 'სამ', 'ოთხ', 'ხუთ', 'პარ', 'შაბ', 'კვი']
   const cells = [
-    [['lesson', 'ვებ დეველოპმენტი']], [['lesson', 'მარკეტინგი']], [['lesson', 'ინგლისური']], [['lesson', 'სტატისტიკა'], ['work', 'ბარისტა']], [['lesson', 'სემინარი']], [['work', 'ღონისძიება']], [],
+    [['lesson', 'სამსახური']], [['lesson', 'ლექცია']], [['lesson', 'სამსახური']], [['lesson', 'ლექცია'], ['work', 'ბარისტა']], [['lesson', 'სამსახური']], [['work', 'ღონისძიება']], [['lesson', 'ოჯახი']],
   ]
   return (
     <div className={`border-b border-line bg-white px-6 pb-10 pt-[max(env(safe-area-inset-top),1.25rem)] lg:min-h-dvh lg:flex-col lg:border-b-0 lg:border-r lg:p-12 ${compact ? 'hidden lg:flex' : 'lg:flex'}`}>
       <Logo />
       <div className="mt-8 lg:mt-auto">
         <h1 className="max-w-lg text-[32px] font-semibold leading-[1.15] tracking-tight lg:text-[46px]">იმუშავე მაშინ, როცა თავისუფალი ხარ</h1>
-        <p className="mt-3 max-w-md text-[16px] text-muted">ჩაწერე ლექციები და ვაკანსიებს მხოლოდ შენს თავისუფალ დროში ნახავ. აყვანის შემდეგ ცვლები შენს კალენდარში ჩნდება.</p>
+        <p className="mt-3 max-w-md text-[16px] text-muted">სწავლობ, მუშაობ თუ სხვა საქმე გაქვს: ჩაწერე, როდის ხარ დაკავებული, და დამატებით სამუშაოს მხოლოდ შენს თავისუფალ დროში ნახავ.</p>
       </div>
       <div className="mt-8 max-w-lg overflow-hidden rounded-2xl border border-line lg:mb-auto lg:mt-12">
         <div className="grid grid-cols-7 border-b border-line bg-bg">
@@ -107,10 +107,10 @@ function Welcome({ go }) {
   return (
     <div>
       <h2 className="text-[26px] font-semibold">დავიწყოთ 👋</h2>
-      <p className="mt-1 font-semibold text-muted">ვინ ხარ?</p>
+      <p className="mt-1 text-muted">რას ეძებ?</p>
       <div className="mt-5 space-y-3">
-        <RoleCard emoji="🎓" title="სტუდენტი ვარ" text="ვეძებ სამსახურს ლექციებს შორის" onClick={() => go({ name: 'register', role: 'student' })} />
-        <RoleCard emoji="🏢" title="დამსაქმებელი ვარ" text="ვეძებ სტუდენტებს ცვლებისთვის" onClick={() => go({ name: 'register', role: 'employer' })} />
+        <RoleCard emoji="🔎" title="ვეძებ სამსახურს" text="დამატებითი შემოსავალი შენს თავისუფალ დროს" onClick={() => go({ name: 'register', role: 'student' })} />
+        <RoleCard emoji="🤝" title="ვეძებ თანამშრომლებს" text="იპოვე ხალხი, ვისაც შენი ცვლის დროს სცალია" onClick={() => go({ name: 'register', role: 'employer' })} />
       </div>
       <p className="mt-5 text-center font-semibold text-muted">
         უკვე გაქვს ანგარიში? <button onClick={() => go({ name: 'login' })} className="font-semibold text-brand hover:underline">შესვლა</button>
@@ -119,8 +119,8 @@ function Welcome({ go }) {
       <div className="mt-8 rounded-2xl border border-dashed border-line p-4">
         <p className="text-center text-[13px] font-semibold uppercase tracking-wide text-quiet">სწრაფი დემო, რეგისტრაციის გარეშე</p>
         <div className="mt-3 grid grid-cols-2 gap-2">
-          <button disabled={!!busy} onClick={() => demo('student')} className={`${chip} whitespace-nowrap px-2 text-[13px]`}>{busy === 'student' ? '…' : '🎓 სტუდენტი'}</button>
-          <button disabled={!!busy} onClick={() => demo('employer')} className={`${chip} whitespace-nowrap px-2 text-[13px]`}>{busy === 'employer' ? '…' : '🏢 დამსაქმებელი'}</button>
+          <button disabled={!!busy} onClick={() => demo('student')} className={`${chip} whitespace-nowrap px-2 text-[13px]`}>{busy === 'student' ? '…' : '🔎 მაძიებელი'}</button>
+          <button disabled={!!busy} onClick={() => demo('employer')} className={`${chip} whitespace-nowrap px-2 text-[13px]`}>{busy === 'employer' ? '…' : '🤝 დამსაქმებელი'}</button>
         </div>
         {error && <p className="mt-2 text-center text-sm font-medium text-coral">{error}</p>}
       </div>
@@ -197,7 +197,7 @@ function Login({ go }) {
 
 function Register({ initialRole, go }) {
   const [role, setRole] = useState(initialRole)
-  const [form, setForm] = useState({ email: '', password: '', full_name: '', company_name: '', university: '', year: '1', hours: '15' })
+  const [form, setForm] = useState({ email: '', password: '', full_name: '', company_name: '' })
   const { busy, error, run } = useSubmit()
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value })
 
@@ -205,8 +205,7 @@ function Register({ initialRole, go }) {
     e.preventDefault()
     run(() => {
       const meta = role === 'student' ? { role, full_name: form.full_name } : { role, full_name: form.full_name, company_name: form.company_name }
-      const profile = role === 'student' ? { university: form.university, year: Number(form.year), hours: Number(form.hours) } : {}
-      return signUpWithProfile(form.email, form.password, meta, profile)
+      return signUpWithProfile(form.email, form.password, meta, {})
     })
   }
 
@@ -215,24 +214,11 @@ function Register({ initialRole, go }) {
       <Back go={go} />
       <h2 className="mb-4 text-[30px] font-semibold">რეგისტრაცია</h2>
       <div className="mb-5">
-        <Segmented value={role} onChange={setRole} options={[['student', '🎓 სტუდენტი'], ['employer', '🏢 დამსაქმებელი']]} />
+        <Segmented value={role} onChange={setRole} options={[['student', '🔎 ვეძებ სამსახურს'], ['employer', '🤝 ვეძებ თანამშრომელს']]} />
       </div>
       <form onSubmit={submit} className="space-y-4">
         {role === 'employer' && <Field label="კომპანია"><input required className={input} value={form.company_name} onChange={set('company_name')} placeholder="მაგ. Coffee Lab" /></Field>}
         <Field label={role === 'student' ? 'სახელი და გვარი' : 'საკონტაქტო პირი'}><input required className={input} value={form.full_name} onChange={set('full_name')} /></Field>
-        {role === 'student' && (
-          <>
-            <Field label="უნივერსიტეტი"><input required className={input} value={form.university} onChange={set('university')} placeholder="მაგ. თსუ" /></Field>
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="კურსი">
-                <select className={input} value={form.year} onChange={set('year')}>
-                  {[1, 2, 3, 4].map((y) => <option key={y} value={y}>{y}</option>)}
-                </select>
-              </Field>
-              <Field label="საათი კვირაში"><input required type="number" inputMode="numeric" min="2" max="40" className={input} value={form.hours} onChange={set('hours')} /></Field>
-            </div>
-          </>
-        )}
         <Field label="ელფოსტა"><input required type="email" inputMode="email" autoComplete="email" className={input} value={form.email} onChange={set('email')} /></Field>
         <Field label="პაროლი (მინ. 6 სიმბოლო)"><input required type="password" minLength={6} autoComplete="new-password" className={input} value={form.password} onChange={set('password')} /></Field>
         {error && <p className="font-medium text-coral">{error}</p>}

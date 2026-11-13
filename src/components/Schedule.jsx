@@ -9,20 +9,20 @@ const TIMES = Array.from({ length: 37 }, (_, i) => 6 * 60 + i * 30) // 06:00 …
 const dateLabel = (d) => `${DAY_NAMES[weekdayOf(d)]}, ${dayNumber(d)} ${MONTH_NAMES[monthIndex(d)]}`
 const weeklyLabel = (d) => `ყოველ ${DAY_NAMES[weekdayOf(d)].replace(/ი$/, '')}ს`
 
-// სტუდენტის განრიგი: ლექციების დამატება კალენდარზე. თავისუფალი დრო ყველაფერია, რაც აქ არ წერია.
+// მაძიებლის განრიგი: დაკავებული დროის დამატება კალენდარზე. თავისუფალი დრო ყველაფერია, რაც აქ არ წერია.
 export function StudentSchedule({ busy, setLessons, matchCount, onSeeJobs }) {
   const [sheet, setSheet] = useState(null)
   const lessons = busy.filter((e) => e.kind === 'lesson')
 
   return (
     <div>
-      <Title eyebrow="დააჭირე დღეს ან საათს და ჩაწერე, როდის არ გცალია">ჩემი განრიგი</Title>
+      <Title eyebrow="დააჭირე დღეს ან საათს და ჩაწერე, როდის ხარ დაკავებული">ჩემი განრიგი</Title>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-white px-4 py-3" data-tour="matches">
         <p className="text-[15px]">
-          {lessons.length === 0 ? 'ჯერ ლექციები არ დაგიმატებია, ამიტომ ყველა ვაკანსია გერგება.' : <>შენს თავისუფალ დროს ერგება <b>{matchCount} ვაკანსია</b></>}
+          {lessons.length === 0 ? 'ჯერ არაფერი ჩაგიწერია, ამიტომ ყველა ვაკანსია გერგება.' : <>შენს თავისუფალ დროს ერგება <b>{matchCount} ვაკანსია</b></>}
         </p>
         <div className="flex items-center gap-4 text-[13px] text-muted">
-          <Legend tone="lesson" text="ლექცია" />
+          <Legend tone="lesson" text="დაკავებული" />
           <Legend tone="work" text="სამუშაო" />
           <button onClick={onSeeJobs} className="rounded-lg bg-ink px-3 py-1.5 text-[14px] font-medium text-white">ვაკანსიები →</button>
         </div>
@@ -44,7 +44,7 @@ const Legend = ({ tone, text }) => (
 function LessonSheet({ date, start, event, onClose, setLessons }) {
   const s0 = event?.start_min ?? Math.max(6 * 60, Math.min(start, 22 * 60))
   const [form, setForm] = useState({
-    title: event?.title ?? 'ლექცია',
+    title: event?.title ?? 'დაკავებული',
     start: s0,
     end: event?.end_min ?? Math.min(s0 + 120, 24 * 60),
     repeat: event ? (event.date ? 'once' : 'weekly') : 'weekly',
@@ -62,7 +62,7 @@ function LessonSheet({ date, start, event, onClose, setLessons }) {
   function save(e) {
     e.preventDefault()
     if (form.end <= form.start) return setError('დასასრული დაწყებაზე გვიან უნდა იყოს.')
-    const row = { title: form.title.trim() || 'ლექცია', start_min: form.start, end_min: form.end }
+    const row = { title: form.title.trim() || 'დაკავებული', start_min: form.start, end_min: form.end }
     if (event) return run(supabase.from('events').update(row).eq('id', event.id).select().single(), (l, d) => l.map((x) => (x.id === d.id ? d : x)))
     const when = form.repeat === 'weekly' ? { weekday: weekdayOf(date) } : { date }
     run(supabase.from('events').insert({ ...row, ...when }).select().single(), (l, d) => [...l, d])
@@ -75,12 +75,12 @@ function LessonSheet({ date, start, event, onClose, setLessons }) {
     <Sheet onClose={onClose}>
       <form onSubmit={save} className="space-y-4">
         <div>
-          <h2 className="text-[22px] font-semibold">{event ? 'ლექციის შეცვლა' : 'როდის არ გცალია?'}</h2>
+          <h2 className="text-[22px] font-semibold">{event ? 'შეცვლა' : 'როდის ხარ დაკავებული?'}</h2>
           <p className="text-[15px] text-muted">{dateLabel(date)}</p>
         </div>
         <label className="block">
           <span className={label}>სახელი</span>
-          <input className={input} value={form.title} onChange={set('title')} placeholder="მაგ. მათემატიკა" />
+          <input className={input} value={form.title} onChange={set('title')} placeholder="მაგ. ლექცია, ძირითადი სამსახური" />
         </label>
         <div className="grid grid-cols-2 gap-3">
           <label className="block">
@@ -99,7 +99,7 @@ function LessonSheet({ date, start, event, onClose, setLessons }) {
         {!event && (
           <Segmented value={form.repeat} onChange={(repeat) => setForm({ ...form, repeat })} options={[['weekly', weeklyLabel(date)], ['once', 'მხოლოდ ამ დღეს']]} />
         )}
-        {event && !event.date && <p className="text-[13px] text-muted">ეს ლექცია {weeklyLabel(date)} მეორდება. ცვლილება ყველა კვირაზე გავრცელდება.</p>}
+        {event && !event.date && <p className="text-[13px] text-muted">ეს {weeklyLabel(date)} მეორდება. ცვლილება ყველა კვირაზე გავრცელდება.</p>}
         {error && <p className="text-[14px] font-medium text-coral">{error}</p>}
         <button className={btn}>შენახვა</button>
         {event && (

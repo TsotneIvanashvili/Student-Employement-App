@@ -114,7 +114,7 @@ function Shell({ profile, tabs, tab, onTab, onHelp, cta, children }) {
           <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-sky text-[16px] font-semibold text-white">{(profile.full_name || '?').slice(0, 1)}</span>
           <span className="min-w-0">
             <span className="block truncate text-[14px] font-semibold">{profile.full_name}</span>
-            <span className="block truncate text-[12px] font-medium text-muted">{profile.role === 'employer' ? profile.company_name : profile.university}</span>
+            <span className="block truncate text-[12px] font-medium text-muted">{profile.role === 'employer' ? profile.company_name : 'სამუშაოს მაძიებელი'}</span>
           </span>
         </div>
       </nav>

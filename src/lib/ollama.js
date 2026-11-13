@@ -4,7 +4,7 @@ import { buildSystemPrompt } from './prompt.js'
 // ონლაინ: Vercel-ის ფუნქცია /api/chat -> Groq (იხ. api/chat.js), ინსტრუქციას სერვერი აწყობს.
 const URL = import.meta.env.DEV ? '/ollama/api/chat' : '/api/chat'
 
-// context: { lang, hours, free }; jobs მხოლოდ ლოკალურ რეჟიმს სჭირდება.
+// context: { lang, free }; jobs მხოლოდ ლოკალურ რეჟიმს სჭირდება.
 // აბრუნებს ტექსტს ნაწილ-ნაწილ (streaming), onToken-ით.
 export async function chat({ model, context, jobs, messages, onToken, signal }) {
   const res = await fetch(URL, {

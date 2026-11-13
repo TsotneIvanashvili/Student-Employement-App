@@ -19,7 +19,6 @@ export default async function handler(req, res) {
     messages.length <= MAX_MESSAGES &&
     messages.every((m) => ['user', 'assistant'].includes(m.role) && String(m.content).length <= MAX_CHARS) &&
     ['ka', 'en'].includes(context?.lang) &&
-    Number.isFinite(context?.hours) &&
     Array.isArray(context?.free) &&
     context.free.length <= 200 &&
     context.free.every((k) => /^[0-6]-\d{1,2}$/.test(k))
@@ -30,7 +29,7 @@ export default async function handler(req, res) {
   if (!jobsRes.ok) return res.status(502).send('Could not load jobs')
   const jobs = await jobsRes.json()
 
-  const system = buildSystemPrompt({ lang: context.lang, hours: Math.min(Math.max(context.hours, 1), 60), free: context.free }, jobs)
+  const system = buildSystemPrompt({ lang: context.lang, free: context.free }, jobs)
 
   const upstream = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',

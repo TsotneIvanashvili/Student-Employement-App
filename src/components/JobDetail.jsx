@@ -7,7 +7,7 @@ import { ApplicantCard, STATUS, STATUS_TONE, jobHours, one } from './Applicants.
 import { Badge, Icon, Sheet, Switch, btn, btn2, card, input, money } from './ui.jsx'
 
 export { STATUS }
-const APP_FIELDS = '*, payments(*), profiles(full_name, university, year, cv_experience, cv_skills, cv_languages, cv_path)'
+const APP_FIELDS = '*, payments(*), profiles(full_name, cv_experience, cv_skills, cv_languages, cv_path)'
 
 export default function JobDetail({ id, profile, busy, onBack, onGoProfile }) {
   const [job, setJob] = useState(null)
@@ -108,7 +108,7 @@ function OwnerControls({ job, setJob }) {
     <label className="flex items-center justify-between gap-3 rounded-2xl bg-bg px-4 py-3">
       <span>
         <span className="block text-[15px] font-semibold">{job.is_open ? 'ვაკანსია ღიაა' : 'ვაკანსია დახურულია'}</span>
-        <span className="text-[13px] font-semibold text-muted">{job.is_open ? 'სტუდენტები ხედავენ და აგზავნიან სივს' : 'ახალი განაცხადები აღარ შემოვა'}</span>
+        <span className="text-[13px] font-semibold text-muted">{job.is_open ? 'მაძიებლები ხედავენ და აგზავნიან სივს' : 'ახალი განაცხადები აღარ შემოვა'}</span>
       </span>
       <Switch on={job.is_open} onChange={toggle} label="ვაკანსიის გახსნა/დახურვა" />
     </label>

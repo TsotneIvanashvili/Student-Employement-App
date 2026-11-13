@@ -33,8 +33,8 @@ export default function JobList({ jobs, busy, onlyFit, setOnlyFit, onGoCalendar 
         <div className="mb-5">
           <Empty
             emoji="🗓️"
-            title="ჯერ ლექციები ჩაწერე"
-            text="განრიგში ჩაწერე, როდის არ გცალია, და აქ დარჩება მხოლოდ ის ვაკანსიები, რომლებიც ლექციებს არ ეჯახება."
+            title="ჯერ ჩაწერე, როდის ხარ დაკავებული"
+            text="განრიგში ჩაწერე სწავლა, ძირითადი სამსახური ან სხვა საქმე, და აქ დარჩება მხოლოდ ის ვაკანსიები, რომლებიც მას არ ეჯახება."
             action={<button onClick={onGoCalendar} className={`${btn} px-6`}>განრიგზე გადასვლა</button>}
           />
         </div>

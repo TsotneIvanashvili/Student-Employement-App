@@ -33,7 +33,7 @@ export function ApplicantCard({ app, job, showJob = false, onChanged }) {
         <div className="min-w-0 flex-1">
           <p className="truncate text-[16px] font-semibold">{p.full_name}</p>
           <p className="truncate text-[14px] font-semibold text-muted">
-            {showJob ? job.title : `${p.university ?? ''}${p.year ? `, ${p.year} კურსი` : ''}`}
+            {showJob ? job.title : p.cv_skills || 'კანდიდატი'}
           </p>
         </div>
         <Badge tone={STATUS_TONE[app.status]}>{STATUS[app.status]}</Badge>
@@ -44,7 +44,7 @@ export function ApplicantCard({ app, job, showJob = false, onChanged }) {
         <div className="mt-4 space-y-3">
           {showJob && (
             <button onClick={() => openJob(job.id)} className="text-[14px] font-medium text-brand hover:underline">
-              {p.university}{p.year ? `, ${p.year} კურსი` : ''} · ვაკანსიის ნახვა →
+              ვაკანსიის ნახვა →
             </button>
           )}
           {app.message && <p className="rounded-2xl bg-brand-soft p-3 text-[15px]">„{app.message}“</p>}
@@ -69,7 +69,7 @@ export function ApplicantCard({ app, job, showJob = false, onChanged }) {
           {pay && (
             <div className={`rounded-2xl p-3 ${pay.status === 'held' ? 'bg-amber-soft' : 'bg-mint-soft'}`}>
               <div className="flex items-center justify-between text-[15px] font-medium">
-                <span>{pay.status === 'held' ? '🔒 დაბლოკილია' : '✅ ჩარიცხულია სტუდენტზე'}</span>
+                <span>{pay.status === 'held' ? '🔒 დაბლოკილია' : '✅ ჩარიცხულია თანამშრომელზე'}</span>
                 <span className="font-semibold">{money(pay.status === 'held' ? pay.amount : pay.amount - pay.fee)}</span>
               </div>
               {pay.status === 'held' && (
@@ -124,7 +124,7 @@ function PaySheet({ job, app, onClose, onDone }) {
       <p className="text-[15px] font-semibold text-muted">{app.profiles.full_name} · {job.title}</p>
       <div className={`${card} mt-4 divide-y divide-line`}>
         <Pair label={`${hours} სთ × ${Number(job.pay)} ₾`} value={money(amount)} strong />
-        <Pair label="სტუდენტი მიიღებს (90%)" value={money(amount - fee)} />
+        <Pair label="თანამშრომელი მიიღებს (90%)" value={money(amount - fee)} />
         <Pair label="Shiftmate-ის საკომისიო (10%)" value={money(fee)} muted />
       </div>
       <p className="mt-2 px-1 text-[13px] font-semibold text-muted">
@@ -158,9 +158,9 @@ function ReleaseSheet({ pay, onClose, onDone }) {
   return (
     <Sheet onClose={onClose}>
       <h2 className="text-[24px] font-semibold">სამუშაო შესრულდა?</h2>
-      <p className="mt-1 text-[15px] text-muted">დადასტურების შემდეგ დაბლოკილი თანხა სტუდენტს ჩაერიცხება.</p>
+      <p className="mt-1 text-[15px] text-muted">დადასტურების შემდეგ დაბლოკილი თანხა თანამშრომელს ჩაერიცხება.</p>
       <div className={`${card} mt-4 divide-y divide-line`}>
-        <Pair label="სტუდენტს ჩაერიცხება" value={money(pay.amount - pay.fee)} strong />
+        <Pair label="თანამშრომელს ჩაერიცხება" value={money(pay.amount - pay.fee)} strong />
         <Pair label="საკომისიო (10%)" value={money(pay.fee)} muted />
       </div>
       {error && <p className="mt-2 text-sm font-medium text-coral">{error}</p>}

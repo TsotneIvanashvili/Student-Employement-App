@@ -10,7 +10,7 @@ import InstallRow from './InstallRow.jsx'
 import { Badge, Empty, Icon, Segmented, Title, btn, card, input, label, money } from './ui.jsx'
 
 const HOURS = Array.from({ length: LAST_HOUR - FIRST_HOUR + 1 }, (_, i) => FIRST_HOUR + i)
-const APP_FIELDS = '*, payments(*), profiles(full_name, university, year, cv_experience, cv_skills, cv_languages, cv_path), jobs!inner(*)'
+const APP_FIELDS = '*, payments(*), profiles(full_name, cv_experience, cv_skills, cv_languages, cv_path), jobs!inner(*)'
 
 // ყველა განაცხადი ერთ ადგილას, ყველა ვაკანსიიდან
 export function Inbox({ profile, onNew }) {
@@ -49,7 +49,7 @@ export function Inbox({ profile, onNew }) {
       </div>
       {shown.length === 0 && (
         rows.length === 0 ? (
-          <Empty emoji="📭" title="ჯერ განაცხადი არ შემოსულა" text="დაამატე ვაკანსია და სტუდენტები, რომლებსაც შენი ცვლის დროს სცალიათ, სივს გამოგიგზავნიან." action={<button onClick={onNew} className={`${btn} px-6`}>ვაკანსიის დამატება</button>} />
+          <Empty emoji="📭" title="ჯერ განაცხადი არ შემოსულა" text="დაამატე ვაკანსია და ის ხალხი, ვისაც შენი ცვლის დროს სცალია, სივს გამოგიგზავნის." action={<button onClick={onNew} className={`${btn} px-6`}>ვაკანსიის დამატება</button>} />
         ) : (
           <Empty emoji="✨" title="აქ ცარიელია" text="ამ ფილტრით განაცხადი არ არის." />
         )
@@ -82,7 +82,7 @@ export function EmployerSchedule({ profile }) {
     <div>
       <Title eyebrow={profile.company_name}>ცვლების კალენდარი</Title>
       <div className="mb-4 flex flex-wrap gap-4 text-[13px] text-muted">
-        <span className="flex items-center gap-1.5"><i className={`h-2.5 w-2.5 rounded-full ${DOTS.work}`} />სტუდენტი აყვანილია</span>
+        <span className="flex items-center gap-1.5"><i className={`h-2.5 w-2.5 rounded-full ${DOTS.work}`} />თანამშრომელი აყვანილია</span>
         <span className="flex items-center gap-1.5"><i className={`h-2.5 w-2.5 rounded-full ${DOTS.open}`} />ჯერ არავინ</span>
       </div>
       <BigCalendar events={events} onEvent={(e) => openJob(e.job_id)} />
@@ -260,7 +260,7 @@ export function NewJob({ profile, onCreated }) {
         </div>
 
         <aside className="space-y-4 lg:sticky lg:top-6">
-          <p className={label}>ასე დაინახავენ სტუდენტები</p>
+          <p className={label}>ასე დაინახავენ მაძიებლები</p>
           <div className="pointer-events-none"><JobCard job={preview} /></div>
           <div className={`${card} space-y-2 p-4 text-[15px] font-medium`}>
             <p className="flex justify-between"><span className="text-muted">ცვლები</span><span>{shifts.length}</span></p>
@@ -319,7 +319,7 @@ export function EmployerProfile({ profile, onSaved }) {
             <Stat emoji="🔒" label="დაბლოკილი" value={money(sum('held'))} tone="text-amber" />
             <Stat emoji="✅" label="ჩარიცხული" value={money(sum('released'))} tone="text-mint-dark" />
           </div>
-          <p className="px-1 text-[14px] font-semibold text-muted">დაბლოკილი თანხა სტუდენტს მაშინ ერიცხება, როცა სამუშაოს შესრულებას დაადასტურებ.</p>
+          <p className="px-1 text-[14px] font-semibold text-muted">დაბლოკილი თანხა თანამშრომელს მაშინ ერიცხება, როცა სამუშაოს შესრულებას დაადასტურებ.</p>
         </div>
         <form onSubmit={save} className={`${card} space-y-4 p-5`}>
           <h2 className="text-[18px] font-semibold">კომპანია</h2>

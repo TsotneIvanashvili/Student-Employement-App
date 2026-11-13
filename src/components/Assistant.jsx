@@ -31,7 +31,7 @@ export default function Assistant({ profile, jobs, busy, setLessons, matchCount 
     try {
       await chat({
         model,
-        context: { lang, hours: profile.hours ?? 15, free: [...free] },
+        context: { lang, free: [...free] },
         jobs,
         messages: history,
         onToken: (full) => setMessages([...history, { role: 'assistant', content: full }]),

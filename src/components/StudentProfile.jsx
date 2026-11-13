@@ -10,9 +10,6 @@ const STATUS_STUDENT = { sent: 'გაგზავნილია', accepted: '�
 export default function StudentProfile({ profile, onSaved }) {
   const [form, setForm] = useState({
     full_name: profile.full_name ?? '',
-    university: profile.university ?? '',
-    year: profile.year ?? 1,
-    hours: profile.hours ?? 15,
     cv_experience: profile.cv_experience ?? '',
     cv_skills: profile.cv_skills ?? '',
     cv_languages: profile.cv_languages ?? '',
@@ -38,7 +35,7 @@ export default function StudentProfile({ profile, onSaved }) {
 
   async function save(e) {
     e.preventDefault()
-    const changes = { ...form, year: Number(form.year), hours: Number(form.hours) }
+    const changes = { ...form }
     const { error } = await supabase.from('profiles').update(changes).eq('id', profile.id)
     setNote(error ? error.message : 'შენახულია ✓')
     if (!error) onSaved(changes)
@@ -59,7 +56,7 @@ export default function StudentProfile({ profile, onSaved }) {
 
   return (
     <div>
-      <Title eyebrow={`${profile.university ?? ''}${profile.year ? ` · ${profile.year} კურსი` : ''}`}>{profile.full_name}</Title>
+      <Title eyebrow="სამუშაოს მაძიებელი">{profile.full_name}</Title>
       <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[360px_minmax(0,1fr)]">
         <div className="space-y-5">
           <div data-tour="wallet" className={`${card} p-5`}>
@@ -100,18 +97,9 @@ export default function StudentProfile({ profile, onSaved }) {
             <h2 className="text-[18px] font-semibold">სივი</h2>
             <Badge tone={cvDone ? 'green' : 'amber'}>{cvDone ? '✓ შევსებულია' : 'შესავსებია'}</Badge>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="სახელი და გვარი"><input className={input} value={form.full_name} onChange={set('full_name')} /></Field>
-            <Field label="უნივერსიტეტი"><input className={input} value={form.university} onChange={set('university')} /></Field>
-            <Field label="კურსი">
-              <select className={input} value={form.year} onChange={set('year')}>
-                {[1, 2, 3, 4].map((y) => <option key={y} value={y}>{y}</option>)}
-              </select>
-            </Field>
-            <Field label="რამდენი საათი გინდა კვირაში"><input type="number" inputMode="numeric" min="2" max="40" className={input} value={form.hours} onChange={set('hours')} /></Field>
-          </div>
+          <Field label="სახელი და გვარი"><input className={input} value={form.full_name} onChange={set('full_name')} /></Field>
           <Field label="გამოცდილება">
-            <textarea className={`${input} resize-none`} rows={3} value={form.cv_experience} onChange={set('cv_experience')} placeholder="მაგ. 3 თვე ბარისტად, მოხალისეობა ფესტივალზე" />
+            <textarea className={`${input} resize-none`} rows={3} value={form.cv_experience} onChange={set('cv_experience')} placeholder="მაგ. 3 თვე ბარისტად, 1 წელი გაყიდვებში" />
           </Field>
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="უნარები"><input className={input} value={form.cv_skills} onChange={set('cv_skills')} placeholder="კომუნიკაცია, Excel" /></Field>
