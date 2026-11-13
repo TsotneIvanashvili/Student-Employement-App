@@ -17,6 +17,8 @@ export const TONES = {
 }
 // წერტილის ფერი (თვის ხედი და ლეგენდა)
 export const DOTS = { lesson: 'bg-[#3d6ee0]', work: 'bg-[#1f9d5a]', open: 'bg-[#d98a14]' }
+// ტელეფონის თვის ხედში ღონისძიება წვრილ ფერად ზოლად ჩანს
+const BARS = { lesson: 'max-sm:bg-[#3d6ee0]', work: 'max-sm:bg-[#1f9d5a]', open: 'max-sm:bg-[#d98a14]' }
 const kindOf = (e) => e.tone ?? e.kind ?? 'lesson'
 const tone = (e) => TONES[kindOf(e)] ?? TONES.lesson
 const dot = (e) => DOTS[kindOf(e)] ?? DOTS.lesson
@@ -88,29 +90,34 @@ function Month({ anchor, today, events, onSlot, onEvent, onMore }) {
           return (
             <div
               key={d}
-              onClick={() => onSlot?.(d, null)}
-              className={`min-h-[84px] border-b border-r border-line p-1 sm:min-h-[112px] sm:p-2 [&:nth-child(7n)]:border-r-0 ${weekdayOf(d) > 4 ? 'bg-bg/60' : ''} ${onSlot ? 'cursor-pointer hover:bg-fill/60' : ''}`}
+              onClick={() => (window.innerWidth < 640 ? onMore(d) : onSlot?.(d, null))}
+              className={`group relative min-h-[76px] border-b border-r border-line p-1 sm:min-h-[124px] sm:p-1.5 [&:nth-child(7n)]:border-r-0 ${weekdayOf(d) > 4 ? 'bg-bg/50' : ''} ${onSlot ? 'cursor-pointer' : ''}`}
             >
-              <div className="mb-1 flex justify-end">
+              <div className="mb-1 flex items-center justify-between px-0.5">
                 <span className={`grid h-6 min-w-6 place-items-center rounded-md px-1 text-[12px] font-semibold sm:text-[13px] ${d === today ? 'bg-ink text-white' : inMonth ? 'text-ink' : 'text-quiet/50'}`}>
                   {dayNumber(d)}
                 </span>
+                {onSlot && (
+                  <span className="hidden h-6 w-6 place-items-center rounded-md text-quiet group-hover:grid group-hover:bg-fill" aria-hidden="true">
+                    <Icon name="plus" className="h-4 w-4" />
+                  </span>
+                )}
               </div>
-              <div className="space-y-0.5">
+              <div className="space-y-1">
                 {list.slice(0, 2).map((e) => (
                   <button
                     key={e.id}
                     onClick={(ev) => { ev.stopPropagation(); onEvent?.(e) }}
-                    className="flex w-full items-center gap-1 rounded px-0.5 py-0.5 text-left text-[10px] font-medium hover:bg-fill sm:gap-1.5 sm:text-[12px]"
+                    title={`${e.title} · ${fmtMin(e.start_min)}–${fmtMin(e.end_min)}`}
+                    className={`block h-1.5 w-full overflow-hidden rounded-full text-left transition hover:brightness-95 sm:h-auto sm:rounded-md sm:px-1.5 sm:py-1 ${tone(e)} ${BARS[kindOf(e)] ?? BARS.lesson} max-sm:pointer-events-none`}
                   >
-                    <i className={`h-1.5 w-1.5 shrink-0 rounded-full sm:h-2 sm:w-2 ${dot(e)}`} />
-                    <span className="hidden shrink-0 text-quiet sm:inline">{fmtMin(e.start_min)}</span>
-                    <span className="truncate">{e.title}</span>
+                    <span className="hidden truncate text-[12px] font-semibold leading-tight sm:block">{e.title}</span>
+                    <span className="hidden truncate text-[11px] leading-tight opacity-75 sm:block">{fmtMin(e.start_min)}–{fmtMin(e.end_min)}</span>
                   </button>
                 ))}
                 {list.length > 2 && (
-                  <button onClick={(ev) => { ev.stopPropagation(); onMore(d) }} className="px-0.5 text-[11px] font-medium text-muted hover:text-ink sm:text-[12px]">
-                    + კიდევ {list.length - 2}
+                  <button onClick={(ev) => { ev.stopPropagation(); onMore(d) }} className="w-full rounded-md text-left text-[11px] font-medium leading-none text-muted hover:bg-fill hover:text-ink sm:px-1 sm:text-[12px] sm:leading-normal">
+                    +{list.length - 2} <span className="hidden sm:inline">კიდევ</span>
                   </button>
                 )}
               </div>
