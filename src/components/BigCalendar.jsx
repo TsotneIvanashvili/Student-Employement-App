@@ -15,7 +15,11 @@ export const TONES = {
   work: 'bg-[#ddf3e6] border-[#1f9d5a] text-[#0e4a2a]',
   open: 'bg-[#fdf0da] border-[#d98a14] text-[#5f3a05]',
 }
-const tone = (e) => TONES[e.tone ?? e.kind] ?? TONES.lesson
+// წერტილის ფერი (თვის ხედი და ლეგენდა)
+export const DOTS = { lesson: 'bg-[#3d6ee0]', work: 'bg-[#1f9d5a]', open: 'bg-[#d98a14]' }
+const kindOf = (e) => e.tone ?? e.kind ?? 'lesson'
+const tone = (e) => TONES[kindOf(e)] ?? TONES.lesson
+const dot = (e) => DOTS[kindOf(e)] ?? DOTS.lesson
 
 const monthTitle = (date) => `${MONTH_NAMES[monthIndex(date)]} ${yearOf(date)}`
 const short = (date) => `${dayNumber(date)} ${MONTH_NAMES[monthIndex(date)].slice(0, 3)}`
@@ -35,15 +39,21 @@ export default function BigCalendar({ events, onSlot, onEvent }) {
 
   return (
     <section className="overflow-hidden rounded-2xl border border-line bg-white" data-tour="calendar">
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line p-3 sm:p-4">
-        <div className="flex items-center gap-2">
-          <button onClick={() => step(-1)} aria-label="წინა" className="grid h-9 w-9 place-items-center rounded-lg border border-line hover:bg-fill"><Icon name="back" className="h-4 w-4" strokeWidth={2.5} /></button>
-          <button onClick={() => step(1)} aria-label="შემდეგი" className="grid h-9 w-9 place-items-center rounded-lg border border-line hover:bg-fill"><Icon name="chevron" className="h-4 w-4" strokeWidth={2.5} /></button>
-          <button onClick={() => setAnchor(today)} className="h-9 rounded-lg border border-line px-3 text-[14px] font-medium hover:bg-fill">დღეს</button>
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">
+        <div className="flex items-center gap-3">
+          <h2 className="text-[18px] font-semibold sm:text-[22px]">{title}</h2>
+          {anchor !== today && (
+            <button onClick={() => setAnchor(today)} className="rounded-full bg-fill px-3 py-1 text-[13px] font-medium hover:bg-line">დღეს</button>
+          )}
         </div>
-        <h2 className="order-last w-full text-center text-[18px] font-semibold sm:order-none sm:w-auto sm:text-[20px]">{title}</h2>
-        <div className="w-full sm:w-auto">
-          <Segmented value={view} onChange={setView} options={[['day', 'დღე'], ['week', 'კვირა'], ['month', 'თვე']]} />
+        <div className="flex w-full items-center gap-2 sm:w-auto">
+          <div className="flex shrink-0 overflow-hidden rounded-lg border border-line">
+            <button onClick={() => step(-1)} aria-label="წინა" className="grid h-9 w-9 place-items-center hover:bg-fill"><Icon name="back" className="h-4 w-4" strokeWidth={2.5} /></button>
+            <button onClick={() => step(1)} aria-label="შემდეგი" className="grid h-9 w-9 place-items-center border-l border-line hover:bg-fill"><Icon name="chevron" className="h-4 w-4" strokeWidth={2.5} /></button>
+          </div>
+          <div className="flex-1 sm:flex-none">
+            <Segmented value={view} onChange={setView} options={[['day', 'დღე'], ['week', 'კვირა'], ['month', 'თვე']]} />
+          </div>
         </div>
       </header>
 
@@ -79,23 +89,27 @@ function Month({ anchor, today, events, onSlot, onEvent, onMore }) {
             <div
               key={d}
               onClick={() => onSlot?.(d, null)}
-              className={`min-h-[84px] border-b border-r border-line p-1 sm:min-h-[112px] sm:p-1.5 [&:nth-child(7n)]:border-r-0 ${onSlot ? 'cursor-pointer hover:bg-bg' : ''}`}
+              className={`min-h-[84px] border-b border-r border-line p-1 sm:min-h-[112px] sm:p-2 [&:nth-child(7n)]:border-r-0 ${weekdayOf(d) > 4 ? 'bg-bg/60' : ''} ${onSlot ? 'cursor-pointer hover:bg-fill/60' : ''}`}
             >
-              <span className={`mb-1 inline-grid h-7 w-7 place-items-center rounded-full text-[13px] font-medium sm:text-[14px] ${d === today ? 'bg-coral text-white' : inMonth ? 'text-ink' : 'text-quiet/60'}`}>
-                {dayNumber(d)}
-              </span>
-              <div className="space-y-1">
+              <div className="mb-1 flex justify-end">
+                <span className={`grid h-6 min-w-6 place-items-center rounded-md px-1 text-[12px] font-semibold sm:text-[13px] ${d === today ? 'bg-ink text-white' : inMonth ? 'text-ink' : 'text-quiet/50'}`}>
+                  {dayNumber(d)}
+                </span>
+              </div>
+              <div className="space-y-0.5">
                 {list.slice(0, 2).map((e) => (
                   <button
                     key={e.id}
                     onClick={(ev) => { ev.stopPropagation(); onEvent?.(e) }}
-                    className={`block w-full truncate rounded-[5px] border-l-[3px] px-1 py-0.5 text-left text-[10px] font-medium sm:px-1.5 sm:text-[12px] ${tone(e)}`}
+                    className="flex w-full items-center gap-1 rounded px-0.5 py-0.5 text-left text-[10px] font-medium hover:bg-fill sm:gap-1.5 sm:text-[12px]"
                   >
-                    {e.title}
+                    <i className={`h-1.5 w-1.5 shrink-0 rounded-full sm:h-2 sm:w-2 ${dot(e)}`} />
+                    <span className="hidden shrink-0 text-quiet sm:inline">{fmtMin(e.start_min)}</span>
+                    <span className="truncate">{e.title}</span>
                   </button>
                 ))}
                 {list.length > 2 && (
-                  <button onClick={(ev) => { ev.stopPropagation(); onMore(d) }} className="px-1 text-[11px] font-medium text-muted hover:text-ink sm:text-[12px]">
+                  <button onClick={(ev) => { ev.stopPropagation(); onMore(d) }} className="px-0.5 text-[11px] font-medium text-muted hover:text-ink sm:text-[12px]">
                     + კიდევ {list.length - 2}
                   </button>
                 )}
@@ -104,6 +118,21 @@ function Month({ anchor, today, events, onSlot, onEvent, onMore }) {
           )
         })}
       </div>
+    </div>
+  )
+}
+
+// წითელი ხაზი ახლანდელ დროზე (დღევანდელ სვეტში)
+function NowLine() {
+  const [now, setNow] = useState(() => new Date())
+  useEffect(() => {
+    const t = setInterval(() => setNow(new Date()), 60000)
+    return () => clearInterval(t)
+  }, [])
+  const top = ((now.getHours() * 60 + now.getMinutes()) / 60) * ROW
+  return (
+    <div className="pointer-events-none absolute inset-x-0 z-10" style={{ top }}>
+      <div className="relative h-[2px] bg-coral"><span className="absolute -left-1 -top-[3px] h-2 w-2 rounded-full bg-coral" /></div>
     </div>
   )
 }
@@ -119,9 +148,11 @@ function TimeGrid({ days, today, events, onSlot, onEvent }) {
       <div className="grid border-b border-line" style={{ gridTemplateColumns: `52px repeat(${days.length}, minmax(0, 1fr))` }}>
         <div />
         {days.map((d) => (
-          <div key={d} className={`flex flex-col items-center py-2 ${d === today ? 'bg-bg' : ''}`}>
-            <span className="text-[12px] font-medium text-muted">{days.length > 1 ? SHORT[weekdayOf(d)] : DAY_NAMES[weekdayOf(d)]}</span>
-            <span className={`mt-0.5 grid h-7 w-7 place-items-center rounded-full text-[14px] font-semibold ${d === today ? 'bg-coral text-white' : ''}`}>{dayNumber(d)}</span>
+          <div key={d} className="px-1 py-2">
+            <div className={`flex flex-col items-center rounded-xl py-1.5 ${d === today ? 'bg-ink text-white' : ''}`}>
+              <span className={`text-[12px] font-medium ${d === today ? 'text-white/70' : 'text-muted'}`}>{days.length > 1 ? SHORT[weekdayOf(d)] : DAY_NAMES[weekdayOf(d)]}</span>
+              <span className="text-[16px] font-semibold leading-tight">{dayNumber(d)}</span>
+            </div>
           </div>
         ))}
       </div>
@@ -138,15 +169,16 @@ function TimeGrid({ days, today, events, onSlot, onEvent }) {
             <div
               key={d}
               data-day-col={d}
-              className={`relative border-l border-line ${d === today ? 'bg-bg/70' : ''} ${onSlot ? 'cursor-pointer' : ''}`}
+              className={`relative border-l border-line ${onSlot ? 'cursor-pointer hover:bg-bg/40' : ''}`}
               onClick={(ev) => onSlot?.(d, Math.min(23, Math.floor(ev.nativeEvent.offsetY / ROW)))}
             >
-              {HOURS.map((h) => <div key={h} className="pointer-events-none border-b border-line" style={{ height: ROW }} />)}
+              {HOURS.map((h) => <div key={h} className="pointer-events-none border-b border-dashed border-line" style={{ height: ROW }} />)}
+              {d === today && <NowLine />}
               {layoutDay(eventsOn(events, d)).map((e) => (
                 <button
                   key={e.id}
                   onClick={(ev) => { ev.stopPropagation(); onEvent?.(e) }}
-                  className={`absolute overflow-hidden rounded-md border-l-[3px] px-1.5 py-1 text-left leading-tight ${tone(e)}`}
+                  className={`absolute overflow-hidden rounded-lg px-1.5 py-1 text-left leading-tight ring-1 ring-white ${tone(e)}`}
                   style={{
                     top: (e.start_min / 60) * ROW + 1,
                     height: ((e.end_min - e.start_min) / 60) * ROW - 2,
@@ -154,8 +186,8 @@ function TimeGrid({ days, today, events, onSlot, onEvent }) {
                     width: `calc(${100 / e.cols}% - 4px)`,
                   }}
                 >
+                  <span className="flex items-center gap-1 truncate text-[11px] opacity-80"><i className={`h-1.5 w-1.5 shrink-0 rounded-full ${dot(e)}`} />{fmtMin(e.start_min)}–{fmtMin(e.end_min)}</span>
                   <span className="block truncate text-[12px] font-semibold">{e.title}</span>
-                  <span className="block truncate text-[11px] opacity-75">{fmtMin(e.start_min)}–{fmtMin(e.end_min)}</span>
                   {e.subtitle && <span className="block truncate text-[11px] opacity-75">{e.subtitle}</span>}
                 </button>
               ))}

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { DAY_NAMES, MONTH_NAMES, dayNumber, fmtMin, monthIndex, weekdayOf } from '../lib/schedule.js'
-import BigCalendar, { TONES } from './BigCalendar.jsx'
+import BigCalendar, { DOTS } from './BigCalendar.jsx'
 import { openJob } from './JobCard.jsx'
 import { Segmented, Sheet, Title, btn, btn2, input, label } from './ui.jsx'
 
@@ -38,7 +38,7 @@ export function StudentSchedule({ busy, setLessons, matchCount, onSeeJobs }) {
 }
 
 const Legend = ({ tone, text }) => (
-  <span className="flex items-center gap-1.5"><i className={`h-3 w-3 rounded-sm border-l-[3px] ${TONES[tone]}`} />{text}</span>
+  <span className="flex items-center gap-1.5"><i className={`h-2.5 w-2.5 rounded-full ${DOTS[tone]}`} />{text}</span>
 )
 
 function LessonSheet({ date, start, event, onClose, setLessons }) {

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { Icon, Segmented, btn, card, chip, input, label } from './ui.jsx'
-import { TONES } from './BigCalendar.jsx'
+import { DOTS } from './BigCalendar.jsx'
 
 const DEMO = {
   student: {
@@ -73,9 +73,9 @@ function Hero({ compact }) {
         <div className="grid grid-cols-7">
           {cells.map((list, i) => (
             <div key={i} className="min-h-[86px] space-y-1 border-r border-line p-1 last:border-r-0">
-              <span className={`inline-grid h-5 w-5 place-items-center rounded-full text-[11px] ${i === 4 ? 'bg-coral text-white' : ''}`}>{16 + i}</span>
+              <span className={`ml-auto grid h-5 w-5 place-items-center rounded-md text-[11px] ${i === 4 ? 'bg-ink text-white' : ''}`}>{16 + i}</span>
               {list.map(([tone, title]) => (
-                <span key={title} className={`block truncate rounded-[4px] border-l-[3px] px-1 py-0.5 text-[10px] ${TONES[tone]}`}>{title}</span>
+                <span key={title} className="flex items-center gap-1 truncate text-[10px]"><i className={`h-1.5 w-1.5 shrink-0 rounded-full ${DOTS[tone]}`} /><span className="truncate">{title}</span></span>
               ))}
             </div>
           ))}

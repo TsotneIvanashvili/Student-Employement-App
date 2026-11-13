@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { FIRST_HOUR, LAST_HOUR, formatShift, todayISO } from '../lib/match.js'
 import Calendar, { WEEKDAYS, WEEKEND, preset } from './Calendar.jsx'
-import BigCalendar, { TONES } from './BigCalendar.jsx'
+import BigCalendar, { DOTS } from './BigCalendar.jsx'
 import { jobEvents } from '../lib/schedule.js'
 import JobCard, { CompanyLogo, openJob } from './JobCard.jsx'
 import { ApplicantCard, jobHours } from './Applicants.jsx'
@@ -82,8 +82,8 @@ export function EmployerSchedule({ profile }) {
     <div>
       <Title eyebrow={profile.company_name}>ცვლების კალენდარი</Title>
       <div className="mb-4 flex flex-wrap gap-4 text-[13px] text-muted">
-        <span className="flex items-center gap-1.5"><i className={`h-3 w-3 rounded-sm border-l-[3px] ${TONES.work}`} />სტუდენტი აყვანილია</span>
-        <span className="flex items-center gap-1.5"><i className={`h-3 w-3 rounded-sm border-l-[3px] ${TONES.open}`} />ჯერ არავინ</span>
+        <span className="flex items-center gap-1.5"><i className={`h-2.5 w-2.5 rounded-full ${DOTS.work}`} />სტუდენტი აყვანილია</span>
+        <span className="flex items-center gap-1.5"><i className={`h-2.5 w-2.5 rounded-full ${DOTS.open}`} />ჯერ არავინ</span>
       </div>
       <BigCalendar events={events} onEvent={(e) => openJob(e.job_id)} />
     </div>
