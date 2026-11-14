@@ -31,7 +31,7 @@ export default function InstallRow() {
 
 const Step = ({ n, children }) => (
   <li className="flex gap-3">
-    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-brand-soft text-sm font-semibold text-brand">{n}</span>
+    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-brand-soft text-sm font-semibold text-brand-deep">{n}</span>
     <span>{children}</span>
   </li>
 )

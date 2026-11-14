@@ -1,40 +1,85 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { supabase } from '../lib/supabase.js'
-import { openJob } from './JobCard.jsx'
-import { STATUS_TONE } from './Applicants.jsx'
 import AccountActions from './AccountActions.jsx'
-import { Badge, Icon, Title, btn, card, input, label } from './ui.jsx'
+import { IdentityCard } from './Identity.jsx'
+import { Badge, Icon, Title, btn, btn2, btnSm2, card, input, label } from './ui.jsx'
 
-const STATUS_STUDENT = { sent: 'გაგზავნილია', accepted: 'აგიყვანეს', rejected: 'უარი' }
+// პროფილი: პირადი მონაცემები (მხოლოდ საჩვენებლად) და სივი, რომელიც "რედაქტირების" ღილაკით იხსნება
+export default function StudentProfile({ profile, email, onSaved }) {
+  const cvDone = Boolean(profile.cv_experience || profile.cv_skills || profile.cv_languages || profile.cv_path)
+  const [editing, setEditing] = useState(!cvDone)
+  const [note, setNote] = useState(null)
 
-export default function StudentProfile({ profile, onSaved }) {
+  async function openPdf() {
+    const { data } = await supabase.storage.from('cvs').createSignedUrl(profile.cv_path, 600)
+    if (data) window.open(data.signedUrl, '_blank', 'noopener')
+  }
+
+  return (
+    <div>
+      <Title eyebrow="სამუშაოს მაძიებელი">პროფილი</Title>
+      <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[380px_minmax(0,1fr)]">
+        <div className="space-y-5">
+          <IdentityCard profile={profile} email={email} onSaved={onSaved} />
+          <div className="hidden lg:block"><AccountActions profile={profile} /></div>
+        </div>
+
+        <section className={`${card} p-5`} data-cv>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5">
+              <h2 className="text-[18px] font-bold">სივი</h2>
+              <Badge tone={cvDone ? 'green' : 'amber'}>{cvDone ? <><Icon name="check" className="h-3.5 w-3.5" strokeWidth={3} />შევსებულია</> : 'შესავსებია'}</Badge>
+            </div>
+            {!editing && <button onClick={() => { setEditing(true); setNote(null) }} className={`${btnSm2} flex items-center gap-1.5`}><Icon name="edit" className="h-4 w-4" />რედაქტირება</button>}
+          </div>
+          {note && <p className={`mb-3 flex items-center gap-1.5 text-[14px] font-medium ${note.ok ? 'text-brand-deep' : 'text-coral'}`}>{note.ok && <Icon name="check" className="h-4 w-4" strokeWidth={3} />}{note.text}</p>}
+
+          {editing ? (
+            <CvForm profile={profile} onSaved={onSaved} canCancel={cvDone} setNote={setNote} onClose={() => setEditing(false)} />
+          ) : (
+            <dl className="space-y-2">
+              <Fact name="გამოცდილება" value={profile.cv_experience} />
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                <Fact name="უნარები" value={profile.cv_skills} />
+                <Fact name="ენები" value={profile.cv_languages} />
+              </div>
+              {profile.cv_path && (
+                <button onClick={openPdf} className="flex w-full items-center gap-2 rounded-2xl bg-bg px-4 py-3 text-left text-[15px] font-semibold hover:bg-fill">
+                  <Icon name="doc" className="h-5 w-5 text-brand-deep" />PDF სივის ნახვა
+                </button>
+              )}
+            </dl>
+          )}
+        </section>
+
+        <div className="lg:hidden"><AccountActions profile={profile} /></div>
+      </div>
+    </div>
+  )
+}
+
+const Fact = ({ name, value }) => (
+  <div className="rounded-2xl bg-bg px-4 py-3">
+    <dt className="text-[12px] font-medium text-muted">{name}</dt>
+    <dd className={`whitespace-pre-wrap break-words text-[15px] ${value ? '' : 'text-quiet'}`}>{value || 'არ არის შევსებული'}</dd>
+  </div>
+)
+
+function CvForm({ profile, onSaved, canCancel, setNote, onClose }) {
   const [form, setForm] = useState({
-    full_name: profile.full_name ?? '',
     cv_experience: profile.cv_experience ?? '',
     cv_skills: profile.cv_skills ?? '',
     cv_languages: profile.cv_languages ?? '',
   })
-  const [note, setNote] = useState(null)
-  const [applications, setApplications] = useState([])
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value })
-
-  useEffect(() => {
-    supabase
-      .from('applications')
-      .select('id, status, jobs(id, title, company)')
-      .eq('student_id', profile.id)
-      .order('created_at', { ascending: false })
-      .then(({ data }) => setApplications(data ?? []))
-  }, [profile.id])
-
-  const cvDone = Boolean(profile.cv_experience || profile.cv_skills || profile.cv_path)
 
   async function save(e) {
     e.preventDefault()
-    const changes = { ...form }
-    const { error } = await supabase.from('profiles').update(changes).eq('id', profile.id)
-    setNote(error ? { text: 'ვერ შეინახა. სცადე თავიდან.' } : { ok: true, text: 'შენახულია' })
-    if (!error) onSaved(changes)
+    const { error } = await supabase.from('profiles').update(form).eq('id', profile.id)
+    if (error) return setNote({ text: 'ვერ შეინახა. სცადე თავიდან.' })
+    onSaved(form)
+    setNote({ ok: true, text: 'შენახულია' })
+    onClose()
   }
 
   async function upload(e) {
@@ -51,55 +96,24 @@ export default function StudentProfile({ profile, onSaved }) {
   }
 
   return (
-    <div>
-      <Title eyebrow="სამუშაოს მაძიებელი">{profile.full_name}</Title>
-      <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[360px_minmax(0,1fr)]">
-        <div className="space-y-5">
-          <section className={`${card} p-5`}>
-            <h2 className="mb-3 text-[18px] font-semibold">ჩემი განაცხადები</h2>
-            {applications.length === 0 && <p className="text-muted">ჯერ არცერთი არ გაგიგზავნია.</p>}
-            <ul className="space-y-2">
-              {applications.map((a) => (
-                <li key={a.id}>
-                  <button onClick={() => openJob(a.jobs.id)} className="flex w-full items-center gap-3 rounded-2xl bg-bg px-4 py-3 text-left hover:bg-fill">
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate font-semibold">{a.jobs.title}</span>
-                      <span className="block truncate text-[13px] font-semibold text-muted">{a.jobs.company}</span>
-                    </span>
-                    <Badge tone={STATUS_TONE[a.status]}>{STATUS_STUDENT[a.status]}</Badge>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </section>
-          <div className="hidden lg:block"><AccountActions profile={profile} /></div>
-        </div>
-
-        <form onSubmit={save} className={`${card} space-y-4 p-5`} data-tour="cv">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-[18px] font-semibold">სივი</h2>
-            <Badge tone={cvDone ? 'green' : 'amber'}>{cvDone ? <><Icon name="check" className="h-3.5 w-3.5" strokeWidth={2.5} />შევსებულია</> : 'შესავსებია'}</Badge>
-          </div>
-          <Field label="სახელი და გვარი"><input required maxLength={80} className={input} value={form.full_name} onChange={set('full_name')} /></Field>
-          <Field label="გამოცდილება">
-            <textarea className={`${input} resize-none`} rows={3} maxLength={1000} value={form.cv_experience} onChange={set('cv_experience')} placeholder="მაგ. 3 თვე ბარისტად, 1 წელი გაყიდვებში" />
-          </Field>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="უნარები"><input maxLength={200} className={input} value={form.cv_skills} onChange={set('cv_skills')} placeholder="კომუნიკაცია, Excel" /></Field>
-            <Field label="ენები"><input maxLength={200} className={input} value={form.cv_languages} onChange={set('cv_languages')} placeholder="ინგლისური B2" /></Field>
-          </div>
-          <label className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl border border-dashed border-line px-4 py-4 hover:border-brand">
-            <span className="flex items-center gap-2 font-medium"><Icon name="doc" className="h-5 w-5 text-brand" />{profile.cv_path ? 'PDF სივი ატვირთულია' : 'PDF სივი (არასავალდებულო)'}</span>
-            <span className="font-semibold text-brand">{profile.cv_path ? 'შეცვლა' : 'ატვირთვა'}</span>
-            <input type="file" accept="application/pdf" className="hidden" onChange={upload} />
-          </label>
-          {note && <p className={`flex items-center gap-1.5 font-medium ${note.ok ? 'text-mint-dark' : 'text-coral'}`}>{note.ok && <Icon name="check" className="h-4 w-4" strokeWidth={2.5} />}{note.text}</p>}
-          <button className={btn}>შენახვა</button>
-        </form>
-
-        <div className="lg:hidden"><AccountActions profile={profile} /></div>
+    <form onSubmit={save} className="space-y-4">
+      <Field label="გამოცდილება">
+        <textarea className={`${input} resize-none`} rows={3} maxLength={1000} value={form.cv_experience} onChange={set('cv_experience')} placeholder="მაგ. 3 თვე ბარისტად, 1 წელი გაყიდვებში" />
+      </Field>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Field label="უნარები"><input maxLength={200} className={input} value={form.cv_skills} onChange={set('cv_skills')} placeholder="კომუნიკაცია, Excel" /></Field>
+        <Field label="ენები"><input maxLength={200} className={input} value={form.cv_languages} onChange={set('cv_languages')} placeholder="ინგლისური B2" /></Field>
       </div>
-    </div>
+      <label className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl border border-dashed border-line px-4 py-4 hover:border-brand-deep">
+        <span className="flex items-center gap-2 font-medium"><Icon name="doc" className="h-5 w-5 text-brand-deep" />{profile.cv_path ? 'PDF სივი ატვირთულია' : 'PDF სივი (არასავალდებულო)'}</span>
+        <span className="font-semibold text-brand-deep">{profile.cv_path ? 'შეცვლა' : 'ატვირთვა'}</span>
+        <input type="file" accept="application/pdf" className="hidden" onChange={upload} />
+      </label>
+      <div className={`grid gap-3 ${canCancel ? 'grid-cols-2' : 'grid-cols-1'}`}>
+        {canCancel && <button type="button" onClick={onClose} className={btn2}>გაუქმება</button>}
+        <button className={btn}>შენახვა</button>
+      </div>
+    </form>
   )
 }
 

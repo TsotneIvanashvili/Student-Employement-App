@@ -5,6 +5,7 @@ import { navigate, usePath } from './lib/router.jsx'
 import Auth from './components/Auth.jsx'
 import { About, Home, How, Logo, NotFound, Privacy, Terms, usePageTitle } from './components/Site.jsx'
 import JobList, { filterJobs } from './components/JobList.jsx'
+import { EmployerHome, SeekerHome } from './components/Dashboard.jsx'
 import { StudentSchedule } from './components/Schedule.jsx'
 import JobDetail from './components/JobDetail.jsx'
 import Assistant from './components/Assistant.jsx'
@@ -13,18 +14,19 @@ import { EmployerSchedule, Inbox, MyJobs, NewJob, EmployerProfile } from './comp
 import Tour, { EMPLOYER_STEPS, STUDENT_STEPS } from './components/Tour.jsx'
 import { Icon, btn } from './components/ui.jsx'
 
+// პროფილი მენიუში არ არის: იხსნება სახელის ბარათით (კომპიუტერზე ქვემოთ მარცხნივ, ტელეფონზე ზემოთ მარჯვნივ)
 const STUDENT_TABS = [
+  { id: 'home', icon: 'home', label: 'მთავარი' },
   { id: 'calendar', icon: 'calendar', label: 'განრიგი' },
   { id: 'jobs', icon: 'jobs', label: 'ვაკანსიები' },
   { id: 'ai', icon: 'ai', label: 'ასისტენტი' },
-  { id: 'profile', icon: 'profile', label: 'პროფილი' },
 ]
 const EMPLOYER_TABS = [
+  { id: 'home', icon: 'home', label: 'მთავარი' },
   { id: 'inbox', icon: 'inbox', label: 'განაცხადები' },
   { id: 'calendar', icon: 'calendar', label: 'კალენდარი' },
   { id: 'jobs', icon: 'jobs', label: 'ვაკანსიები' },
   { id: 'plus', icon: 'plus', label: 'დამატება' },
-  { id: 'profile', icon: 'profile', label: 'პროფილი' },
 ]
 function useHash() {
   const [hash, setHash] = useState(window.location.hash)
@@ -106,7 +108,8 @@ export default function App() {
   if (!profile) return <Splash />
 
   const patch = (changes) => setProfile((p) => ({ ...p, ...changes }))
-  return profile.role === 'employer' ? <EmployerApp profile={profile} patch={patch} /> : <StudentApp profile={profile} patch={patch} />
+  const email = session.user.email
+  return profile.role === 'employer' ? <EmployerApp profile={profile} email={email} patch={patch} /> : <StudentApp profile={profile} email={email} patch={patch} />
 }
 
 const Splash = () => <div className="grid min-h-dvh place-items-center"><Logo className="animate-pulse text-[32px]" /></div>
@@ -129,9 +132,11 @@ function LoadError() {
 
 // ტელეფონზე: ქვედა ტაბები. კომპიუტერზე: მარცხენა მენიუ.
 function Shell({ profile, tabs, tab, onTab, onHelp, cta, children }) {
+  const initial = (profile.full_name || '?').slice(0, 1)
+  const toggleProfile = () => onTab(tab === 'profile' ? 'home' : 'profile')
   return (
-    <div className="min-h-dvh lg:pl-64">
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white/95 px-2 pb-[max(env(safe-area-inset-bottom),6px)] pt-1.5 backdrop-blur lg:inset-y-0 lg:left-0 lg:right-auto lg:flex lg:w-64 lg:flex-col lg:border-r lg:border-t-0 lg:bg-white lg:px-4 lg:py-6">
+    <div className="min-h-dvh lg:pl-[272px]">
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white/95 px-2 pb-[max(env(safe-area-inset-bottom),6px)] pt-1.5 backdrop-blur lg:inset-y-0 lg:left-0 lg:right-auto lg:flex lg:w-[272px] lg:flex-col lg:border-r lg:border-t-0 lg:bg-white lg:px-4 lg:py-6">
         <div className="mb-8 hidden px-2 lg:block"><Logo /></div>
         {cta && <div className="mb-4 hidden lg:block">{cta}</div>}
         <div className="grid lg:flex lg:flex-col lg:gap-1" style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }}>
@@ -142,31 +147,43 @@ function Shell({ profile, tabs, tab, onTab, onHelp, cta, children }) {
                 key={t.id}
                 data-tour={`tab-${t.id}`}
                 onClick={() => onTab(t.id)}
-                className={`flex min-w-0 flex-col items-center gap-0.5 rounded-2xl py-1.5 font-medium transition ${tabs.length > 4 ? 'text-[10px] tracking-tight' : 'text-[11px]'} lg:flex-row lg:tracking-normal lg:gap-3 lg:px-4 lg:py-3 lg:text-[16px] ${active ? 'text-brand lg:bg-brand-soft' : 'text-quiet hover:text-ink lg:text-muted lg:hover:bg-fill'}`}
+                className={`flex min-w-0 flex-col items-center gap-0.5 rounded-2xl py-1.5 font-medium transition ${tabs.length > 4 ? 'text-[10px] tracking-tight' : 'text-[11px]'} lg:flex-row lg:gap-3 lg:px-4 lg:py-3 lg:text-[16px] lg:tracking-normal ${active ? 'text-brand-deep lg:bg-brand-soft lg:font-semibold' : 'text-quiet hover:text-ink lg:text-muted lg:hover:bg-fill'}`}
               >
                 <span className={`grid h-8 w-12 place-items-center rounded-full transition lg:h-auto lg:w-auto ${active ? 'bg-brand-soft lg:bg-transparent' : ''}`}>
-                  <Icon name={t.icon} className="h-6 w-6" strokeWidth={active ? 2.6 : 2} />
+                  <Icon name={t.icon} className="h-6 w-6" strokeWidth={active ? 2.4 : 2} />
                 </span>
                 <span className="max-w-full truncate">{t.label}</span>
               </button>
             )
           })}
         </div>
-        <div className="mt-auto hidden items-center gap-3 rounded-2xl bg-bg p-3 lg:flex">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-sky text-[16px] font-semibold text-white">{(profile.full_name || '?').slice(0, 1)}</span>
-          <span className="min-w-0">
+        <button
+          data-tour="me"
+          onClick={toggleProfile}
+          aria-label="პროფილი"
+          aria-pressed={tab === 'profile'}
+          className={`mt-auto hidden w-full items-center gap-3 rounded-2xl p-3 text-left transition lg:flex ${tab === 'profile' ? 'bg-brand-soft' : 'bg-bg hover:bg-fill'}`}
+        >
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand text-[16px] font-bold text-on-brand">{initial}</span>
+          <span className="min-w-0 flex-1">
             <span className="block truncate text-[14px] font-semibold">{profile.full_name}</span>
             <span className="block truncate text-[12px] font-medium text-muted">{profile.role === 'employer' ? profile.company_name : 'სამუშაოს მაძიებელი'}</span>
           </span>
-        </div>
+          <Icon name="chevron" className={`h-4 w-4 shrink-0 text-quiet transition ${tab === 'profile' ? 'rotate-90' : ''}`} strokeWidth={2.5} />
+        </button>
       </nav>
 
       <div className="mx-auto max-w-6xl px-4 pb-32 pt-[max(env(safe-area-inset-top),14px)] sm:px-6 lg:px-10 lg:pb-12 lg:pt-8">
-        <header className="mb-3 flex items-center justify-between lg:mb-0 lg:h-0 lg:justify-end">
+        <header className="mb-4 flex items-center justify-between gap-2 lg:mb-0 lg:h-0 lg:justify-end">
           <span className="lg:hidden"><Logo className="text-[22px]" /></span>
-          <button data-tour="help" onClick={onHelp} className="flex items-center gap-1.5 rounded-full border border-line bg-white px-3 py-1.5 text-[14px] font-semibold text-muted hover:text-brand lg:relative lg:top-1">
-            <Icon name="help" className="h-5 w-5" />გზამკვლევი
-          </button>
+          <span className="flex items-center gap-2">
+            <button data-tour="help" onClick={onHelp} aria-label="გზამკვლევი" className="flex h-10 items-center gap-1.5 rounded-full bg-white px-3 text-[14px] font-semibold text-muted shadow-card hover:text-ink lg:relative lg:top-1">
+              <Icon name="help" className="h-5 w-5" /><span className="hidden sm:inline">გზამკვლევი</span>
+            </button>
+            <button data-tour="me" onClick={toggleProfile} aria-label="პროფილი" aria-pressed={tab === 'profile'} className={`grid h-10 w-10 place-items-center rounded-full bg-brand text-[16px] font-bold text-on-brand lg:hidden ${tab === 'profile' ? 'ring-4 ring-brand-soft' : ''}`}>
+              {initial}
+            </button>
+          </span>
         </header>
         {children}
       </div>
@@ -174,14 +191,14 @@ function Shell({ profile, tabs, tab, onTab, onHelp, cta, children }) {
   )
 }
 
-function StudentApp({ profile, patch }) {
+function StudentApp({ profile, email, patch }) {
   usePageTitle('')
   const hash = useHash()
   const jobId = hash.startsWith('#job/') ? hash.slice(5) : null
-  const [tab, setTab] = useState('calendar')
+  const [tab, setTab] = useState('home')
   const [jobs, setJobs] = useState([])
   const [lessons, setLessons] = useState([])
-  const [work, setWork] = useState([])
+  const [applications, setApplications] = useState([])
   const [onlyFit, setOnlyFit] = useState({ on: true, kind: 'all' })
   const [showTour, openTour, closeTour] = useTour(`sj_tour_student_${profile.id}`)
 
@@ -189,25 +206,28 @@ function StudentApp({ profile, patch }) {
     supabase.from('jobs').select('*').eq('is_open', true).order('created_at', { ascending: false }).then(({ data }) => setJobs(data ?? []))
     supabase.from('events').select('*').then(({ data }) => setLessons(data ?? []))
   }, [])
-  // მიღებული სამუშაოს ცვლები თავისით ჩნდება განრიგში (ვაკანსიის გვერდიდან დაბრუნებისას ახლდება)
+  // განაცხადები ახლდება ვაკანსიის გვერდიდან დაბრუნებისას; მიღებული სამუშაოს ცვლები თავისით ჩნდება განრიგში
   useEffect(() => {
     if (jobId) return
     supabase
       .from('applications')
-      .select('jobs(*)')
+      .select('id, status, jobs(*)')
       .eq('student_id', profile.id)
-      .eq('status', 'accepted')
-      .then(({ data }) => setWork((data ?? []).flatMap((a) => jobEvents(a.jobs))))
+      .order('created_at', { ascending: false })
+      .then(({ data }) => setApplications(data ?? []))
   }, [jobId, profile.id])
   useEffect(toTop, [jobId])
 
-  const busy = useMemo(() => [...lessons.map((e) => ({ ...e, kind: 'lesson' })), ...work], [lessons, work])
+  const busy = useMemo(
+    () => [...lessons.map((e) => ({ ...e, kind: 'lesson' })), ...applications.filter((a) => a.status === 'accepted').flatMap((a) => jobEvents(a.jobs))],
+    [lessons, applications],
+  )
   const matches = useMemo(() => filterJobs(jobs, busy, { on: true, kind: 'all' }), [jobs, busy])
 
   const go = (t) => { closeJob(); setTab(t); toTop() }
 
   return (
-    <Shell profile={profile} tabs={STUDENT_TABS} tab={jobId ? 'jobs' : tab} onTab={go} onHelp={() => { go('calendar'); openTour() }}>
+    <Shell profile={profile} tabs={STUDENT_TABS} tab={jobId ? 'jobs' : tab} onTab={go} onHelp={() => { go('home'); openTour() }}>
       {jobId ? (
         <JobDetail
           id={jobId}
@@ -218,22 +238,23 @@ function StudentApp({ profile, patch }) {
         />
       ) : (
         <>
+          {tab === 'home' && <SeekerHome profile={profile} busy={busy} matches={matches} applications={applications} go={go} openProfile={() => go('profile')} />}
           {tab === 'calendar' && <StudentSchedule busy={busy} setLessons={setLessons} matchCount={matches.length} onSeeJobs={() => go('jobs')} />}
           {tab === 'jobs' && <JobList jobs={jobs} busy={busy} onlyFit={onlyFit} setOnlyFit={setOnlyFit} onGoCalendar={() => go('calendar')} />}
           {tab === 'ai' && <Assistant profile={profile} jobs={jobs} busy={busy} setLessons={setLessons} matchCount={matches.length} />}
-          {tab === 'profile' && <StudentProfile profile={profile} onSaved={patch} />}
+          {tab === 'profile' && <StudentProfile profile={profile} email={email} onSaved={patch} />}
         </>
       )}
-      {showTour && !jobId && <Tour steps={STUDENT_STEPS} onClose={closeTour} />}
+      {showTour && !jobId && <Tour steps={STUDENT_STEPS} onClose={closeTour} onTab={go} />}
     </Shell>
   )
 }
 
-function EmployerApp({ profile, patch }) {
+function EmployerApp({ profile, email, patch }) {
   usePageTitle('')
   const hash = useHash()
   const jobId = hash.startsWith('#job/') ? hash.slice(5) : null
-  const [tab, setTab] = useState('inbox')
+  const [tab, setTab] = useState('home')
   const [version, setVersion] = useState(0)
   const [showTour, openTour, closeTour] = useTour(`sj_tour_employer_${profile.id}`)
   useEffect(toTop, [jobId])
@@ -245,21 +266,22 @@ function EmployerApp({ profile, patch }) {
       tabs={EMPLOYER_TABS}
       tab={jobId ? 'jobs' : tab}
       onTab={go}
-      onHelp={() => { go('inbox'); openTour() }}
+      onHelp={() => { go('home'); openTour() }}
       cta={<button onClick={() => go('plus')} className={`${btn} flex items-center justify-center gap-2`}><Icon name="plus" className="h-5 w-5" strokeWidth={3} />ახალი ვაკანსია</button>}
     >
       {jobId ? (
         <JobDetail id={jobId} profile={profile} busy={null} onBack={() => (history.length > 1 ? history.back() : closeJob())} onGoProfile={() => {}} />
       ) : (
         <>
+          {tab === 'home' && <EmployerHome key={version} profile={profile} go={go} />}
           {tab === 'inbox' && <Inbox key={version} profile={profile} onNew={() => go('plus')} />}
           {tab === 'calendar' && <EmployerSchedule profile={profile} />}
           {tab === 'jobs' && <MyJobs key={version} profile={profile} onNew={() => go('plus')} />}
           {tab === 'plus' && <NewJob profile={profile} onCreated={() => { setVersion((v) => v + 1); go('jobs') }} />}
-          {tab === 'profile' && <EmployerProfile profile={profile} onSaved={patch} />}
+          {tab === 'profile' && <EmployerProfile profile={profile} email={email} onSaved={patch} />}
         </>
       )}
-      {showTour && !jobId && <Tour steps={EMPLOYER_STEPS} onClose={closeTour} />}
+      {showTour && !jobId && <Tour steps={EMPLOYER_STEPS} onClose={closeTour} onTab={go} />}
     </Shell>
   )
 }

@@ -1,11 +1,15 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase.js'
-import { DAY_NAMES, MONTH_NAMES, dayNumber, fmtMin, monthIndex, weekdayOf } from '../lib/schedule.js'
+import { chat } from '../lib/ollama.js'
+import { splitReply } from '../lib/prompt.js'
+import { DAY_NAMES, MONTH_NAMES, dayNumber, fmtMin, freeSlots, monthIndex, weekdayOf } from '../lib/schedule.js'
 import BigCalendar, { DOTS } from './BigCalendar.jsx'
+import LessonProposals from './LessonProposals.jsx'
 import { openJob } from './JobCard.jsx'
-import { Segmented, Sheet, Title, btn, btn2, input, label } from './ui.jsx'
+import { Icon, Segmented, Sheet, Title, btn, btn2, btnSm, card, input, label } from './ui.jsx'
 
-const TIMES = Array.from({ length: 37 }, (_, i) => 6 * 60 + i * 30) // 06:00 … 24:00
+const TIMES = Array.from({ length: 49 }, (_, i) => i * 30) // 00:00 … 24:00
+const withValue = (list, v) => (list.includes(v) ? list : [...list, v].sort((a, b) => a - b)) // AI-ს ჩაწერილი 13:45-ის მსგავსი დროც ჩანს
 const dateLabel = (d) => `${DAY_NAMES[weekdayOf(d)]}, ${dayNumber(d)} ${MONTH_NAMES[monthIndex(d)]}`
 const weeklyLabel = (d) => `ყოველ ${DAY_NAMES[weekdayOf(d)].replace(/ი$/, '')}ს`
 
@@ -16,23 +20,78 @@ export function StudentSchedule({ busy, setLessons, matchCount, onSeeJobs }) {
 
   return (
     <div>
-      <Title eyebrow="დააჭირე დღეს ან საათს, რომ დაკავებული დრო ჩაწერო">ჩემი განრიგი</Title>
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-white px-4 py-3" data-tour="matches">
-        <p className="text-[15px]">
-          {lessons.length === 0 ? 'ჯერ არაფერი ჩაგიწერია, ამიტომ ყველა ვაკანსია გერგება.' : <>შენს თავისუფალ დროს ერგება <b>{matchCount} ვაკანსია</b></>}
+      <Title eyebrow="მონიშნე, როდის ხარ დაკავებული. დანარჩენი დრო თავისუფალია">ჩემი განრიგი</Title>
+      <QuickAdd busy={busy} setLessons={setLessons} />
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-1 text-[14px]" data-tour="matches">
+        <p className="text-muted">
+          {lessons.length === 0 ? 'ჯერ არაფერი ჩაგიწერია, ამიტომ ყველა ვაკანსია გერგება.' : <>შენს თავისუფალ დროს ერგება <button onClick={onSeeJobs} className="font-semibold text-brand-deep underline underline-offset-4">{matchCount} ვაკანსია</button></>}
         </p>
-        <div className="flex w-full flex-wrap items-center justify-between gap-x-4 gap-y-2 text-[13px] text-muted sm:w-auto">
+        <div className="flex items-center gap-4 text-[13px] text-muted">
           <Legend tone="lesson" text="დაკავებული" />
           <Legend tone="work" text="სამუშაო" />
-          <button onClick={onSeeJobs} className="ml-auto whitespace-nowrap rounded-lg bg-ink px-3 py-1.5 text-[14px] font-medium text-white">ვაკანსიების ნახვა</button>
         </div>
       </div>
       <BigCalendar
         events={busy}
+        hint="გადაატარე მაუსი საათებზე ან დააჭირე დღეს"
         onSlot={(date, hour) => setSheet({ date, start: (hour ?? 10) * 60 })}
+        onRange={(date, start, end) => setSheet({ date, start, end })}
         onEvent={(e) => (e.kind === 'work' ? openJob(e.job_id) : setSheet({ date: e.on, event: e }))}
       />
       {sheet && <LessonSheet {...sheet} onClose={() => setSheet(null)} setLessons={setLessons} />}
+    </div>
+  )
+}
+
+// სიტყვებით ჩაწერა: ასისტენტი ტექსტს დაკავებულ დროდ აქცევს, კალენდარში დადასტურების შემდეგ ემატება
+function QuickAdd({ busy, setLessons }) {
+  const [text, setText] = useState('')
+  const [state, setState] = useState({ status: 'idle' }) // idle | loading | done | error
+
+  async function submit(e) {
+    e.preventDefault()
+    if (!text.trim() || state.status === 'loading') return
+    setState({ status: 'loading' })
+    try {
+      const full = await chat({
+        model: 'llama3.2',
+        context: { lang: 'ka', free: [...freeSlots(busy)] },
+        jobs: [],
+        messages: [{ role: 'user', content: `ჩამიწერე განრიგში, როდის ვარ დაკავებული: ${text.trim()}` }],
+        onToken: () => {},
+      })
+      const { text: reply, lessons } = splitReply(full)
+      setState({ status: 'done', reply, lessons, key: Date.now() })
+    } catch (err) {
+      setState({ status: 'error', busy: String(err.message).includes('429') })
+    }
+  }
+
+  return (
+    <div className="mb-4" data-tour="quickadd">
+      <form onSubmit={submit} className={`${card} flex items-center gap-2 py-2 pl-4 pr-2`}>
+        <Icon name="ai" className="h-6 w-6 shrink-0 text-brand-deep" />
+        <input
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          maxLength={300}
+          aria-label="დაკავებული დრო სიტყვებით"
+          placeholder="დაწერე სიტყვებით: ორშაბათიდან პარასკევამდე 10-დან 6-მდე ვმუშაობ"
+          className="min-w-0 flex-1 bg-transparent py-2 text-[15px] outline-none placeholder:text-quiet"
+        />
+        <button disabled={!text.trim() || state.status === 'loading'} className={`${btnSm} shrink-0 disabled:opacity-40`}>
+          {state.status === 'loading' ? 'ვწერ…' : 'ჩაწერა'}
+        </button>
+      </form>
+      {state.status === 'error' && (
+        <p className="mt-2 px-1 text-[14px] font-medium text-coral">{state.busy ? 'ასისტენტი ახლა დატვირთულია. სცადე ერთ წუთში.' : 'ასისტენტი ვერ გამოეხმაურა. სცადე თავიდან ან მონიშნე კალენდარზე.'}</p>
+      )}
+      {state.status === 'done' && (
+        <div className="mt-2 space-y-2">
+          {state.lessons.length === 0 && <p className="rounded-2xl bg-brand-soft px-4 py-3 text-[15px]">{state.reply || 'ვერ გავიგე. დაწერე დღე და საათები, მაგალითად: სამშაბათს 13:00–16:00 ლექცია.'}</p>}
+          <LessonProposals key={state.key} lessons={state.lessons} setLessons={setLessons} onDone={() => setText('')} onCancel={() => setState({ status: 'idle' })} />
+        </div>
+      )}
     </div>
   )
 }
@@ -41,12 +100,12 @@ const Legend = ({ tone, text }) => (
   <span className="flex items-center gap-1.5"><i className={`h-2.5 w-2.5 rounded-full ${DOTS[tone]}`} />{text}</span>
 )
 
-function LessonSheet({ date, start, event, onClose, setLessons }) {
-  const s0 = event?.start_min ?? Math.max(6 * 60, Math.min(start, 22 * 60))
+function LessonSheet({ date, start, end, event, onClose, setLessons }) {
+  const s0 = event?.start_min ?? Math.min(start, 23 * 60)
   const [form, setForm] = useState({
     title: event?.title ?? 'დაკავებული',
     start: s0,
-    end: event?.end_min ?? Math.min(s0 + 120, 24 * 60),
+    end: event?.end_min ?? end ?? Math.min(s0 + 120, 24 * 60),
     repeat: event ? (event.date ? 'once' : 'weekly') : 'weekly',
   })
   const [error, setError] = useState('')
@@ -54,7 +113,7 @@ function LessonSheet({ date, start, event, onClose, setLessons }) {
 
   async function run(query, apply) {
     const { data, error } = await query
-    if (error) return setError(error.message)
+    if (error) return setError('ვერ შეინახა. სცადე თავიდან.')
     setLessons((list) => apply(list, data))
     onClose()
   }
@@ -86,13 +145,13 @@ function LessonSheet({ date, start, event, onClose, setLessons }) {
           <label className="block">
             <span className={label}>დან</span>
             <select className={input} value={form.start} onChange={set('start')} aria-label="დაწყება">
-              {TIMES.slice(0, -1).map((m) => <option key={m} value={m}>{fmtMin(m)}</option>)}
+              {withValue(TIMES.slice(0, -1), form.start).map((m) => <option key={m} value={m}>{fmtMin(m)}</option>)}
             </select>
           </label>
           <label className="block">
             <span className={label}>მდე</span>
             <select className={input} value={form.end} onChange={set('end')} aria-label="დასრულება">
-              {TIMES.slice(1).map((m) => <option key={m} value={m}>{fmtMin(m)}</option>)}
+              {withValue(TIMES.slice(1), form.end).map((m) => <option key={m} value={m}>{fmtMin(m)}</option>)}
             </select>
           </label>
         </div>

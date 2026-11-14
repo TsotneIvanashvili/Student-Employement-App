@@ -18,7 +18,7 @@ export default function JobDetail({ id, profile, busy, onBack, onGoProfile }) {
   }, [id])
 
   const back = (
-    <button onClick={onBack} className="mb-4 flex items-center gap-1 text-[16px] font-semibold text-brand hover:underline">
+    <button onClick={onBack} className="mb-4 flex items-center gap-1 text-[16px] font-semibold text-brand-deep hover:underline">
       <Icon name="back" className="h-5 w-5" strokeWidth={2.8} />უკან
     </button>
   )
@@ -57,8 +57,8 @@ export default function JobDetail({ id, profile, busy, onBack, onGoProfile }) {
             <Stat label={job.kind === 'gig' ? 'სულ' : 'კვირაში'} value={`${hours} სთ`} />
           </div>
           <div className="rounded-2xl bg-brand-soft px-4 py-3">
-            <p className="text-[13px] font-medium text-brand">{job.kind === 'gig' ? 'მთლიანი ანაზღაურება' : 'კვირაში გამოიმუშავებ'}</p>
-            <p className="text-[26px] font-semibold text-brand">{money(hours * job.pay)}</p>
+            <p className="text-[13px] font-medium text-brand-deep">{job.kind === 'gig' ? 'მთლიანი ანაზღაურება' : 'კვირაში გამოიმუშავებ'}</p>
+            <p className="text-[26px] font-semibold text-brand-deep">{money(hours * job.pay)}</p>
           </div>
           {profile.role === 'student' && <Apply job={job} profile={profile} onGoProfile={onGoProfile} />}
           {isOwner && <OwnerControls job={job} setJob={setJob} />}

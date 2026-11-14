@@ -12,7 +12,7 @@ import { Badge, Icon, btn, btn2, card } from './ui.jsx'
 export function Logo({ className = 'text-[24px]' }) {
   return (
     <span className={`inline-flex items-center gap-2 font-semibold tracking-tight text-ink ${className}`}>
-      <span className="grid h-[1.4em] w-[1.4em] place-items-center rounded-[0.4em] bg-ink text-white">
+      <span className="grid h-[1.4em] w-[1.4em] place-items-center rounded-[0.4em] bg-brand text-on-brand">
         <Icon name="calendar" className="h-[0.85em] w-[0.85em]" strokeWidth={3} />
       </span>
       <span>shift<span className="text-muted">mate</span></span>
@@ -39,11 +39,11 @@ function Layout({ signedIn, children }) {
           </nav>
           <div className="flex items-center gap-2">
             {signedIn ? (
-              <Link to="/" className="rounded-xl bg-ink px-4 py-2 text-[14px] font-semibold text-white hover:bg-black">აპში გადასვლა</Link>
+              <Link to="/" className="rounded-xl bg-brand px-4 py-2 text-[14px] font-semibold text-on-brand hover:bg-brand-dark">აპში გადასვლა</Link>
             ) : (
               <>
                 <Link to="/login" className="rounded-xl px-3 py-2 text-[14px] font-semibold hover:bg-fill">შესვლა</Link>
-                <Link to="/register" className="rounded-xl bg-ink px-4 py-2 text-[14px] font-semibold text-white hover:bg-black">დაწყება</Link>
+                <Link to="/register" className="rounded-xl bg-brand px-4 py-2 text-[14px] font-semibold text-on-brand hover:bg-brand-dark">დაწყება</Link>
               </>
             )}
           </div>
@@ -75,14 +75,14 @@ export function CalendarMock() {
     [['lesson', 'სამსახური']], [['lesson', 'ლექცია']], [['lesson', 'სამსახური']], [['lesson', 'ლექცია'], ['work', 'ბარისტა']], [['lesson', 'სამსახური']], [['work', 'ღონისძიება']], [['lesson', 'ოჯახი']],
   ]
   return (
-    <div className="w-full max-w-lg overflow-hidden rounded-2xl border border-line bg-white" aria-hidden="true">
+    <div className="w-full max-w-lg overflow-hidden rounded-3xl bg-white shadow-card ring-1 ring-line" aria-hidden="true">
       <div className="grid grid-cols-7 border-b border-line bg-bg">
         {days.map((d) => <span key={d} className="py-1.5 text-center text-[11px] text-muted">{d}</span>)}
       </div>
       <div className="grid grid-cols-7">
         {cells.map((list, i) => (
           <div key={i} className="min-h-[86px] min-w-0 space-y-1 border-r border-line p-1 last:border-r-0">
-            <span className={`ml-auto grid h-5 w-5 place-items-center rounded-md text-[11px] ${i === 4 ? 'bg-ink text-white' : ''}`}>{16 + i}</span>
+            <span className={`ml-auto grid h-5 w-5 place-items-center rounded-md text-[11px] ${i === 4 ? 'bg-brand text-on-brand' : ''}`}>{16 + i}</span>
             {list.map(([tone, title]) => (
               <span key={title} className="flex items-center gap-1 text-[10px]"><i className={`h-1.5 w-1.5 shrink-0 rounded-full ${DOTS[tone]}`} /><span className="truncate">{title}</span></span>
             ))}
@@ -108,7 +108,7 @@ const Steps = ({ steps }) => (
   <ol className="space-y-4">
     {steps.map(([icon, title, text], i) => (
       <li key={title} className="flex gap-4">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-fill"><Icon name={icon} className="h-5 w-5" /></span>
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-brand-soft text-brand-deep"><Icon name={icon} className="h-5 w-5" /></span>
         <div>
           <p className="text-[16px] font-semibold">{i + 1}. {title}</p>
           <p className="text-[15px] text-muted">{text}</p>

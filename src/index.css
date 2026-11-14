@@ -2,25 +2,30 @@
 
 @theme {
   --font-sans: "Inter", "Noto Sans Georgian", system-ui, sans-serif;
-  --color-ink: #1a1a1a;
-  --color-brand: #1a1a1a;
-  --color-brand-dark: #000000;
-  --color-brand-soft: #f1f1f1;
-  --color-mint: #2c6e66;
-  --color-mint-dark: #235750;
-  --color-mint-soft: #dcebe9;
-  --color-sun: #efe3cd;
+  /* ბრენდის ფერი ერთ ადგილას: ამ ხუთი ხაზის შეცვლით მთელი საიტის პალიტრა იცვლება */
+  --color-brand: #2fd07f;
+  --color-brand-dark: #25bd70;
+  --color-brand-soft: #e2f9ed;
+  --color-brand-deep: #0a7a45;
+  --color-on-brand: #06301c;
+
+  --color-ink: #15181e;
+  --color-mint: #12a065;
+  --color-mint-dark: #0a7a45;
+  --color-mint-soft: #e2f9ed;
+  --color-sun: #fff1c9;
   --color-amber: #8a5a14;
-  --color-amber-soft: #f3e8d4;
-  --color-coral: #d0453a;
-  --color-coral-soft: #fbe7e5;
-  --color-sky: #4a5bc4;
-  --color-sky-soft: #e9ebf8;
-  --color-bg: #f7f7f7;
-  --color-fill: #f0f0f0;
-  --color-line: #e7e7e7;
-  --color-muted: #6b6b6b;
-  --color-quiet: #9b9b9b;
+  --color-amber-soft: #fdf0d5;
+  --color-coral: #d93a3a;
+  --color-coral-soft: #fde8e8;
+  --color-sky: #3d6ee0;
+  --color-sky-soft: #e6edfd;
+  --color-bg: #f4f6f5;
+  --color-fill: #eef1f0;
+  --color-line: #e4e8e6;
+  --color-muted: #5d6670;
+  --color-quiet: #98a1ab;
+  --shadow-card: 0 1px 2px rgba(21, 24, 30, 0.04), 0 10px 28px -14px rgba(21, 24, 30, 0.14);
 }
 
 body {

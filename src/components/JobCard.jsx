@@ -12,12 +12,13 @@ export function CompanyLogo({ name, size = 'h-12 w-12 text-[15px]' }) {
 }
 
 // ვაკანსიის ბარათი: სიაში და AI-ს რეკომენდაციებში. დაჭერით ვაკანსიის გვერდი იხსნება.
-export default function JobCard({ job, busy, compact = false }) {
+// flat: სხვა ბარათის შიგნით (ჩრდილის გარეშე)
+export default function JobCard({ job, busy, compact = false, flat = false }) {
   const m = busy ? matchJob(job, busy) : null
   return (
     <button
       onClick={() => openJob(job.id)}
-      className={`${card} flex w-full items-center gap-3 text-left transition hover:border-brand/40 ${compact ? 'p-3' : 'p-4'}`}
+      className={`${flat ? 'rounded-2xl bg-bg hover:bg-fill' : `${card} hover:ring-2 hover:ring-brand/50`} flex w-full items-center gap-3 text-left transition ${compact ? 'p-3' : 'p-4'}`}
     >
       <CompanyLogo name={job.company} />
       <div className="min-w-0 flex-1">

@@ -7,6 +7,7 @@ import { jobEvents } from '../lib/schedule.js'
 import JobCard, { CompanyLogo, openJob } from './JobCard.jsx'
 import { ApplicantCard, jobHours } from './Applicants.jsx'
 import AccountActions from './AccountActions.jsx'
+import { IdentityCard } from './Identity.jsx'
 import { Badge, Empty, Icon, Segmented, Title, btn, card, input, label, money } from './ui.jsx'
 
 const HOURS = Array.from({ length: LAST_HOUR - FIRST_HOUR + 1 }, (_, i) => FIRST_HOUR + i)
@@ -39,9 +40,9 @@ export function Inbox({ profile, onNew }) {
     <section>
       <Title eyebrow={profile.company_name}>განაცხადები</Title>
       <div className="mb-5 grid grid-cols-3 gap-2 sm:gap-3">
-        <Stat icon="inbox" label="ახალი" value={count('sent')} tone="text-brand" />
+        <Stat icon="inbox" label="ახალი" value={count('sent')} tone="text-brand-deep" />
         <Stat icon="users" label="აყვანილი" value={count('accepted')} tone="text-mint-dark" />
-        <Stat icon="x" label="უარყოფილი" value={count('rejected')} tone="text-muted" />
+        <Stat icon="x" label="უარი" value={count('rejected')} tone="text-muted" />
       </div>
       <div className="mb-4">
         <Segmented value={filter} onChange={setFilter} options={[['sent', `ახალი (${count('sent')})`], ['accepted', 'აყვანილი'], ['all', 'ყველა']]} />
@@ -119,7 +120,7 @@ export function MyJobs({ profile, onNew }) {
           const fresh = job.applications.filter((a) => a.status === 'sent').length
           return (
             <li key={job.id}>
-              <button onClick={() => openJob(job.id)} className={`${card} flex w-full items-start gap-3 p-4 text-left transition hover:border-brand/40 ${job.is_open ? '' : 'opacity-60'}`}>
+              <button onClick={() => openJob(job.id)} className={`${card} flex w-full items-start gap-3 p-4 text-left transition hover:ring-2 hover:ring-brand/50 ${job.is_open ? '' : 'opacity-60'}`}>
                 <CompanyLogo name={job.company} />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-2">
@@ -209,7 +210,7 @@ export function NewJob({ profile, onCreated }) {
           <Step n={1} title="რა ტიპის სამუშაოა?">
             <div className="grid grid-cols-2 gap-3">
               {[['recurring', 'repeat', 'მუდმივი ცვლები', 'ყოველ კვირა, იგივე საათებში'], ['gig', 'bolt', '1–2 დღიანი', 'ერთჯერადი: ღონისძიება, გადაზიდვა']].map(([k, emoji, title, text]) => (
-                <button type="button" key={k} onClick={() => setKind(k)} className={`rounded-2xl border p-4 text-left transition ${kind === k ? 'border-brand bg-brand-soft' : 'border-line bg-white'}`}>
+                <button type="button" key={k} onClick={() => setKind(k)} className={`rounded-2xl border p-4 text-left transition ${kind === k ? 'border-brand-deep bg-brand-soft' : 'border-line bg-white'}`}>
                   <span className="grid h-9 w-9 place-items-center rounded-lg bg-white text-ink"><Icon name={emoji} className="h-5 w-5" /></span>
                   <span className="mt-1 block text-[16px] font-semibold">{title}</span>
                   <span className="block text-[13px] font-semibold text-muted">{text}</span>
@@ -251,7 +252,7 @@ export function NewJob({ profile, onCreated }) {
                   </div>
                 ))}
                 {gigDays.length < 2 && (
-                  <button type="button" onClick={() => setGigDays([...gigDays, emptyGigDay()])} className="font-semibold text-brand">+ მეორე დღის დამატება</button>
+                  <button type="button" onClick={() => setGigDays([...gigDays, emptyGigDay()])} className="font-semibold text-brand-deep">+ მეორე დღის დამატება</button>
                 )}
               </div>
             )}
@@ -264,7 +265,7 @@ export function NewJob({ profile, onCreated }) {
           <div className={`${card} space-y-2 p-4 text-[15px] font-medium`}>
             <p className="flex justify-between"><span className="text-muted">ცვლები</span><span>{shifts.length}</span></p>
             <p className="flex justify-between"><span className="text-muted">{kind === 'gig' ? 'სულ საათი' : 'საათი კვირაში'}</span><span>{jobHours(preview)} სთ</span></p>
-            <p className="flex justify-between border-t border-line pt-2 text-[17px]"><span>{kind === 'gig' ? 'ჯამური ხარჯი' : 'ხარჯი კვირაში'}</span><span className="font-semibold text-brand">{money(jobHours(preview) * preview.pay)}</span></p>
+            <p className="flex justify-between border-t border-line pt-2 text-[17px]"><span>{kind === 'gig' ? 'ჯამური ხარჯი' : 'ხარჯი კვირაში'}</span><span className="font-semibold text-brand-deep">{money(jobHours(preview) * preview.pay)}</span></p>
           </div>
           {error && <p className="rounded-2xl bg-coral-soft p-3 font-medium text-coral">{error}</p>}
           <button disabled={busy} className={btn}>{busy ? 'ქვეყნდება…' : 'გამოქვეყნება'}</button>
@@ -278,7 +279,7 @@ function Step({ n, title, children }) {
   return (
     <section className={`${card} p-5`}>
       <h2 className="mb-4 flex items-center gap-2.5 text-[18px] font-semibold">
-        <span className="grid h-8 w-8 place-items-center rounded-full bg-brand text-[15px] text-white">{n}</span>{title}
+        <span className="grid h-8 w-8 place-items-center rounded-full bg-brand text-[15px] text-on-brand">{n}</span>{title}
       </h2>
       {children}
     </section>
@@ -292,28 +293,12 @@ const Field = ({ label: text, children, className = '' }) => (
   </label>
 )
 
-export function EmployerProfile({ profile, onSaved }) {
-  const [form, setForm] = useState({ full_name: profile.full_name ?? '', company_name: profile.company_name ?? '' })
-  const [note, setNote] = useState(null)
-
-  async function save(e) {
-    e.preventDefault()
-    const { error } = await supabase.from('profiles').update(form).eq('id', profile.id)
-    setNote(error ? { text: 'ვერ შეინახა. სცადე თავიდან.' } : { ok: true, text: 'შენახულია' })
-    if (!error) onSaved(form)
-  }
-
+export function EmployerProfile({ profile, email, onSaved }) {
   return (
     <div>
-      <Title eyebrow="დამსაქმებელი">{profile.company_name}</Title>
+      <Title eyebrow="დამსაქმებელი">პროფილი</Title>
       <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-2">
-        <form onSubmit={save} className={`${card} space-y-4 p-5`}>
-          <h2 className="text-[18px] font-semibold">კომპანია</h2>
-          <Field label="კომპანიის სახელი"><input className={input} value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} /></Field>
-          <Field label="საკონტაქტო პირი"><input className={input} value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} /></Field>
-          {note && <p className={`flex items-center gap-1.5 font-medium ${note.ok ? 'text-mint-dark' : 'text-coral'}`}>{note.ok && <Icon name="check" className="h-4 w-4" strokeWidth={2.5} />}{note.text}</p>}
-          <button className={btn}>შენახვა</button>
-        </form>
+        <IdentityCard profile={profile} email={email} onSaved={onSaved} />
         <AccountActions profile={profile} />
       </div>
     </div>

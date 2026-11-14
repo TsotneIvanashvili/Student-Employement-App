@@ -65,10 +65,10 @@ export default function Calendar({ value, setValue, presets = [], marks = {}, ba
   }
 
   return (
-    <section className="rounded-2xl border border-line bg-white p-3 sm:p-4">
+    <section className="rounded-2xl bg-bg p-3 sm:p-4">
       <div className="mb-3 flex items-center justify-between gap-3">
         <p className="text-[15px] font-semibold">
-          <span className={tone === 'mint' ? 'text-mint-dark' : 'text-brand'}>{value.size}</span> {unit}
+          <span className={tone === 'mint' ? 'text-mint-dark' : 'text-brand-deep'}>{value.size}</span> {unit}
         </p>
         {value.size > 0 && (
           <button type="button" onClick={() => setValue(new Set())} className="text-[14px] font-medium text-muted hover:text-coral">გასუფთავება</button>

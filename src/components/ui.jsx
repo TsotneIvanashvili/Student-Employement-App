@@ -1,13 +1,16 @@
-// საერთო საშენი ბლოკები: მინიმალისტური ღილაკები და ბარათები.
+// საერთო საშენი ბლოკები: ღილაკები, ბარათები, ველები.
 
-const press = 'transition active:scale-[0.99] disabled:opacity-50'
-export const btn = `w-full rounded-xl bg-ink py-3 text-[15px] font-semibold text-white hover:bg-black ${press}`
-export const btnMint = `w-full rounded-xl bg-mint py-3 text-[15px] font-semibold text-white hover:bg-mint-dark ${press}`
-export const btn2 = `w-full rounded-xl border border-line bg-white py-3 text-[15px] font-semibold text-ink hover:bg-fill ${press}`
-export const btnDark = btn
-export const chip = `rounded-lg border border-line bg-white px-3 py-1.5 text-[14px] font-medium text-ink hover:bg-fill ${press}`
-export const card = 'rounded-2xl border border-line bg-white'
-export const input = 'w-full rounded-xl border border-line bg-white px-3.5 py-2.5 text-[15px] outline-none transition placeholder:text-quiet focus:border-ink'
+const press = 'transition active:scale-[0.98] disabled:opacity-50'
+export const btn = `w-full rounded-2xl bg-brand py-3.5 text-[15px] font-semibold text-on-brand hover:bg-brand-dark ${press}`
+export const btnMint = btn
+export const btn2 = `w-full rounded-2xl bg-fill py-3.5 text-[15px] font-semibold text-ink hover:bg-line ${press}`
+export const btnDark = `w-full rounded-2xl bg-ink py-3.5 text-[15px] font-semibold text-white hover:bg-black ${press}`
+// პატარა ღილაკები (ბარათებში, სათაურის გვერდით)
+export const btnSm = `rounded-xl bg-brand px-4 py-2 text-[14px] font-semibold text-on-brand hover:bg-brand-dark ${press}`
+export const btnSm2 = `rounded-xl bg-fill px-4 py-2 text-[14px] font-semibold text-ink hover:bg-line ${press}`
+export const chip = `rounded-full bg-fill px-3.5 py-2 text-[14px] font-medium text-ink hover:bg-line ${press}`
+export const card = 'rounded-3xl bg-white shadow-card'
+export const input = 'w-full rounded-2xl border border-line bg-white px-4 py-3 text-[15px] outline-none transition placeholder:text-quiet focus:border-brand-deep focus:ring-4 focus:ring-brand-soft'
 export const label = 'mb-1.5 block text-[13px] font-medium text-muted'
 
 export const ICONS = {
@@ -38,6 +41,8 @@ export const ICONS = {
   repeat: 'M17 2l4 4-4 4M3 11V9a3 3 0 0 1 3-3h15M7 22l-4-4 4-4m14-1v2a3 3 0 0 1-3 3H3',
   sun: 'M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4l1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4',
   moon: 'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z',
+  edit: 'M4 20h4L19 9l-4-4L4 16zm9.5-13.5l4 4',
+  mail: 'M4 6h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1zm-1 1l9 6 9-6',
   help: 'M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14m0 3h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z',
 }
 
@@ -54,7 +59,7 @@ export function Title({ eyebrow, children, action }) {
     <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
       <div className="min-w-0">
         {eyebrow && <p className="text-[14px] text-muted">{eyebrow}</p>}
-        <h1 className="text-[26px] font-semibold leading-tight tracking-tight lg:text-[30px]">{children}</h1>
+        <h1 className="text-[28px] font-bold leading-tight tracking-tight lg:text-[34px]">{children}</h1>
       </div>
       {action}
     </div>
@@ -63,13 +68,13 @@ export function Title({ eyebrow, children, action }) {
 
 export function Segmented({ value, onChange, options }) {
   return (
-    <div className="inline-grid w-full rounded-xl bg-fill p-1 sm:w-auto" style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}>
+    <div className="inline-grid w-full rounded-2xl bg-fill p-1 sm:w-auto" style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}>
       {options.map(([v, text]) => (
         <button
           type="button"
           key={v}
           onClick={() => onChange(v)}
-          className={`flex min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-2 py-1.5 text-[14px] font-medium transition sm:px-3 ${value === v ? 'bg-white text-ink shadow-sm' : 'text-muted hover:text-ink'}`}
+          className={`flex min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-2 py-2 text-[14px] font-semibold transition sm:px-4 ${value === v ? 'bg-white text-ink shadow-sm' : 'text-muted hover:text-ink'}`}
         >
           {text}
         </button>
@@ -82,7 +87,7 @@ export function Segmented({ value, onChange, options }) {
 export function Sheet({ onClose, children }) {
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 animate-fade sm:items-center sm:p-6" onClick={onClose}>
-      <div className="max-h-[92dvh] w-full overflow-y-auto rounded-t-3xl bg-white px-5 pb-[max(env(safe-area-inset-bottom),1.5rem)] pt-3 animate-sheet sm:max-w-md sm:rounded-2xl sm:pt-5" onClick={(e) => e.stopPropagation()}>
+      <div className="max-h-[92dvh] w-full overflow-y-auto rounded-t-[28px] bg-white px-5 pb-[max(env(safe-area-inset-bottom),1.5rem)] pt-3 animate-sheet sm:max-w-md sm:rounded-[28px] sm:p-6" onClick={(e) => e.stopPropagation()}>
         <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-line sm:hidden" />
         {children}
       </div>
@@ -92,7 +97,7 @@ export function Sheet({ onClose, children }) {
 
 export function Switch({ on, onChange, label: aria }) {
   return (
-    <button type="button" role="switch" aria-checked={on} aria-label={aria} onClick={() => onChange(!on)} className={`relative h-8 w-14 shrink-0 rounded-full transition-colors ${on ? 'bg-mint' : 'bg-line'}`}>
+    <button type="button" role="switch" aria-checked={on} aria-label={aria} onClick={() => onChange(!on)} className={`relative h-8 w-14 shrink-0 rounded-full transition-colors ${on ? 'bg-brand' : 'bg-line'}`}>
       <span className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow transition-all ${on ? 'left-7' : 'left-1'}`} />
     </button>
   )
@@ -101,19 +106,19 @@ export function Switch({ on, onChange, label: aria }) {
 export const Badge = ({ tone = 'gray', children }) => {
   const tones = {
     gray: 'bg-fill text-muted',
-    green: 'bg-mint-soft text-mint-dark',
+    green: 'bg-brand-soft text-brand-deep',
     amber: 'bg-amber-soft text-amber',
     red: 'bg-coral-soft text-coral',
     violet: 'bg-[#ebe6f7] text-[#4b3a8a]',
     sky: 'bg-sky-soft text-sky',
   }
-  return <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-md px-2 py-0.5 text-[12px] font-medium ${tones[tone]}`}>{children}</span>
+  return <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-[12px] font-semibold ${tones[tone]}`}>{children}</span>
 }
 
 export function Empty({ icon, title, text, action }) {
   return (
-    <div className={`${card} flex flex-col items-center px-6 py-8 text-center`}>
-      <span className="grid h-12 w-12 place-items-center rounded-full bg-fill text-muted"><Icon name={icon} className="h-6 w-6" /></span>
+    <div className={`${card} flex flex-col items-center px-6 py-10 text-center`}>
+      <span className="grid h-14 w-14 place-items-center rounded-2xl bg-brand-soft text-brand-deep"><Icon name={icon} className="h-7 w-7" /></span>
       <p className="mt-3 text-[17px] font-semibold">{title}</p>
       {text && <p className="mt-1 max-w-sm text-[15px] text-muted">{text}</p>}
       {action && <div className="mt-4">{action}</div>}
