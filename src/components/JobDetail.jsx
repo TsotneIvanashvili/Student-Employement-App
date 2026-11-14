@@ -3,11 +3,11 @@ import { supabase } from '../lib/supabase.js'
 import { formatShift } from '../lib/match.js'
 import { matchJob } from '../lib/schedule.js'
 import { CompanyLogo } from './JobCard.jsx'
-import { ApplicantCard, STATUS, STATUS_TONE, jobHours, one } from './Applicants.jsx'
+import { ApplicantCard, STATUS, STATUS_TONE, jobHours } from './Applicants.jsx'
 import { Badge, Icon, Sheet, Switch, btn, btn2, card, input, money } from './ui.jsx'
 
 export { STATUS }
-const APP_FIELDS = '*, payments(*), profiles(full_name, cv_experience, cv_skills, cv_languages, cv_path)'
+const APP_FIELDS = '*, profiles(full_name, cv_experience, cv_skills, cv_languages, cv_path)'
 
 export default function JobDetail({ id, profile, busy, onBack, onGoProfile }) {
   const [job, setJob] = useState(null)
@@ -139,33 +139,45 @@ function Apply({ job, profile, onGoProfile }) {
   const [application, setApplication] = useState(undefined)
   const [sheet, setSheet] = useState(false)
   const [message, setMessage] = useState('')
+  const [phone, setPhone] = useState(() => {
+    try {
+      return localStorage.getItem('sj_phone') ?? ''
+    } catch {
+      return ''
+    }
+  })
   const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
   const hasCv = Boolean(profile.cv_experience || profile.cv_skills || profile.cv_path)
 
   useEffect(() => {
-    supabase.from('applications').select('*, payments(*)').eq('job_id', job.id).eq('student_id', profile.id).maybeSingle().then(({ data }) => setApplication(data))
+    supabase.from('applications').select('*').eq('job_id', job.id).eq('student_id', profile.id).maybeSingle().then(({ data }) => setApplication(data))
   }, [job.id, profile.id])
 
-  async function send() {
+  async function send(e) {
+    e.preventDefault()
     setError('')
-    const { data, error } = await supabase.from('applications').insert({ job_id: job.id, student_id: profile.id, message }).select().single()
-    if (error) return setError(error.message)
+    setBusy(true)
+    const { data, error } = await supabase.from('applications').insert({ job_id: job.id, student_id: profile.id, message: message.trim(), phone: phone.trim() }).select().single()
+    setBusy(false)
+    if (error) return setError('განაცხადი ვერ გაიგზავნა. სცადე თავიდან.')
+    try {
+      localStorage.setItem('sj_phone', phone.trim())
+    } catch {}
     setApplication(data)
     setSheet(false)
   }
 
   if (application === undefined) return null
   if (application) {
-    const pay = one(application.payments)
     return (
       <div className="rounded-2xl bg-bg p-4 text-center">
         <p className="text-[13px] font-medium text-muted">შენი განაცხადი</p>
         <div className="mt-1.5"><Badge tone={STATUS_TONE[application.status]}>{application.status === 'sent' ? 'გაგზავნილია' : STATUS[application.status]}</Badge></div>
-        {pay && (pay.status === 'released' ? (
-          <p className="mt-3 flex items-center justify-center gap-1.5 text-[15px] font-medium"><Icon name="check" className="h-5 w-5 text-mint" />ჩაგერიცხა <span className="text-mint-dark">{money(pay.amount - pay.fee)}</span></p>
-        ) : (
-          <p className="mt-3 text-[15px] font-semibold"><Icon name="lock" className="mr-1 inline h-4 w-4 align-[-2px]" />{money(pay.amount)} დაბლოკილია სამუშაოს დასრულებამდე. შენ მიიღებ {money(pay.amount - pay.fee)} (−10%).</p>
-        ))}
+        {application.status === 'accepted' && (
+          <p className="mt-3 text-[14px] text-muted">ცვლები შენს განრიგში დაემატა. დეტალებზე დამსაქმებელი დაგიკავშირდება{application.phone ? ` ნომერზე ${application.phone}` : ''}.</p>
+        )}
+        {application.status === 'sent' && <p className="mt-3 text-[14px] text-muted">პასუხს აქ და პროფილის გვერდზე ნახავ.</p>}
       </div>
     )
   }
@@ -184,16 +196,20 @@ function Apply({ job, profile, onGoProfile }) {
               <button onClick={onGoProfile} className={`${btn} mt-5`}>სივის შევსება</button>
             </div>
           ) : (
-            <div>
+            <form onSubmit={send}>
               <h2 className="text-[22px] font-semibold">{job.title}</h2>
-              <p className="text-[15px] font-semibold text-muted">{job.company} ნახავს შენს პროფილს და სივს{profile.cv_path ? ' (PDF-იც)' : ''}.</p>
-              <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={4} placeholder="მოკლე წერილი (არასავალდებულო)" className={`${input} mt-4 resize-none`} />
+              <p className="text-[15px] text-muted">{job.company} ნახავს შენს სახელს, სივს{profile.cv_path ? ' (PDF-იც)' : ''} და ტელეფონს.</p>
+              <label className="mt-4 block">
+                <span className="mb-1.5 block text-[13px] font-medium text-muted">ტელეფონი, რომ დამსაქმებელი დაგიკავშირდეს</span>
+                <input required type="tel" inputMode="tel" autoComplete="tel" pattern="[0-9+ \(\)\-]{6,20}" title="მაგ. 555 12 34 56" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="555 12 34 56" className={input} />
+              </label>
+              <textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={3} maxLength={1000} placeholder="მოკლე წერილი (არასავალდებულო)" className={`${input} mt-3 resize-none`} />
               {error && <p className="mt-2 text-sm font-medium text-coral">{error}</p>}
               <div className="mt-4 grid grid-cols-[auto_1fr] gap-3">
-                <button onClick={() => setSheet(false)} className={`${btn2} px-5`}>გაუქმება</button>
-                <button onClick={send} className={btn}>გაგზავნა</button>
+                <button type="button" onClick={() => setSheet(false)} className={`${btn2} px-5`}>გაუქმება</button>
+                <button disabled={busy} className={btn}>{busy ? 'იგზავნება…' : 'გაგზავნა'}</button>
               </div>
-            </div>
+            </form>
           )}
         </Sheet>
       )}

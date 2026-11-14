@@ -6,11 +6,11 @@ import BigCalendar, { DOTS } from './BigCalendar.jsx'
 import { jobEvents } from '../lib/schedule.js'
 import JobCard, { CompanyLogo, openJob } from './JobCard.jsx'
 import { ApplicantCard, jobHours } from './Applicants.jsx'
-import InstallRow from './InstallRow.jsx'
+import AccountActions from './AccountActions.jsx'
 import { Badge, Empty, Icon, Segmented, Title, btn, card, input, label, money } from './ui.jsx'
 
 const HOURS = Array.from({ length: LAST_HOUR - FIRST_HOUR + 1 }, (_, i) => FIRST_HOUR + i)
-const APP_FIELDS = '*, payments(*), profiles(full_name, cv_experience, cv_skills, cv_languages, cv_path), jobs!inner(*)'
+const APP_FIELDS = '*, profiles(full_name, cv_experience, cv_skills, cv_languages, cv_path), jobs!inner(*)'
 
 // ყველა განაცხადი ერთ ადგილას, ყველა ვაკანსიიდან
 export function Inbox({ profile, onNew }) {
@@ -33,7 +33,6 @@ export function Inbox({ profile, onNew }) {
 
   if (!rows) return <Title eyebrow={profile.company_name}>განაცხადები</Title>
   const count = (s) => rows.filter((r) => r.status === s).length
-  const held = rows.flatMap((r) => r.payments).filter((p) => p?.status === 'held').reduce((s, p) => s + Number(p.amount), 0)
   const shown = filter === 'all' ? rows : rows.filter((r) => r.status === filter)
 
   return (
@@ -42,7 +41,7 @@ export function Inbox({ profile, onNew }) {
       <div className="mb-5 grid grid-cols-3 gap-2 sm:gap-3">
         <Stat icon="inbox" label="ახალი" value={count('sent')} tone="text-brand" />
         <Stat icon="users" label="აყვანილი" value={count('accepted')} tone="text-mint-dark" />
-        <Stat icon="lock" label="დაბლოკილი" value={money(held)} tone="text-amber" />
+        <Stat icon="x" label="უარყოფილი" value={count('rejected')} tone="text-muted" />
       </div>
       <div className="mb-4">
         <Segmented value={filter} onChange={setFilter} options={[['sent', `ახალი (${count('sent')})`], ['accepted', 'აყვანილი'], ['all', 'ყველა']]} />
@@ -198,7 +197,7 @@ export function NewJob({ profile, onCreated }) {
     setBusy(true)
     const { error } = await supabase.from('jobs').insert({ employer_id: profile.id, company: preview.company, title: form.title, district: form.district, pay: Number(form.pay), description: form.description, kind, shifts })
     setBusy(false)
-    if (error) return setError(error.message)
+    if (error) return setError('ვაკანსია ვერ გამოქვეყნდა. სცადე თავიდან.')
     onCreated()
   }
 
@@ -221,11 +220,11 @@ export function NewJob({ profile, onCreated }) {
 
           <Step n={2} title="დეტალები">
             <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="პოზიცია"><input required className={input} value={form.title} onChange={set('title')} placeholder="მაგ. ბარისტა" /></Field>
-              <Field label="უბანი"><input required className={input} value={form.district} onChange={set('district')} placeholder="მაგ. ვაკე" /></Field>
-              <Field label="ანაზღაურება (₾ საათში)"><input required type="number" inputMode="decimal" min="1" step="0.5" className={input} value={form.pay} onChange={set('pay')} placeholder="მაგ. 9" aria-label="ლარი საათში" /></Field>
+              <Field label="პოზიცია"><input required maxLength={80} className={input} value={form.title} onChange={set('title')} placeholder="მაგ. ბარისტა" /></Field>
+              <Field label="უბანი"><input required maxLength={60} className={input} value={form.district} onChange={set('district')} placeholder="მაგ. ვაკე" /></Field>
+              <Field label="ანაზღაურება (₾ საათში)"><input required type="number" inputMode="decimal" min="1" max="1000" step="0.5" className={input} value={form.pay} onChange={set('pay')} placeholder="მაგ. 9" aria-label="ლარი საათში" /></Field>
             </div>
-            <Field label="აღწერა" className="mt-4"><textarea className={`${input} resize-none`} rows={3} value={form.description} onChange={set('description')} placeholder="რას გააკეთებს, რა სჭირდება" /></Field>
+            <Field label="აღწერა" className="mt-4"><textarea className={`${input} resize-none`} rows={3} maxLength={2000} value={form.description} onChange={set('description')} placeholder="რას გააკეთებს, რა სჭირდება" /></Field>
           </Step>
 
           <Step n={3} title={kind === 'gig' ? 'როდის?' : 'რომელ საათებში?'}>
@@ -265,7 +264,7 @@ export function NewJob({ profile, onCreated }) {
           <div className={`${card} space-y-2 p-4 text-[15px] font-medium`}>
             <p className="flex justify-between"><span className="text-muted">ცვლები</span><span>{shifts.length}</span></p>
             <p className="flex justify-between"><span className="text-muted">{kind === 'gig' ? 'სულ საათი' : 'საათი კვირაში'}</span><span>{jobHours(preview)} სთ</span></p>
-            <p className="flex justify-between border-t-2 border-line pt-2 text-[17px]"><span>{kind === 'gig' ? 'ჯამური ხარჯი' : 'ხარჯი კვირაში'}</span><span className="font-semibold text-brand">{money(jobHours(preview) * preview.pay)}</span></p>
+            <p className="flex justify-between border-t border-line pt-2 text-[17px]"><span>{kind === 'gig' ? 'ჯამური ხარჯი' : 'ხარჯი კვირაში'}</span><span className="font-semibold text-brand">{money(jobHours(preview) * preview.pay)}</span></p>
           </div>
           {error && <p className="rounded-2xl bg-coral-soft p-3 font-medium text-coral">{error}</p>}
           <button disabled={busy} className={btn}>{busy ? 'ქვეყნდება…' : 'გამოქვეყნება'}</button>
@@ -296,17 +295,11 @@ const Field = ({ label: text, children, className = '' }) => (
 export function EmployerProfile({ profile, onSaved }) {
   const [form, setForm] = useState({ full_name: profile.full_name ?? '', company_name: profile.company_name ?? '' })
   const [note, setNote] = useState(null)
-  const [pays, setPays] = useState([])
-
-  useEffect(() => {
-    supabase.from('payments').select('amount, fee, status').eq('employer_id', profile.id).then(({ data }) => setPays(data ?? []))
-  }, [profile.id])
-  const sum = (status) => pays.filter((p) => p.status === status).reduce((s, p) => s + Number(p.amount), 0)
 
   async function save(e) {
     e.preventDefault()
     const { error } = await supabase.from('profiles').update(form).eq('id', profile.id)
-    setNote(error ? { text: error.message } : { ok: true, text: 'შენახულია' })
+    setNote(error ? { text: 'ვერ შეინახა. სცადე თავიდან.' } : { ok: true, text: 'შენახულია' })
     if (!error) onSaved(form)
   }
 
@@ -314,13 +307,6 @@ export function EmployerProfile({ profile, onSaved }) {
     <div>
       <Title eyebrow="დამსაქმებელი">{profile.company_name}</Title>
       <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-2">
-        <div className="space-y-5">
-          <div className="grid grid-cols-2 gap-3">
-            <Stat icon="lock" label="დაბლოკილი" value={money(sum('held'))} tone="text-amber" />
-            <Stat icon="check" label="ჩარიცხული" value={money(sum('released'))} tone="text-mint-dark" />
-          </div>
-          <p className="px-1 text-[14px] font-semibold text-muted">დაბლოკილი თანხა თანამშრომელს მაშინ ერიცხება, როცა სამუშაოს შესრულებას დაადასტურებ.</p>
-        </div>
         <form onSubmit={save} className={`${card} space-y-4 p-5`}>
           <h2 className="text-[18px] font-semibold">კომპანია</h2>
           <Field label="კომპანიის სახელი"><input className={input} value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} /></Field>
@@ -328,10 +314,7 @@ export function EmployerProfile({ profile, onSaved }) {
           {note && <p className={`flex items-center gap-1.5 font-medium ${note.ok ? 'text-mint-dark' : 'text-coral'}`}>{note.ok && <Icon name="check" className="h-4 w-4" strokeWidth={2.5} />}{note.text}</p>}
           <button className={btn}>შენახვა</button>
         </form>
-        <div className="space-y-3">
-          <InstallRow />
-          <button onClick={() => supabase.auth.signOut()} className="w-full py-2 font-semibold text-coral">გასვლა</button>
-        </div>
+        <AccountActions profile={profile} />
       </div>
     </div>
   )

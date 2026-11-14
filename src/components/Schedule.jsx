@@ -16,15 +16,15 @@ export function StudentSchedule({ busy, setLessons, matchCount, onSeeJobs }) {
 
   return (
     <div>
-      <Title eyebrow="დააჭირე დღეს ან საათს და ჩაწერე, როდის ხარ დაკავებული">ჩემი განრიგი</Title>
+      <Title eyebrow="დააჭირე დღეს ან საათს, რომ დაკავებული დრო ჩაწერო">ჩემი განრიგი</Title>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-white px-4 py-3" data-tour="matches">
         <p className="text-[15px]">
           {lessons.length === 0 ? 'ჯერ არაფერი ჩაგიწერია, ამიტომ ყველა ვაკანსია გერგება.' : <>შენს თავისუფალ დროს ერგება <b>{matchCount} ვაკანსია</b></>}
         </p>
-        <div className="flex items-center gap-4 text-[13px] text-muted">
+        <div className="flex w-full flex-wrap items-center justify-between gap-x-4 gap-y-2 text-[13px] text-muted sm:w-auto">
           <Legend tone="lesson" text="დაკავებული" />
           <Legend tone="work" text="სამუშაო" />
-          <button onClick={onSeeJobs} className="rounded-lg bg-ink px-3 py-1.5 text-[14px] font-medium text-white">ვაკანსიები →</button>
+          <button onClick={onSeeJobs} className="ml-auto whitespace-nowrap rounded-lg bg-ink px-3 py-1.5 text-[14px] font-medium text-white">ვაკანსიების ნახვა</button>
         </div>
       </div>
       <BigCalendar

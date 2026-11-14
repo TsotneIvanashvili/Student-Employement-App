@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from './lib/supabase.js'
 import { jobEvents } from './lib/schedule.js'
-import Auth, { Logo } from './components/Auth.jsx'
+import { navigate, usePath } from './lib/router.jsx'
+import Auth from './components/Auth.jsx'
+import { About, Home, How, Logo, NotFound, Privacy, Terms, usePageTitle } from './components/Site.jsx'
 import JobList, { filterJobs } from './components/JobList.jsx'
 import { StudentSchedule } from './components/Schedule.jsx'
 import JobDetail from './components/JobDetail.jsx'
@@ -59,37 +61,77 @@ function useTour(key) {
   return [show, () => setShow(true), close]
 }
 
+const PUBLIC = { '/how': How, '/about': About, '/terms': Terms, '/privacy': Privacy }
+const AUTH = { '/login': 'login', '/register': 'register', '/reset': 'reset' }
+
 export default function App() {
+  const path = usePath().replace(/\/+$/, '') || '/'
   const [session, setSession] = useState(undefined)
   const [profile, setProfile] = useState(null)
+  const [failed, setFailed] = useState(false)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session))
-    const { data } = supabase.auth.onAuthStateChange((_e, s) => setSession(s))
+    const { data } = supabase.auth.onAuthStateChange((event, s) => {
+      setSession(s)
+      // პაროლის აღდგენის ბმულით მოსული მომხმარებელი ახალი პაროლის გვერდზე გადადის
+      if (event === 'PASSWORD_RECOVERY') navigate('/new-password', { replace: true })
+    })
     return () => data.subscription.unsubscribe()
   }, [])
 
   const uid = session?.user?.id
   useEffect(() => {
     setProfile(null)
+    setFailed(false)
     if (!uid) return
-    supabase.from('profiles').select('*').eq('id', uid).single().then(({ data }) => setProfile(data))
+    supabase.from('profiles').select('*').eq('id', uid).single().then(({ data, error }) => (error ? setFailed(true) : setProfile(data)))
   }, [uid])
 
-  if (session === undefined || (session && !profile)) {
-    return <div className="grid min-h-dvh place-items-center"><Logo className="animate-pulse text-[32px]" /></div>
+  // შესული მომხმარებელი შესვლის/რეგისტრაციის გვერდზე აღარ რჩება
+  useEffect(() => {
+    if (session && AUTH[path]) navigate('/', { replace: true })
+  }, [session, path])
+
+  const Public = PUBLIC[path]
+  if (Public) return <Public signedIn={Boolean(session)} />
+  if (session === undefined) return <Splash />
+  if (path === '/new-password') return session ? <Auth mode="new-password" /> : <NotFound />
+  if (!session) {
+    if (path === '/') return <Home />
+    return AUTH[path] ? <Auth key={path} mode={AUTH[path]} /> : <NotFound />
   }
-  if (!session) return <Auth />
+  if (path !== '/') return AUTH[path] ? <Splash /> : <NotFound signedIn />
+  if (failed) return <LoadError />
+  if (!profile) return <Splash />
 
   const patch = (changes) => setProfile((p) => ({ ...p, ...changes }))
   return profile.role === 'employer' ? <EmployerApp profile={profile} patch={patch} /> : <StudentApp profile={profile} patch={patch} />
+}
+
+const Splash = () => <div className="grid min-h-dvh place-items-center"><Logo className="animate-pulse text-[32px]" /></div>
+
+function LoadError() {
+  return (
+    <div className="grid min-h-dvh place-items-center px-6 text-center">
+      <div>
+        <Logo className="text-[28px]" />
+        <p className="mt-6 text-[18px] font-semibold">მონაცემები ვერ ჩაიტვირთა</p>
+        <p className="mt-1 text-[15px] text-muted">შეამოწმე ინტერნეტი და სცადე თავიდან.</p>
+        <div className="mx-auto mt-5 grid max-w-xs gap-2">
+          <button onClick={() => window.location.reload()} className={btn}>თავიდან ცდა</button>
+          <button onClick={() => supabase.auth.signOut()} className="py-2 text-[14px] font-medium text-muted">გასვლა</button>
+        </div>
+      </div>
+    </div>
+  )
 }
 
 // ტელეფონზე: ქვედა ტაბები. კომპიუტერზე: მარცხენა მენიუ.
 function Shell({ profile, tabs, tab, onTab, onHelp, cta, children }) {
   return (
     <div className="min-h-dvh lg:pl-64">
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t-2 border-line bg-white/95 px-2 pb-[max(env(safe-area-inset-bottom),6px)] pt-1.5 backdrop-blur lg:inset-y-0 lg:left-0 lg:right-auto lg:flex lg:w-64 lg:flex-col lg:border-r-2 lg:border-t-0 lg:bg-white lg:px-4 lg:py-6">
+      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white/95 px-2 pb-[max(env(safe-area-inset-bottom),6px)] pt-1.5 backdrop-blur lg:inset-y-0 lg:left-0 lg:right-auto lg:flex lg:w-64 lg:flex-col lg:border-r lg:border-t-0 lg:bg-white lg:px-4 lg:py-6">
         <div className="mb-8 hidden px-2 lg:block"><Logo /></div>
         {cta && <div className="mb-4 hidden lg:block">{cta}</div>}
         <div className="grid lg:flex lg:flex-col lg:gap-1" style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }}>
@@ -100,12 +142,12 @@ function Shell({ profile, tabs, tab, onTab, onHelp, cta, children }) {
                 key={t.id}
                 data-tour={`tab-${t.id}`}
                 onClick={() => onTab(t.id)}
-                className={`flex flex-col items-center gap-0.5 rounded-2xl py-1.5 text-[11px] font-semibold transition lg:flex-row lg:gap-3 lg:px-4 lg:py-3 lg:text-[16px] ${active ? 'text-brand lg:bg-brand-soft' : 'text-quiet hover:text-ink lg:text-muted lg:hover:bg-fill'}`}
+                className={`flex min-w-0 flex-col items-center gap-0.5 rounded-2xl py-1.5 font-medium transition ${tabs.length > 4 ? 'text-[10px] tracking-tight' : 'text-[11px]'} lg:flex-row lg:tracking-normal lg:gap-3 lg:px-4 lg:py-3 lg:text-[16px] ${active ? 'text-brand lg:bg-brand-soft' : 'text-quiet hover:text-ink lg:text-muted lg:hover:bg-fill'}`}
               >
                 <span className={`grid h-8 w-12 place-items-center rounded-full transition lg:h-auto lg:w-auto ${active ? 'bg-brand-soft lg:bg-transparent' : ''}`}>
                   <Icon name={t.icon} className="h-6 w-6" strokeWidth={active ? 2.6 : 2} />
                 </span>
-                {t.label}
+                <span className="max-w-full truncate">{t.label}</span>
               </button>
             )
           })}
@@ -133,6 +175,7 @@ function Shell({ profile, tabs, tab, onTab, onHelp, cta, children }) {
 }
 
 function StudentApp({ profile, patch }) {
+  usePageTitle('')
   const hash = useHash()
   const jobId = hash.startsWith('#job/') ? hash.slice(5) : null
   const [tab, setTab] = useState('calendar')
@@ -187,6 +230,7 @@ function StudentApp({ profile, patch }) {
 }
 
 function EmployerApp({ profile, patch }) {
+  usePageTitle('')
   const hash = useHash()
   const jobId = hash.startsWith('#job/') ? hash.slice(5) : null
   const [tab, setTab] = useState('inbox')

@@ -12,7 +12,19 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Method not allowed')
   if (!process.env.GROQ_API_KEY) return res.status(500).send('GROQ_API_KEY is not set on the server')
 
-  const { messages, context } = typeof req.body === 'string' ? JSON.parse(req.body) : req.body
+  // მხოლოდ შესული მომხმარებლები: ტოკენს Supabase ამოწმებს, რომ უცხომ AI-ს ლიმიტი ვერ დახარჯოს
+  const token = (req.headers.authorization ?? '').replace(/^Bearer /, '')
+  if (!token) return res.status(401).send('Sign in required')
+  const userRes = await fetch(`${SUPABASE_URL}/auth/v1/user`, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}` } })
+  if (!userRes.ok) return res.status(401).send('Sign in required')
+
+  let body
+  try {
+    body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body
+  } catch {
+    return res.status(400).send('Invalid request')
+  }
+  const { messages, context } = body ?? {}
   // სისტემურ ინსტრუქციას მხოლოდ სერვერი აწყობს: ბრაუზერიდან 'system' როლი არ მიიღება
   const valid =
     Array.isArray(messages) &&
@@ -42,7 +54,10 @@ export default async function handler(req, res) {
       reasoning_effort: 'low',
     }),
   })
-  if (!upstream.ok) return res.status(upstream.status).send(await upstream.text())
+  if (!upstream.ok) {
+    console.error('Groq error', upstream.status, await upstream.text())
+    return res.status(upstream.status === 429 ? 429 : 502).send(upstream.status === 429 ? 'Too many requests' : 'AI is unavailable')
+  }
 
   // Groq აბრუნებს SSE-ს ("data: {...}"), ვაქცევთ NDJSON-ად ({"message":{"content":"..."}})
   res.setHeader('Content-Type', 'application/x-ndjson')

@@ -83,7 +83,7 @@ export default function Assistant({ profile, jobs, busy, setLessons, matchCount 
             {import.meta.env.DEV ? (
               <>Ollama-სთან კავშირი ვერ დამყარდა. ტერმინალში გაუშვი <code>ollama serve</code> და <code>ollama pull {model}</code>.</>
             ) : (
-              <>AI ასისტენტი დროებით მიუწვდომელია. სცადე ცოტა ხანში.<br /><span className="text-xs">{error}</span></>
+              <>{error.includes('429') ? 'ასისტენტი ახლა დატვირთულია. სცადე ერთ წუთში.' : 'ასისტენტი დროებით მიუწვდომელია. სცადე ცოტა ხანში.'}</>
             )}
           </p>
         )}

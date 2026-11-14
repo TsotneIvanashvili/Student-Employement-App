@@ -1,4 +1,5 @@
 import { buildSystemPrompt } from './prompt.js'
+import { supabase } from './supabase.js'
 
 // ლოკალურად: Vite-ის proxy /ollama -> http://127.0.0.1:11434 (იხ. vite.config.js)
 // ონლაინ: Vercel-ის ფუნქცია /api/chat -> Groq (იხ. api/chat.js), ინსტრუქციას სერვერი აწყობს.
@@ -7,9 +8,10 @@ const URL = import.meta.env.DEV ? '/ollama/api/chat' : '/api/chat'
 // context: { lang, free }; jobs მხოლოდ ლოკალურ რეჟიმს სჭირდება.
 // აბრუნებს ტექსტს ნაწილ-ნაწილ (streaming), onToken-ით.
 export async function chat({ model, context, jobs, messages, onToken, signal }) {
+  const { data } = await supabase.auth.getSession()
   const res = await fetch(URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${data.session?.access_token ?? ''}` },
     body: JSON.stringify(
       import.meta.env.DEV
         ? { model, stream: true, messages: [{ role: 'system', content: buildSystemPrompt(context, jobs) }, ...messages] }
@@ -17,7 +19,7 @@ export async function chat({ model, context, jobs, messages, onToken, signal }) 
     ),
     signal,
   })
-  if (!res.ok) throw new Error(`AI ${res.status}: ${await res.text()}`)
+  if (!res.ok) throw new Error(String(res.status))
 
   const reader = res.body.getReader()
   const decoder = new TextDecoder()

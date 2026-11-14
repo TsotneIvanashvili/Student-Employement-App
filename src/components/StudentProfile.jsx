@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { openJob } from './JobCard.jsx'
 import { STATUS_TONE } from './Applicants.jsx'
-import InstallRow from './InstallRow.jsx'
-import { Badge, Icon, Title, btn, card, input, label, money } from './ui.jsx'
+import AccountActions from './AccountActions.jsx'
+import { Badge, Icon, Title, btn, card, input, label } from './ui.jsx'
 
 const STATUS_STUDENT = { sent: 'გაგზავნილია', accepted: 'აგიყვანეს', rejected: 'უარი' }
 
@@ -21,23 +21,19 @@ export default function StudentProfile({ profile, onSaved }) {
   useEffect(() => {
     supabase
       .from('applications')
-      .select('id, status, jobs(id, title, company), payments(amount, fee, status)')
+      .select('id, status, jobs(id, title, company)')
       .eq('student_id', profile.id)
       .order('created_at', { ascending: false })
       .then(({ data }) => setApplications(data ?? []))
   }, [profile.id])
 
-  const pays = applications.map((a) => (Array.isArray(a.payments) ? a.payments[0] : a.payments)).filter(Boolean)
-  const earned = pays.filter((p) => p.status === 'released').reduce((s, p) => s + (p.amount - p.fee), 0)
-  const pending = pays.filter((p) => p.status === 'held').reduce((s, p) => s + (p.amount - p.fee), 0)
-  const fees = pays.reduce((s, p) => s + Number(p.fee), 0)
   const cvDone = Boolean(profile.cv_experience || profile.cv_skills || profile.cv_path)
 
   async function save(e) {
     e.preventDefault()
     const changes = { ...form }
     const { error } = await supabase.from('profiles').update(changes).eq('id', profile.id)
-    setNote(error ? { text: error.message } : { ok: true, text: 'შენახულია' })
+    setNote(error ? { text: 'ვერ შეინახა. სცადე თავიდან.' } : { ok: true, text: 'შენახულია' })
     if (!error) onSaved(changes)
   }
 
@@ -48,7 +44,7 @@ export default function StudentProfile({ profile, onSaved }) {
     if (file.size > 5 * 1024 * 1024) return setNote({ text: 'ფაილი 5 MB-ზე მეტია.' })
     const path = `${profile.id}/cv.pdf`
     const { error } = await supabase.storage.from('cvs').upload(path, file, { upsert: true, contentType: 'application/pdf' })
-    if (error) return setNote({ text: error.message })
+    if (error) return setNote({ text: 'ფაილი ვერ აიტვირთა. სცადე თავიდან.' })
     await supabase.from('profiles').update({ cv_path: path }).eq('id', profile.id)
     onSaved({ cv_path: path })
     setNote({ ok: true, text: 'PDF ატვირთულია' })
@@ -59,19 +55,9 @@ export default function StudentProfile({ profile, onSaved }) {
       <Title eyebrow="სამუშაოს მაძიებელი">{profile.full_name}</Title>
       <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-[360px_minmax(0,1fr)]">
         <div className="space-y-5">
-          <div data-tour="wallet" className={`${card} p-5`}>
-            <p className="flex items-center gap-2 text-[14px] text-muted"><Icon name="wallet" className="h-5 w-5" />საფულე</p>
-            <p className="mt-1 text-[34px] font-semibold leading-none">{money(earned)}</p>
-            <p className="mt-1 text-[13px] text-muted">მიღებული შემოსავალი</p>
-            <div className="mt-4 grid grid-cols-2 gap-2 text-[13px]">
-              <div className="rounded-xl bg-bg px-3 py-2"><p className="text-muted">მოლოდინში</p><p className="text-[16px] font-semibold">{money(pending)}</p></div>
-              <div className="rounded-xl bg-bg px-3 py-2"><p className="text-muted">საკომისიო 10%</p><p className="text-[16px] font-semibold">{money(fees)}</p></div>
-            </div>
-          </div>
-
           <section className={`${card} p-5`}>
             <h2 className="mb-3 text-[18px] font-semibold">ჩემი განაცხადები</h2>
-            {applications.length === 0 && <p className="font-semibold text-muted">ჯერ არცერთი არ გაგიგზავნია.</p>}
+            {applications.length === 0 && <p className="text-muted">ჯერ არცერთი არ გაგიგზავნია.</p>}
             <ul className="space-y-2">
               {applications.map((a) => (
                 <li key={a.id}>
@@ -86,10 +72,7 @@ export default function StudentProfile({ profile, onSaved }) {
               ))}
             </ul>
           </section>
-          <div className="hidden space-y-3 lg:block">
-            <InstallRow />
-            <button onClick={() => supabase.auth.signOut()} className="w-full py-2 font-semibold text-coral">გასვლა</button>
-          </div>
+          <div className="hidden lg:block"><AccountActions profile={profile} /></div>
         </div>
 
         <form onSubmit={save} className={`${card} space-y-4 p-5`} data-tour="cv">
@@ -97,13 +80,13 @@ export default function StudentProfile({ profile, onSaved }) {
             <h2 className="text-[18px] font-semibold">სივი</h2>
             <Badge tone={cvDone ? 'green' : 'amber'}>{cvDone ? <><Icon name="check" className="h-3.5 w-3.5" strokeWidth={2.5} />შევსებულია</> : 'შესავსებია'}</Badge>
           </div>
-          <Field label="სახელი და გვარი"><input className={input} value={form.full_name} onChange={set('full_name')} /></Field>
+          <Field label="სახელი და გვარი"><input required maxLength={80} className={input} value={form.full_name} onChange={set('full_name')} /></Field>
           <Field label="გამოცდილება">
-            <textarea className={`${input} resize-none`} rows={3} value={form.cv_experience} onChange={set('cv_experience')} placeholder="მაგ. 3 თვე ბარისტად, 1 წელი გაყიდვებში" />
+            <textarea className={`${input} resize-none`} rows={3} maxLength={1000} value={form.cv_experience} onChange={set('cv_experience')} placeholder="მაგ. 3 თვე ბარისტად, 1 წელი გაყიდვებში" />
           </Field>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="უნარები"><input className={input} value={form.cv_skills} onChange={set('cv_skills')} placeholder="კომუნიკაცია, Excel" /></Field>
-            <Field label="ენები"><input className={input} value={form.cv_languages} onChange={set('cv_languages')} placeholder="ინგლისური B2" /></Field>
+            <Field label="უნარები"><input maxLength={200} className={input} value={form.cv_skills} onChange={set('cv_skills')} placeholder="კომუნიკაცია, Excel" /></Field>
+            <Field label="ენები"><input maxLength={200} className={input} value={form.cv_languages} onChange={set('cv_languages')} placeholder="ინგლისური B2" /></Field>
           </div>
           <label className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl border border-dashed border-line px-4 py-4 hover:border-brand">
             <span className="flex items-center gap-2 font-medium"><Icon name="doc" className="h-5 w-5 text-brand" />{profile.cv_path ? 'PDF სივი ატვირთულია' : 'PDF სივი (არასავალდებულო)'}</span>
@@ -114,10 +97,7 @@ export default function StudentProfile({ profile, onSaved }) {
           <button className={btn}>შენახვა</button>
         </form>
 
-        <div className="space-y-3 lg:hidden">
-          <InstallRow />
-          <button onClick={() => supabase.auth.signOut()} className="w-full py-2 font-semibold text-coral">გასვლა</button>
-        </div>
+        <div className="lg:hidden"><AccountActions profile={profile} /></div>
       </div>
     </div>
   )
