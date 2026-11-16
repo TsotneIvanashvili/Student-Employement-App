@@ -1,34 +1,33 @@
 import { useEffect, useRef, useState } from 'react'
 import { todayISO } from '../lib/match.js'
-import {
-  DAY_NAMES, MONTH_NAMES, addDays, addMonths, dayNumber, eventsOn, fmtMin, layoutDay, monthIndex, startOfMonth, startOfWeek, weekdayOf, yearOf,
-} from '../lib/schedule.js'
+import { addDays, addMonths, dayNumber, eventsOn, fmtMin, layoutDay, monthIndex, startOfMonth, startOfWeek, weekdayOf, yearOf } from '../lib/schedule.js'
+import { dayLong, dayShort, monthLong, monthShort, tr, useLang } from '../lib/i18n.js'
 import { Icon, Segmented } from './ui.jsx'
 
-const ROW = 44 // ერთი საათის სიმაღლე (px)
+const ROW = 40 // ერთი საათის სიმაღლე (px)
 const HOURS = Array.from({ length: 24 }, (_, h) => h)
-const SHORT = ['ორშ', 'სამ', 'ოთხ', 'ხუთ', 'პარ', 'შაბ', 'კვი']
 
-// ფერები მოვლენის ტიპის მიხედვით: ლექცია, სამუშაო, თავისუფალი ცვლა (დამსაქმებლისთვის)
+// ფერები: ლექცია (ლურჯი), სამუშაო (ქარვისფერი), პირადი (იისფერი), ShiftMate-ზე აყვანილი ცვლა (მწვანე),
+// დამსაქმებლის ცვლა, რომელზეც ჯერ არავინ აიყვანეს (ნაცრისფერი)
 export const TONES = {
-  lesson: 'bg-[#e6edfd] border-[#3d6ee0] text-[#173a85]',
-  work: 'bg-[#ddf3e6] border-[#1f9d5a] text-[#0e4a2a]',
-  open: 'bg-[#fdf0da] border-[#d98a14] text-[#5f3a05]',
+  lecture: 'bg-[#e6edfd] text-[#2a4fae]',
+  work: 'bg-[#fdf0d5] text-[#8a5a14]',
+  personal: 'bg-[#ebe6f7] text-[#4b3a8a]',
+  job: 'bg-[#e2f9ed] text-[#0a7a45] ring-1 ring-inset ring-[#2fd07f]',
+  open: 'bg-fill text-muted ring-1 ring-inset ring-dashed ring-field',
 }
-// წერტილის ფერი (თვის ხედი და ლეგენდა)
-export const DOTS = { lesson: 'bg-[#3d6ee0]', work: 'bg-[#1f9d5a]', open: 'bg-[#d98a14]' }
-// ტელეფონის თვის ხედში ღონისძიება წვრილ ფერად ზოლად ჩანს
-const BARS = { lesson: 'max-sm:bg-[#3d6ee0]', work: 'max-sm:bg-[#1f9d5a]', open: 'max-sm:bg-[#d98a14]' }
-const kindOf = (e) => e.tone ?? e.kind ?? 'lesson'
-const tone = (e) => TONES[kindOf(e)] ?? TONES.lesson
-const dot = (e) => DOTS[kindOf(e)] ?? DOTS.lesson
+export const DOTS = { lecture: 'bg-[#3d6ee0]', work: 'bg-[#c98a1e]', personal: 'bg-[#7a64c4]', job: 'bg-[#2fd07f]', open: 'bg-quiet' }
+const BARS = { lecture: 'max-sm:bg-[#3d6ee0]', work: 'max-sm:bg-[#c98a1e]', personal: 'max-sm:bg-[#7a64c4]', job: 'max-sm:bg-[#2fd07f]', open: 'max-sm:bg-quiet' }
+export const kindOf = (e) => e.tone ?? (e.kind === 'work' ? 'job' : e.type ?? 'lecture')
+const tone = (e) => TONES[kindOf(e)] ?? TONES.lecture
 
-const monthTitle = (date) => `${MONTH_NAMES[monthIndex(date)]} ${yearOf(date)}`
-const short = (date) => `${dayNumber(date)} ${MONTH_NAMES[monthIndex(date)].slice(0, 3)}`
+const monthTitle = (date) => `${monthLong(monthIndex(date))} ${yearOf(date)}`
+const short = (date) => `${dayNumber(date)} ${monthShort(monthIndex(date))}`
 
 // კალენდარი: დღე / კვირა / თვე. onSlot(date, hour) — ცარიელ ადგილზე დაჭერა, onRange(date, start, end) — მაუსით
 // საათებზე გადატარება (წუთებში), onEvent(occurrence) — მოვლენაზე დაჭერა.
 export default function BigCalendar({ events, onSlot, onRange, onEvent, hint }) {
+  useLang()
   const today = todayISO()
   const [view, setView] = useState(() => (window.innerWidth < 768 ? 'day' : 'week'))
   const [anchor, setAnchor] = useState(today)
@@ -36,26 +35,26 @@ export default function BigCalendar({ events, onSlot, onRange, onEvent, hint }) 
   const step = (dir) => setAnchor((a) => (view === 'month' ? addMonths(a, dir) : addDays(a, view === 'week' ? 7 * dir : dir)))
   const weekStart = startOfWeek(anchor)
   const title =
-    view === 'day' ? `${dayNumber(anchor)} ${MONTH_NAMES[monthIndex(anchor)]} ${yearOf(anchor)}`
+    view === 'day' ? `${dayNumber(anchor)} ${monthLong(monthIndex(anchor))} ${yearOf(anchor)}`
     : view === 'week' ? `${short(weekStart)} – ${short(addDays(weekStart, 6))} ${yearOf(addDays(weekStart, 6))}`
     : monthTitle(anchor)
 
   return (
     <section className="overflow-hidden rounded-3xl bg-white shadow-card" data-tour="calendar">
-      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3.5 sm:px-5">
+      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-fill px-4 py-3.5 sm:px-5">
         <div className="flex items-center gap-3">
-          <h2 className="text-[18px] font-bold tracking-tight sm:text-[22px]">{title}</h2>
+          <h2 className="text-[18px] font-bold tracking-[-0.01em] sm:text-[20px]">{title}</h2>
           {anchor !== today && (
-            <button onClick={() => setAnchor(today)} className="rounded-full bg-brand-soft px-3 py-1 text-[13px] font-semibold text-brand-deep hover:brightness-95">დღეს</button>
+            <button onClick={() => setAnchor(today)} className="rounded-full bg-brand-soft px-3 py-1 text-[13px] font-semibold text-brand-deep hover:brightness-95">{tr('დღეს', 'Today')}</button>
           )}
         </div>
         <div className="flex w-full items-center gap-2 sm:w-auto">
-          <div className="flex shrink-0 overflow-hidden rounded-xl bg-fill">
-            <button onClick={() => step(-1)} aria-label="წინა" className="grid h-10 w-10 place-items-center hover:bg-line"><Icon name="back" className="h-4 w-4" strokeWidth={2.5} /></button>
-            <button onClick={() => step(1)} aria-label="შემდეგი" className="grid h-10 w-10 place-items-center hover:bg-line"><Icon name="chevron" className="h-4 w-4" strokeWidth={2.5} /></button>
+          <div className="flex shrink-0 overflow-hidden rounded-xl bg-line">
+            <button onClick={() => step(-1)} aria-label={tr('წინა', 'Previous')} className="grid h-10 w-10 place-items-center hover:bg-field"><Icon name="back" className="h-4 w-4" strokeWidth={2.5} /></button>
+            <button onClick={() => step(1)} aria-label={tr('შემდეგი', 'Next')} className="grid h-10 w-10 place-items-center hover:bg-field"><Icon name="chevron" className="h-4 w-4" strokeWidth={2.5} /></button>
           </div>
-          <div className="flex-1 sm:flex-none">
-            <Segmented value={view} onChange={setView} options={[['day', 'დღე'], ['week', 'კვირა'], ['month', 'თვე']]} />
+          <div className="flex-1 sm:w-[240px] sm:flex-none">
+            <Segmented size="sm" value={view} onChange={setView} options={[['day', tr('დღე', 'Day')], ['week', tr('კვირა', 'Week')], ['month', tr('თვე', 'Month')]]} />
           </div>
         </div>
       </header>
@@ -65,7 +64,7 @@ export default function BigCalendar({ events, onSlot, onRange, onEvent, hint }) 
       ) : (
         <TimeGrid days={view === 'week' ? Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)) : [anchor]} today={today} events={events} onSlot={onSlot} onRange={onRange} onEvent={onEvent} />
       )}
-      {hint && view !== 'month' && <p className="hidden border-t border-line px-5 py-2.5 text-[13px] text-quiet lg:block">{hint}</p>}
+      {hint && view !== 'month' && <p className="hidden border-t border-fill px-5 py-2.5 text-[13px] text-quiet lg:block">{hint}</p>}
     </section>
   )
 }
@@ -78,10 +77,10 @@ function Month({ anchor, today, events, onSlot, onEvent, onMore }) {
   for (let d = first; d <= last || days.length % 7; d = addDays(d, 1)) days.push(d)
   return (
     <div>
-      <div className="grid grid-cols-7 border-b border-line">
-        {DAY_NAMES.map((d, i) => (
-          <p key={d} className={`py-2 text-center text-[12px] font-medium sm:text-[13px] ${i > 4 ? 'text-quiet' : 'text-muted'}`}>
-            <span className="hidden sm:inline">{d}</span><span className="sm:hidden">{SHORT[i]}</span>
+      <div className="grid grid-cols-7 border-b border-fill">
+        {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+          <p key={i} className={`py-2 text-center text-[12px] font-semibold sm:text-[13px] ${i > 4 ? 'text-quiet' : 'text-muted'}`}>
+            <span className="hidden sm:inline">{dayLong(i)}</span><span className="sm:hidden">{dayShort(i)}</span>
           </p>
         ))}
       </div>
@@ -93,10 +92,10 @@ function Month({ anchor, today, events, onSlot, onEvent, onMore }) {
             <div
               key={d}
               onClick={() => (window.innerWidth < 640 ? onMore(d) : onSlot?.(d, null))}
-              className={`group relative min-h-[76px] border-b border-r border-line p-1 sm:min-h-[124px] sm:p-1.5 [&:nth-child(7n)]:border-r-0 ${weekdayOf(d) > 4 ? 'bg-bg/50' : ''} ${onSlot ? 'cursor-pointer' : ''}`}
+              className={`group relative min-h-[76px] border-b border-r border-fill p-1 sm:min-h-[124px] sm:p-1.5 [&:nth-child(7n)]:border-r-0 ${weekdayOf(d) > 4 ? 'bg-bg/50' : ''} ${onSlot ? 'cursor-pointer' : ''}`}
             >
               <div className="mb-1 flex items-center justify-between px-0.5">
-                <span className={`grid h-6 min-w-6 place-items-center rounded-md px-1 text-[12px] font-semibold sm:text-[13px] ${d === today ? 'bg-brand text-on-brand' : inMonth ? 'text-ink' : 'text-quiet/50'}`}>
+                <span className={`grid h-6 min-w-6 place-items-center rounded-md px-1 text-[12px] font-semibold sm:text-[13px] ${d === today ? 'bg-ink text-white' : inMonth ? 'text-ink' : 'text-quiet/50'}`}>
                   {dayNumber(d)}
                 </span>
                 {onSlot && (
@@ -111,7 +110,7 @@ function Month({ anchor, today, events, onSlot, onEvent, onMore }) {
                     key={e.id}
                     onClick={(ev) => { ev.stopPropagation(); onEvent?.(e) }}
                     title={`${e.title} · ${fmtMin(e.start_min)}–${fmtMin(e.end_min)}`}
-                    className={`block h-1.5 w-full overflow-hidden rounded-full text-left transition hover:brightness-95 sm:h-auto sm:rounded-md sm:px-1.5 sm:py-1 ${tone(e)} ${BARS[kindOf(e)] ?? BARS.lesson} max-sm:pointer-events-none`}
+                    className={`block h-1.5 w-full overflow-hidden rounded-full text-left transition hover:brightness-95 sm:h-auto sm:rounded-[9px] sm:px-1.5 sm:py-1 ${tone(e)} ${BARS[kindOf(e)] ?? BARS.lecture} max-sm:pointer-events-none`}
                   >
                     <span className="hidden truncate text-[12px] font-semibold leading-tight sm:block">{e.title}</span>
                     <span className="hidden truncate text-[11px] leading-tight opacity-75 sm:block">{fmtMin(e.start_min)}–{fmtMin(e.end_min)}</span>
@@ -119,7 +118,7 @@ function Month({ anchor, today, events, onSlot, onEvent, onMore }) {
                 ))}
                 {list.length > 2 && (
                   <button onClick={(ev) => { ev.stopPropagation(); onMore(d) }} className="w-full rounded-md text-left text-[11px] font-medium leading-none text-muted hover:bg-fill hover:text-ink sm:px-1 sm:text-[12px] sm:leading-normal">
-                    +{list.length - 2} <span className="hidden sm:inline">კიდევ</span>
+                    +{list.length - 2} <span className="hidden sm:inline">{tr('კიდევ', 'more')}</span>
                   </button>
                 )}
               </div>
@@ -187,23 +186,23 @@ function TimeGrid({ days, today, events, onSlot, onRange, onEvent }) {
 
   return (
     <div>
-      <div className="grid border-b border-line" style={{ gridTemplateColumns: `52px repeat(${days.length}, minmax(0, 1fr))` }}>
+      <div className="grid border-b border-fill" style={{ gridTemplateColumns: `46px repeat(${days.length}, minmax(0, 1fr))` }}>
         <div />
         {days.map((d) => (
           <div key={d} className="px-1 py-2">
-            <div className={`flex flex-col items-center rounded-2xl py-1.5 ${d === today ? 'bg-brand text-on-brand' : ''}`}>
-              <span className={`text-[12px] font-medium ${d === today ? 'opacity-70' : 'text-muted'}`}>{days.length > 1 ? SHORT[weekdayOf(d)] : DAY_NAMES[weekdayOf(d)]}</span>
+            <div className={`flex flex-col items-center rounded-[10px] py-1.5 ${d === today ? 'bg-ink text-white' : ''}`}>
+              <span className={`text-[12px] font-semibold ${d === today ? 'opacity-70' : 'text-muted'}`}>{days.length > 1 ? dayShort(weekdayOf(d)) : dayLong(weekdayOf(d))}</span>
               <span className="text-[16px] font-semibold leading-tight">{dayNumber(d)}</span>
             </div>
           </div>
         ))}
       </div>
       <div ref={scroller} data-scroller className="max-h-[68vh] overflow-y-auto">
-        <div className="grid" style={{ gridTemplateColumns: `52px repeat(${days.length}, minmax(0, 1fr))` }}>
+        <div className="grid" style={{ gridTemplateColumns: `46px repeat(${days.length}, minmax(0, 1fr))` }}>
           <div>
             {HOURS.map((h) => (
-              <div key={h} className="relative border-b border-line text-right" style={{ height: ROW }}>
-                <span className="absolute -top-2 right-2 bg-white px-0.5 text-[11px] text-quiet">{h === 0 ? '' : fmtMin(h * 60)}</span>
+              <div key={h} className="relative text-right" style={{ height: ROW }}>
+                <span className="absolute -top-2 right-1.5 bg-white px-0.5 text-[10px] tabular-nums text-muted">{h === 0 ? '' : fmtMin(h * 60)}</span>
               </div>
             ))}
           </div>
@@ -211,7 +210,7 @@ function TimeGrid({ days, today, events, onSlot, onRange, onEvent }) {
             <div
               key={d}
               data-day-col={d}
-              className={`relative select-none border-l border-line ${onSlot ? 'cursor-pointer hover:bg-bg/60' : ''} ${d === today ? 'bg-brand-soft/30' : ''}`}
+              className={`relative select-none ${onSlot ? 'cursor-pointer hover:bg-bg/60' : ''}`}
               onPointerDown={down(d)}
               onPointerMove={move}
               onPointerUp={up}
@@ -227,13 +226,13 @@ function TimeGrid({ days, today, events, onSlot, onRange, onEvent }) {
                   {fmtMin(Math.min(sel.from, sel.to))}–{fmtMin(Math.max(sel.from, sel.to))}
                 </div>
               )}
-              {HOURS.map((h) => <div key={h} className="pointer-events-none border-b border-dashed border-line" style={{ height: ROW }} />)}
+              {HOURS.map((h) => <div key={h} className="pointer-events-none border-t border-fill" style={{ height: ROW }} />)}
               {d === today && <NowLine />}
               {layoutDay(eventsOn(events, d)).map((e) => (
                 <button
                   key={e.id}
                   onClick={(ev) => { ev.stopPropagation(); onEvent?.(e) }}
-                  className={`absolute flex flex-col justify-start overflow-hidden rounded-xl border-l-4 px-1.5 py-1 text-left leading-tight ring-1 ring-white ${tone(e)}`}
+                  className={`absolute flex flex-col justify-start overflow-hidden rounded-[9px] px-1.5 py-1 text-left leading-tight transition active:scale-[0.96] ${tone(e)}`}
                   style={{
                     top: (e.start_min / 60) * ROW + 1,
                     height: ((e.end_min - e.start_min) / 60) * ROW - 2,
@@ -241,8 +240,8 @@ function TimeGrid({ days, today, events, onSlot, onRange, onEvent }) {
                     width: `calc(${100 / e.cols}% - 4px)`,
                   }}
                 >
-                  <span className="flex items-center gap-1 truncate text-[11px] opacity-80"><i className={`h-1.5 w-1.5 shrink-0 rounded-full ${dot(e)}`} />{fmtMin(e.start_min)}–{fmtMin(e.end_min)}</span>
-                  <span className="block truncate text-[12px] font-semibold">{e.title}</span>
+                  <span className="block truncate text-[11px] font-semibold">{e.title}</span>
+                  <span className="block truncate text-[10px] tabular-nums opacity-80">{fmtMin(e.start_min)}–{fmtMin(e.end_min)}</span>
                   {e.subtitle && <span className="block truncate text-[11px] opacity-75">{e.subtitle}</span>}
                 </button>
               ))}

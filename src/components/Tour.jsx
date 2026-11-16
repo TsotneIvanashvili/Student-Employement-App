@@ -1,24 +1,25 @@
 import { useLayoutEffect, useRef, useState } from 'react'
+import { tr, useLang } from '../lib/i18n.js'
 import { Icon } from './ui.jsx'
 
 // tab: რომელ გვერდზე უნდა იყოს მომხმარებელი ამ ნაბიჯზე; target: data-tour ატრიბუტი, რომელსაც ნაბიჯი გამოყოფს
-export const STUDENT_STEPS = [
-  { tab: 'home', target: null, icon: 'calendar', title: 'მოგესალმები Shiftmate-ში!', text: 'ერთ წუთში გაჩვენებ, როგორ იპოვო დამატებითი სამუშაო, რომელიც შენს სხვა საქმეებს არ ეჯახება.' },
-  { tab: 'calendar', target: 'quickadd', title: 'დაწერე, როდის ხარ დაკავებული', text: 'ჩაწერე სიტყვებით, მაგალითად „ორშაბათიდან პარასკევამდე 10-დან 6-მდე ვმუშაობ“, და ასისტენტი განრიგს თავად შეავსებს.' },
-  { tab: 'calendar', target: 'calendar', title: 'ან მონიშნე კალენდარზე', text: 'დააჭირე დღეს ან საათს, კომპიუტერზე კი მაუსი გადაატარე საათებზე. ყოველ კვირა თავისით მეორდება. დანარჩენი დრო თავისუფალია.' },
-  { tab: 'calendar', target: 'tab-jobs', title: 'ვაკანსიები', text: 'აქ მხოლოდ ის ვაკანსიებია, რომლებიც შენს თავისუფალ დროში ჯდება. თუ აგიყვანენ, ცვლები თავისით გამოჩნდება განრიგში.' },
-  { tab: 'calendar', target: 'tab-ai', title: 'AI ასისტენტი', text: 'გირჩევს საუკეთესო ვაკანსიებს და შეუძლია დაკავებული დრო ჩაგიწეროს.' },
-  { tab: 'home', target: 'me', title: 'პროფილი და სივი', text: 'შენს სახელზე დაჭერით იხსნება პროფილი. შეავსე სივი ერთხელ და ყველა ვაკანსიაზე გამოიყენება.' },
-  { tab: 'home', target: 'help', title: 'ყოველთვის აქ არის', text: 'გზამკვლევის თავიდან ნახვა ამ ღილაკით შეგიძლია.' },
+export const seekerSteps = () => [
+  { tab: 'home', target: null, icon: 'calendar', title: tr('მოგესალმები ShiftMate-ში!', 'Welcome to ShiftMate!'), text: tr('ერთ წუთში გაჩვენებ, როგორ იპოვო დამატებითი სამუშაო, რომელიც შენს სხვა საქმეებს არ ეჯახება.', "In a minute I'll show you how to find extra work that doesn't clash with everything else.") },
+  { tab: 'home', target: 'matches', title: tr('შენი თავისუფალი კვირა', 'Your free week'), text: tr('მწვანე თავისუფალი დროა, ნაცრისფერი დაკავებული. რიცხვი გეუბნება, რამდენი ვაკანსია ერგება იმ დღეს.', 'Green is free time, grey is busy. The number tells you how many jobs fit that day.') },
+  { tab: 'calendar', target: 'calendar', title: tr('ჩაწერე, როდის ხარ დაკავებული', "Write down when you're busy"), text: tr('დააჭირე დღეს ან საათს, კომპიუტერზე კი მაუსი გადაატარე საათებზე. ყოველ კვირა თავისით მეორდება.', 'Tap a day or hour, or drag across hours with a mouse. It repeats every week.') },
+  { tab: 'calendar', target: 'quickadd', title: tr('ან მიწერე AI-ს', 'Or tell the AI'), text: tr('მაგალითად „ორშაბათიდან პარასკევამდე 10-დან 6-მდე ვმუშაობ“, და კალენდარს თავად შეგივსებს.', 'For example "I work Monday to Friday, 10 to 6", and it fills in your calendar.') },
+  { tab: 'calendar', target: 'tab-jobs', title: tr('ვაკანსიები', 'Jobs'), text: tr('თითო ვაკანსიაზე ჩანს, რამდენი ცვლა ერგება შენს დროს. თუ აგიყვანენ, ცვლები კალენდარში ჩნდება.', 'Each job shows how many shifts fit your time. If you are hired, the shifts appear in your calendar.') },
+  { tab: 'home', target: 'me', title: tr('პროფილი და სივი', 'Profile and CV'), text: tr('აქ შეავსებ სივს, შეცვლი ენას და ნახავ შეფასებებს.', 'Fill in your CV, change the language and see your ratings here.') },
+  { tab: 'profile', target: 'help', title: tr('ყოველთვის აქ არის', 'Always here'), text: tr('გზამკვლევის თავიდან ნახვა პროფილიდან შეგიძლია.', 'You can replay this guide from your profile.') },
 ]
 
-export const EMPLOYER_STEPS = [
-  { tab: 'home', target: null, icon: 'users', title: 'მოგესალმებით Shiftmate-ში!', text: 'ერთ წუთში გაჩვენებთ, როგორ იპოვოთ ხალხი, ვისაც თქვენი ცვლის დროს ნამდვილად სცალია.' },
-  { tab: 'home', target: 'tab-plus', title: 'დაამატეთ ვაკანსია', text: 'ცვლის საათებს კალენდარზე მონიშნავთ. მაძიებლები ვაკანსიას მხოლოდ მაშინ ნახავენ, თუ მათ დროს ერგება.' },
-  { tab: 'home', target: 'tab-inbox', title: 'ყველა განაცხადი ერთ ადგილას', text: 'ახალი სივები ყველა ვაკანსიიდან აქ გროვდება. აქედანვე აიყვანთ ან უარს ეტყვით.' },
-  { tab: 'home', target: 'tab-calendar', title: 'ცვლების კალენდარი', text: 'დღე, კვირა ან თვე: რომელ დღეს რომელი ცვლაა და ვინ მუშაობს.' },
-  { tab: 'home', target: 'me', title: 'პროფილი', text: 'კომპანიის მონაცემები და ანგარიშის პარამეტრები თქვენს სახელზე დაჭერით იხსნება.' },
-  { tab: 'home', target: 'help', title: 'ყოველთვის აქ არის', text: 'გზამკვლევის თავიდან ნახვა ამ ღილაკით შეგიძლიათ.' },
+export const employerSteps = () => [
+  { tab: 'home', target: null, icon: 'users', title: tr('მოგესალმებით ShiftMate-ში!', 'Welcome to ShiftMate!'), text: tr('ერთ წუთში გაჩვენებთ, როგორ იპოვოთ ხალხი, ვისაც თქვენი ცვლის დროს ნამდვილად სცალია.', "In a minute we'll show you how to find people who are actually free during your shifts.") },
+  { tab: 'home', target: 'new', title: tr('დაამატეთ ვაკანსია', 'Post a job'), text: tr('აირჩიეთ დღეები და საათები. მაძიებლები ვაკანსიას მაშინ ნახავენ, როცა ეს დრო მათ ერგებათ.', 'Choose the days and hours. Job seekers see it when that time fits them.') },
+  { tab: 'home', target: 'tab-inbox', title: tr('ყველა განაცხადი ერთ ადგილას', 'All applications in one place'), text: tr('აქედან აიყვანთ, დაადასტურებთ დასრულებას და შეაფასებთ თანამშრომელს.', 'Hire, confirm the work is done and rate the worker from here.') },
+  { tab: 'home', target: 'tab-calendar', title: tr('ცვლების კალენდარი', 'Shift calendar'), text: tr('რომელ დღეს რომელი ცვლაა და ვინ მუშაობს.', 'Which shift is on which day and who is working.') },
+  { tab: 'home', target: 'me', title: tr('პროფილი', 'Profile'), text: tr('კომპანიის მონაცემები, ენა და შეფასებები.', 'Company details, language and ratings.') },
+  { tab: 'profile', target: 'help', title: tr('ყოველთვის აქ არის', 'Always here'), text: tr('გზამკვლევის თავიდან ნახვა პროფილიდან შეგიძლიათ.', 'You can replay this guide from your profile.') },
 ]
 
 const GAP = 14 // მანძილი გამოყოფილ ადგილსა და ბარათს შორის
@@ -30,6 +31,7 @@ const findTarget = (name) => [...document.querySelectorAll(`[data-tour="${name}"
 // გზამკვლევი: მიზანს გამოყოფს და ბარათს მის გვერდით დებს. ბარათი გამოყოფილ ადგილს არასოდეს ფარავს:
 // თუ მიზანი ეკრანს ავსებს (კალენდარი), ბარათი ქვემოთ ჯდება და გამოყოფილი ნაწილი მის ზემოთ მთავრდება.
 export default function Tour({ steps, onClose, onTab }) {
+  useLang()
   const [step, setStep] = useState(0)
   const [box, setBox] = useState(null)
   const cardRef = useRef(null)
@@ -99,7 +101,7 @@ export default function Tour({ steps, onClose, onTab }) {
       ) : (
         <div className="absolute inset-0 bg-ink/60" />
       )}
-      <div ref={cardRef} data-tour-card className="absolute rounded-3xl bg-white p-5 shadow-card transition-all duration-300" style={{ top, left, width: cardW, visibility: box ? 'visible' : 'hidden' }}>
+      <div ref={cardRef} data-tour-card className="absolute rounded-[28px] bg-white p-5 shadow-card transition-all duration-300" style={{ top, left, width: cardW, visibility: box ? 'visible' : 'hidden' }}>
         {current.icon && <span className="mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-brand-soft text-brand-deep"><Icon name={current.icon} className="h-6 w-6" /></span>}
         <h3 className="text-[19px] font-bold leading-snug">{current.title}</h3>
         <p className="mt-1.5 text-[15px] leading-relaxed text-muted">{current.text}</p>
@@ -108,9 +110,9 @@ export default function Tour({ steps, onClose, onTab }) {
             {steps.map((_, i) => <span key={i} className={`h-1.5 rounded-full transition-all ${i === step ? 'w-5 bg-brand' : 'w-1.5 bg-line'}`} />)}
           </div>
           <div className="flex items-center gap-1">
-            {!last && <button onClick={onClose} className="px-2 py-2 text-[14px] font-medium text-quiet hover:text-ink">გამოტოვება</button>}
+            {!last && <button onClick={onClose} className="px-2 py-2 text-[14px] font-medium text-quiet hover:text-ink">{tr('გამოტოვება', 'Skip')}</button>}
             <button onClick={() => (last ? onClose() : go(step + 1))} className="rounded-2xl bg-brand px-5 py-2.5 text-[15px] font-semibold text-on-brand hover:bg-brand-dark">
-              {last ? 'დაწყება' : 'შემდეგი'}
+              {last ? tr('დაწყება', 'Start') : tr('შემდეგი', 'Next')}
             </button>
           </div>
         </div>

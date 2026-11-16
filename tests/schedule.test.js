@@ -53,3 +53,20 @@ test('overlapping events are laid out in columns', () => {
   assert.deepEqual([byId[1].col, byId[2].col, byId[1].cols], [0, 1, 2])
   assert.deepEqual([byId[3].col, byId[3].cols], [0, 1])
 })
+
+test('fitInfo: full, partial, flexible and expired jobs', async () => {
+  const { fitInfo, clashOf } = await import('../src/lib/schedule.js')
+  const busy = [{ id: 'a', weekday: 0, date: null, start_min: 600, end_min: 840, skip_dates: [] }]
+  const job = (shifts) => ({ id: 'j', shifts })
+  assert.equal(fitInfo(job([{ day: 1, start: 10, end: 14 }]), busy, '2026-11-16').full, true)
+  const partial = fitInfo(job([{ day: 0, start: 12, end: 16 }, { day: 1, start: 10, end: 14 }]), busy, '2026-11-16')
+  assert.equal(partial.full, false)
+  assert.equal(partial.fitting.length, 1)
+  assert.equal(clashOf({ day: 0, start: 12, end: 16 }, busy).id, 'a')
+  assert.equal(clashOf({ day: 0, start: 14, end: 16 }, busy), null)
+  assert.equal(fitInfo(job([]), busy).flexible, true)
+  assert.equal(fitInfo(job([]), busy).full, true)
+  const old = fitInfo(job([{ date: '2026-01-01', start: 10, end: 12 }]), busy, '2026-11-16')
+  assert.equal(old.expired, true)
+  assert.equal(old.full, false)
+})

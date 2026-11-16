@@ -2,32 +2,18 @@ import { useEffect, useMemo, useState } from 'react'
 import { supabase } from './lib/supabase.js'
 import { jobEvents } from './lib/schedule.js'
 import { navigate, usePath } from './lib/router.jsx'
+import { tr, useLang } from './lib/i18n.js'
 import Auth from './components/Auth.jsx'
 import { About, Home, How, Logo, NotFound, Privacy, Terms, usePageTitle } from './components/Site.jsx'
-import JobList, { filterJobs } from './components/JobList.jsx'
-import { EmployerHome, SeekerHome } from './components/Dashboard.jsx'
+import { JobDetail, JobList } from './components/Jobs.jsx'
+import { EmployerHome, SeekerHome, weekFreeHours } from './components/Dashboard.jsx'
 import { StudentSchedule } from './components/Schedule.jsx'
-import JobDetail from './components/JobDetail.jsx'
 import Assistant from './components/Assistant.jsx'
-import StudentProfile from './components/StudentProfile.jsx'
-import { EmployerSchedule, Inbox, MyJobs, NewJob, EmployerProfile } from './components/Employer.jsx'
-import Tour, { EMPLOYER_STEPS, STUDENT_STEPS } from './components/Tour.jsx'
+import Profile from './components/Profile.jsx'
+import { EmployerSchedule, Inbox, MyJobs, NewJob } from './components/Employer.jsx'
+import Tour, { employerSteps, seekerSteps } from './components/Tour.jsx'
 import { Icon, btn } from './components/ui.jsx'
 
-// პროფილი მენიუში არ არის: იხსნება სახელის ბარათით (კომპიუტერზე ქვემოთ მარცხნივ, ტელეფონზე ზემოთ მარჯვნივ)
-const STUDENT_TABS = [
-  { id: 'home', icon: 'home', label: 'მთავარი' },
-  { id: 'calendar', icon: 'calendar', label: 'განრიგი' },
-  { id: 'jobs', icon: 'jobs', label: 'ვაკანსიები' },
-  { id: 'ai', icon: 'ai', label: 'ასისტენტი' },
-]
-const EMPLOYER_TABS = [
-  { id: 'home', icon: 'home', label: 'მთავარი' },
-  { id: 'inbox', icon: 'inbox', label: 'განაცხადები' },
-  { id: 'calendar', icon: 'calendar', label: 'კალენდარი' },
-  { id: 'jobs', icon: 'jobs', label: 'ვაკანსიები' },
-  { id: 'plus', icon: 'plus', label: 'დამატება' },
-]
 function useHash() {
   const [hash, setHash] = useState(window.location.hash)
   useEffect(() => {
@@ -112,86 +98,102 @@ export default function App() {
   return profile.role === 'employer' ? <EmployerApp profile={profile} email={email} patch={patch} /> : <StudentApp profile={profile} email={email} patch={patch} />
 }
 
-const Splash = () => <div className="grid min-h-dvh place-items-center"><Logo className="animate-pulse text-[32px]" /></div>
+const Splash = () => <div className="grid min-h-dvh place-items-center"><Logo className="animate-pulse text-[26px]" /></div>
 
 function LoadError() {
   return (
     <div className="grid min-h-dvh place-items-center px-6 text-center">
       <div>
-        <Logo className="text-[28px]" />
-        <p className="mt-6 text-[18px] font-semibold">მონაცემები ვერ ჩაიტვირთა</p>
-        <p className="mt-1 text-[15px] text-muted">შეამოწმე ინტერნეტი და სცადე თავიდან.</p>
+        <Logo className="text-[24px]" />
+        <p className="mt-6 text-[18px] font-semibold">{tr('მონაცემები ვერ ჩაიტვირთა', 'Could not load your data')}</p>
+        <p className="mt-1 text-[15px] text-muted">{tr('შეამოწმე ინტერნეტი და სცადე თავიდან.', 'Check your internet and try again.')}</p>
         <div className="mx-auto mt-5 grid max-w-xs gap-2">
-          <button onClick={() => window.location.reload()} className={btn}>თავიდან ცდა</button>
-          <button onClick={() => supabase.auth.signOut()} className="py-2 text-[14px] font-medium text-muted">გასვლა</button>
+          <button onClick={() => window.location.reload()} className={btn}>{tr('თავიდან ცდა', 'Try again')}</button>
+          <button onClick={() => supabase.auth.signOut()} className="py-2 text-[14px] font-medium text-muted">{tr('გასვლა', 'Log out')}</button>
         </div>
       </div>
     </div>
   )
 }
 
-// ტელეფონზე: ქვედა ტაბები. კომპიუტერზე: მარცხენა მენიუ.
-function Shell({ profile, tabs, tab, onTab, onHelp, cta, children }) {
-  const initial = (profile.full_name || '?').slice(0, 1)
-  const toggleProfile = () => onTab(tab === 'profile' ? 'home' : 'profile')
+const ICON = { home: 'home', calendar: 'calendar', jobs: 'briefcase', ai: 'ai', profile: 'profile', inbox: 'inbox' }
+const seekerTabs = () => [
+  ['home', tr('მთავარი', 'Home')],
+  ['calendar', tr('კალენდარი', 'Calendar')],
+  ['jobs', tr('ვაკანსიები', 'Jobs')],
+  ['ai', 'AI'],
+  ['profile', tr('პროფილი', 'Profile')],
+]
+const employerTabs = () => [
+  ['home', tr('მთავარი', 'Home')],
+  ['inbox', tr('განაცხადები', 'Applicants')],
+  ['calendar', tr('კალენდარი', 'Calendar')],
+  ['jobs', tr('ვაკანსიები', 'Jobs')],
+  ['profile', tr('პროფილი', 'Profile')],
+]
+
+// ტელეფონზე: მცურავი ქვედა მენიუ (პროფილი ერთ-ერთი ჩანართია). კომპიუტერზე: მარცხენა მენიუ,
+// პროფილი კი ქვედა მარცხენა სახელის ბარათით იხსნება და იხურება.
+function Shell({ profile, tabs, tab, onTab, cta, detail, children }) {
+  const visible = tabs.filter(([id]) => id !== 'profile')
+  const i = Math.max(0, tabs.findIndex(([id]) => id === tab))
+  const name = profile.role === 'employer' ? profile.company_name || profile.full_name : profile.full_name
   return (
-    <div className="min-h-dvh lg:pl-[272px]">
-      <nav className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-white/95 px-2 pb-[max(env(safe-area-inset-bottom),6px)] pt-1.5 backdrop-blur lg:inset-y-0 lg:left-0 lg:right-auto lg:flex lg:w-[272px] lg:flex-col lg:border-r lg:border-t-0 lg:bg-white lg:px-4 lg:py-6">
-        <div className="mb-8 hidden px-2 lg:block"><Logo /></div>
-        {cta && <div className="mb-4 hidden lg:block">{cta}</div>}
-        <div className="grid lg:flex lg:flex-col lg:gap-1" style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }}>
-          {tabs.map((t) => {
-            const active = tab === t.id
-            return (
-              <button
-                key={t.id}
-                data-tour={`tab-${t.id}`}
-                onClick={() => onTab(t.id)}
-                className={`flex min-w-0 flex-col items-center gap-0.5 rounded-2xl py-1.5 font-medium transition ${tabs.length > 4 ? 'text-[10px] tracking-tight' : 'text-[11px]'} lg:flex-row lg:gap-3 lg:px-4 lg:py-3 lg:text-[16px] lg:tracking-normal ${active ? 'text-brand-deep lg:bg-brand-soft lg:font-semibold' : 'text-quiet hover:text-ink lg:text-muted lg:hover:bg-fill'}`}
-              >
-                <span className={`grid h-8 w-12 place-items-center rounded-full transition lg:h-auto lg:w-auto ${active ? 'bg-brand-soft lg:bg-transparent' : ''}`}>
-                  <Icon name={t.icon} className="h-6 w-6" strokeWidth={active ? 2.4 : 2} />
-                </span>
-                <span className="max-w-full truncate">{t.label}</span>
-              </button>
-            )
-          })}
+    <div className="min-h-dvh lg:pl-[264px]">
+      <nav className="fixed inset-y-0 left-0 z-30 hidden w-[264px] flex-col border-r border-line bg-white px-4 py-6 lg:flex">
+        <div className="mb-7 px-2"><Logo className="text-[18px]" /></div>
+        {cta && <div className="mb-4">{cta}</div>}
+        <div className="flex flex-col gap-1">
+          {visible.map(([id, text]) => (
+            <button key={id} data-tour={`tab-${id}`} onClick={() => onTab(id)} className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-[15px] font-semibold transition ${tab === id ? 'bg-brand-soft text-brand-deep' : 'text-muted hover:bg-fill hover:text-ink'}`}>
+              <Icon name={ICON[id]} className="h-[22px] w-[22px]" />{text}
+            </button>
+          ))}
         </div>
         <button
           data-tour="me"
-          onClick={toggleProfile}
-          aria-label="პროფილი"
+          onClick={() => onTab(tab === 'profile' ? 'home' : 'profile')}
           aria-pressed={tab === 'profile'}
-          className={`mt-auto hidden w-full items-center gap-3 rounded-2xl p-3 text-left transition lg:flex ${tab === 'profile' ? 'bg-brand-soft' : 'bg-bg hover:bg-fill'}`}
+          className={`mt-auto flex w-full items-center gap-3 rounded-2xl p-3 text-left transition ${tab === 'profile' ? 'bg-brand-soft' : 'bg-bg hover:bg-fill'}`}
         >
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-brand text-[16px] font-bold text-on-brand">{initial}</span>
+          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-avatar text-[14px] font-bold text-on-avatar">{(name || '?').slice(0, 1).toUpperCase()}</span>
           <span className="min-w-0 flex-1">
-            <span className="block truncate text-[14px] font-semibold">{profile.full_name}</span>
-            <span className="block truncate text-[12px] font-medium text-muted">{profile.role === 'employer' ? profile.company_name : 'სამუშაოს მაძიებელი'}</span>
+            <span className="block truncate text-[14px] font-semibold">{name}</span>
+            <span className="block truncate text-[12px] text-muted">{profile.role === 'employer' ? tr('დამსაქმებელი', 'Employer') : tr('სამუშაოს მაძიებელი', 'Job seeker')}</span>
           </span>
           <Icon name="chevron" className={`h-4 w-4 shrink-0 text-quiet transition ${tab === 'profile' ? 'rotate-90' : ''}`} strokeWidth={2.5} />
         </button>
       </nav>
 
-      <div className="mx-auto max-w-6xl px-4 pb-32 pt-[max(env(safe-area-inset-top),14px)] sm:px-6 lg:px-10 lg:pb-12 lg:pt-8">
-        <header className="mb-4 flex items-center justify-between gap-2 lg:mb-0 lg:h-0 lg:justify-end">
-          <span className="lg:hidden"><Logo className="text-[22px]" /></span>
-          <span className="flex items-center gap-2">
-            <button data-tour="help" onClick={onHelp} aria-label="გზამკვლევი" className="flex h-10 items-center gap-1.5 rounded-full bg-white px-3 text-[14px] font-semibold text-muted shadow-card hover:text-ink lg:relative lg:top-1">
-              <Icon name="help" className="h-5 w-5" /><span className="hidden sm:inline">გზამკვლევი</span>
-            </button>
-            <button data-tour="me" onClick={toggleProfile} aria-label="პროფილი" aria-pressed={tab === 'profile'} className={`grid h-10 w-10 place-items-center rounded-full bg-brand text-[16px] font-bold text-on-brand lg:hidden ${tab === 'profile' ? 'ring-4 ring-brand-soft' : ''}`}>
-              {initial}
-            </button>
-          </span>
-        </header>
+      <div className="mx-auto max-w-5xl px-4 pb-36 pt-[max(env(safe-area-inset-top),18px)] sm:px-6 lg:px-10 lg:pb-12 lg:pt-9">
         {children}
+        {detail}
       </div>
+
+      <nav className="glass fixed inset-x-3 bottom-[max(env(safe-area-inset-bottom),16px)] z-30 rounded-[32px] p-1.5 shadow-[0_0_0_1px_rgba(21,24,30,.06),0_12px_32px_-12px_rgba(21,24,30,.3)] lg:hidden">
+        <div className="relative flex">
+          <span className="absolute inset-y-0 left-0 rounded-[26px] bg-brand-soft transition-transform duration-[380ms] ease-[cubic-bezier(0.2,0,0,1)]" style={{ width: `${100 / tabs.length}%`, transform: `translateX(${i * 100}%)` }} />
+          {tabs.map(([id, text]) => (
+            <button
+              key={id}
+              data-tour={id === 'profile' ? 'me' : `tab-${id}`}
+              onClick={() => onTab(id)}
+              aria-label={text}
+              aria-current={tab === id ? 'page' : undefined}
+              className={`relative flex min-w-0 flex-1 flex-col items-center gap-[3px] pb-[7px] pt-2 text-[10px] font-semibold transition-colors ${tab === id ? 'text-brand-deep' : 'text-muted'}`}
+            >
+              <Icon name={ICON[id]} className="h-[22px] w-[22px]" />
+              <span className="max-w-full truncate px-0.5">{text}</span>
+            </button>
+          ))}
+        </div>
+      </nav>
     </div>
   )
 }
 
 function StudentApp({ profile, email, patch }) {
+  useLang()
   usePageTitle('')
   const hash = useHash()
   const jobId = hash.startsWith('#job/') ? hash.slice(5) : null
@@ -199,58 +201,51 @@ function StudentApp({ profile, email, patch }) {
   const [jobs, setJobs] = useState([])
   const [lessons, setLessons] = useState([])
   const [applications, setApplications] = useState([])
-  const [onlyFit, setOnlyFit] = useState({ on: true, kind: 'all' })
+  const [version, setVersion] = useState(0)
+  const [draft, setDraft] = useState('')
+  const [filters, setFilters] = useState({ query: '', cat: profile.field && profile.field !== 'general' ? profile.field : 'all', onlyFit: true })
   const [showTour, openTour, closeTour] = useTour(`sj_tour_student_${profile.id}`)
 
   useEffect(() => {
     supabase.from('jobs').select('*').eq('is_open', true).order('created_at', { ascending: false }).then(({ data }) => setJobs(data ?? []))
     supabase.from('events').select('*').then(({ data }) => setLessons(data ?? []))
   }, [])
-  // განაცხადები ახლდება ვაკანსიის გვერდიდან დაბრუნებისას; მიღებული სამუშაოს ცვლები თავისით ჩნდება განრიგში
+  // განაცხადები ახლდება ვაკანსიის გვერდიდან დაბრუნებისას; მიღებული სამუშაოს ცვლები თავისით ჩნდება კალენდარში
   useEffect(() => {
     if (jobId) return
-    supabase
-      .from('applications')
-      .select('id, status, jobs(*)')
-      .eq('student_id', profile.id)
-      .order('created_at', { ascending: false })
-      .then(({ data }) => setApplications(data ?? []))
-  }, [jobId, profile.id])
+    supabase.from('applications').select('id, status, jobs(*)').eq('student_id', profile.id).order('created_at', { ascending: false }).then(({ data }) => setApplications(data ?? []))
+  }, [jobId, profile.id, version])
   useEffect(toTop, [jobId])
 
   const busy = useMemo(
     () => [...lessons.map((e) => ({ ...e, kind: 'lesson' })), ...applications.filter((a) => a.status === 'accepted').flatMap((a) => jobEvents(a.jobs))],
     [lessons, applications],
   )
-  const matches = useMemo(() => filterJobs(jobs, busy, { on: true, kind: 'all' }), [jobs, busy])
-
   const go = (t) => { closeJob(); setTab(t); toTop() }
+  const askAI = (text) => { setDraft(text); go('ai') }
 
   return (
-    <Shell profile={profile} tabs={STUDENT_TABS} tab={jobId ? 'jobs' : tab} onTab={go} onHelp={() => { go('home'); openTour() }}>
-      {jobId ? (
-        <JobDetail
-          id={jobId}
-          profile={profile}
-          busy={busy}
-          onBack={() => (history.length > 1 ? history.back() : closeJob())}
-          onGoProfile={() => go('profile')}
-        />
-      ) : (
-        <>
-          {tab === 'home' && <SeekerHome profile={profile} busy={busy} matches={matches} applications={applications} go={go} openProfile={() => go('profile')} />}
-          {tab === 'calendar' && <StudentSchedule busy={busy} setLessons={setLessons} matchCount={matches.length} onSeeJobs={() => go('jobs')} />}
-          {tab === 'jobs' && <JobList jobs={jobs} busy={busy} onlyFit={onlyFit} setOnlyFit={setOnlyFit} onGoCalendar={() => go('calendar')} />}
-          {tab === 'ai' && <Assistant profile={profile} jobs={jobs} busy={busy} setLessons={setLessons} matchCount={matches.length} />}
-          {tab === 'profile' && <StudentProfile profile={profile} email={email} onSaved={patch} />}
-        </>
-      )}
-      {showTour && !jobId && <Tour steps={STUDENT_STEPS} onClose={closeTour} onTab={go} />}
+    <Shell
+      profile={profile}
+      tabs={seekerTabs()}
+      tab={tab}
+      onTab={go}
+      detail={jobId && <JobDetail key={jobId} id={jobId} profile={profile} busy={busy} onBack={() => (history.length > 1 ? history.back() : closeJob())} onGoProfile={() => go('profile')} onChanged={() => setVersion((v) => v + 1)} />}
+    >
+      <div className={jobId ? 'hidden' : ''}>
+        {tab === 'home' && <SeekerHome profile={profile} busy={busy} jobs={jobs} applications={applications} go={go} askAI={askAI} />}
+        {tab === 'calendar' && <StudentSchedule busy={busy} setLessons={setLessons} freeHours={weekFreeHours(busy)} onFillWithAI={() => askAI(tr('ორშაბათიდან პარასკევამდე 10-დან 18-მდე ვმუშაობ', 'I work Monday to Friday from 10 to 18'))} />}
+        {tab === 'jobs' && <JobList jobs={jobs} busy={busy} filters={filters} setFilters={setFilters} onGoCalendar={() => go('calendar')} />}
+        {tab === 'ai' && <Assistant jobs={jobs} busy={busy} setLessons={setLessons} draft={draft} onDraftUsed={() => setDraft('')} />}
+        {tab === 'profile' && <Profile profile={profile} email={email} onSaved={patch} applications={applications} onHelp={() => { go('home'); openTour() }} />}
+      </div>
+      {showTour && !jobId && <Tour steps={seekerSteps()} onClose={closeTour} onTab={go} />}
     </Shell>
   )
 }
 
 function EmployerApp({ profile, email, patch }) {
+  useLang()
   usePageTitle('')
   const hash = useHash()
   const jobId = hash.startsWith('#job/') ? hash.slice(5) : null
@@ -263,25 +258,21 @@ function EmployerApp({ profile, email, patch }) {
   return (
     <Shell
       profile={profile}
-      tabs={EMPLOYER_TABS}
-      tab={jobId ? 'jobs' : tab}
+      tabs={employerTabs()}
+      tab={tab === 'new' ? 'jobs' : tab}
       onTab={go}
-      onHelp={() => { go('home'); openTour() }}
-      cta={<button onClick={() => go('plus')} className={`${btn} flex items-center justify-center gap-2`}><Icon name="plus" className="h-5 w-5" strokeWidth={3} />ახალი ვაკანსია</button>}
+      cta={<button onClick={() => go('new')} className={`${btn} flex items-center justify-center gap-2 py-3.5`}><Icon name="plus" className="h-5 w-5" strokeWidth={2.5} />{tr('ახალი ვაკანსია', 'New job post')}</button>}
+      detail={jobId && <JobDetail key={jobId} id={jobId} profile={profile} busy={null} onBack={() => (history.length > 1 ? history.back() : closeJob())} onGoProfile={() => {}} />}
     >
-      {jobId ? (
-        <JobDetail id={jobId} profile={profile} busy={null} onBack={() => (history.length > 1 ? history.back() : closeJob())} onGoProfile={() => {}} />
-      ) : (
-        <>
-          {tab === 'home' && <EmployerHome key={version} profile={profile} go={go} />}
-          {tab === 'inbox' && <Inbox key={version} profile={profile} onNew={() => go('plus')} />}
-          {tab === 'calendar' && <EmployerSchedule profile={profile} />}
-          {tab === 'jobs' && <MyJobs key={version} profile={profile} onNew={() => go('plus')} />}
-          {tab === 'plus' && <NewJob profile={profile} onCreated={() => { setVersion((v) => v + 1); go('jobs') }} />}
-          {tab === 'profile' && <EmployerProfile profile={profile} email={email} onSaved={patch} />}
-        </>
-      )}
-      {showTour && !jobId && <Tour steps={EMPLOYER_STEPS} onClose={closeTour} onTab={go} />}
+      <div className={jobId ? 'hidden' : ''}>
+        {tab === 'home' && <EmployerHome key={version} profile={profile} go={go} />}
+        {tab === 'inbox' && <Inbox key={version} profile={profile} onNew={() => go('new')} />}
+        {tab === 'calendar' && <EmployerSchedule profile={profile} />}
+        {tab === 'jobs' && <MyJobs key={version} profile={profile} onNew={() => go('new')} />}
+        {tab === 'new' && <NewJob profile={profile} onCancel={() => go('jobs')} onCreated={() => { setVersion((v) => v + 1); go('jobs') }} />}
+        {tab === 'profile' && <Profile profile={profile} email={email} onSaved={patch} onHelp={() => { go('home'); openTour() }} />}
+      </div>
+      {showTour && !jobId && <Tour steps={employerSteps()} onClose={closeTour} onTab={go} />}
     </Shell>
   )
 }

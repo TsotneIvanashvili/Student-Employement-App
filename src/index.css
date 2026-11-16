@@ -25,6 +25,11 @@
   --color-line: #e4e8e6;
   --color-muted: #5d6670;
   --color-quiet: #98a1ab;
+  --color-field: #c9d0cd;
+  --color-violet: #4b3a8a;
+  --color-violet-soft: #ebe6f7;
+  --color-avatar: #d8e8e6;
+  --color-on-avatar: #123b36;
   --shadow-card: 0 1px 2px rgba(21, 24, 30, 0.04), 0 10px 28px -14px rgba(21, 24, 30, 0.14);
 }
 
@@ -49,4 +54,12 @@ body {
 .animate-sheet { animation: sheet-up 0.28s cubic-bezier(0.2, 0.9, 0.3, 1); }
 .animate-fade { animation: fade-in 0.2s ease-out; }
 .animate-float { animation: float 4s ease-in-out infinite; }
+@keyframes push-in {
+  from { transform: translateX(104%); }
+}
+.animate-push { animation: push-in 0.46s cubic-bezier(0.32, 0.72, 0, 1); }
 .animate-pop { animation: pop 0.35s ease-out; }
+.glass { background: rgba(255, 255, 255, 0.78); -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%); }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; } }

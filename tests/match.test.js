@@ -64,7 +64,10 @@ import { splitReply } from '../src/lib/prompt.js'
 test('splitReply extracts valid LESSON lines and hides them', () => {
   const r = splitReply('დავამატებ, დაადასტურე ქვემოთ.\nLESSON: {"title":"ლექცია","weekday":0,"date":null,"start":"17:00","end":"20:00"}\nLESSON: {"weekday":0,"date":"2026-11-20","start":"10:00","end":"12:00"}')
   assert.equal(r.text, 'დავამატებ, დაადასტურე ქვემოთ.')
-  assert.deepEqual(r.lessons, [{ title: 'ლექცია', weekday: 0, date: null, start_min: 1020, end_min: 1200 }])
+  assert.deepEqual(r.lessons, [{ title: 'ლექცია', type: 'lecture', weekday: 0, date: null, start_min: 1020, end_min: 1200 }])
+  const work = splitReply('LESSON: {"title":"სამსახური","type":"work","weekday":1,"date":null,"start":"10:00","end":"18:00"}').lessons[0]
+  assert.equal(work.type, 'work')
+  assert.equal(splitReply('LESSON: {"type":"hack","weekday":1,"date":null,"start":"10:00","end":"18:00"}').lessons[0].type, 'lecture')
   assert.equal(splitReply('კარგი\nLESS').text, 'კარგი')
   assert.equal(splitReply('LESSON: {"weekday":1,"date":null,"start":"20:00","end":"18:00"}').lessons.length, 0)
 })

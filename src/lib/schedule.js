@@ -113,3 +113,19 @@ export function layoutDay(list) {
   if (group.length) flush()
   return out
 }
+
+// რომელ დაკავებულ დროს ეჯახება ცვლა (ან null)
+export function clashOf(shift, events) {
+  const s = { start_min: shift.start * 60, end_min: shift.end * 60 }
+  const busy = shift.date ? eventsOn(events, shift.date) : events.filter((e) => e.weekday === shift.day)
+  return busy.find((b) => overlaps(b, s)) ?? null
+}
+
+// ვაკანსიის მორგება: full = ყველა მომავალი ცვლა თავისუფალ დროშია; flexible = ფიქსირებული ცვლები არ აქვს;
+// expired = ერთჯერადი ვაკანსია, რომლის ყველა თარიღი უკვე გავიდა.
+export function fitInfo(job, events, today = todayISO()) {
+  const m = matchJob(job, events, today)
+  const flexible = job.shifts.length === 0
+  const expired = !flexible && m.shifts.length === 0
+  return { ...m, flexible, expired, full: flexible || (!expired && m.fitting.length === m.shifts.length) }
+}

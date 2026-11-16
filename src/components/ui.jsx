@@ -1,17 +1,22 @@
-// საერთო საშენი ბლოკები: ღილაკები, ბარათები, ველები.
+import { useRef, useState } from 'react'
+import { money } from '../lib/i18n.js'
 
-const press = 'transition active:scale-[0.98] disabled:opacity-50'
-export const btn = `w-full rounded-2xl bg-brand py-3.5 text-[15px] font-semibold text-on-brand hover:bg-brand-dark ${press}`
-export const btnMint = btn
-export const btn2 = `w-full rounded-2xl bg-fill py-3.5 text-[15px] font-semibold text-ink hover:bg-line ${press}`
-export const btnDark = `w-full rounded-2xl bg-ink py-3.5 text-[15px] font-semibold text-white hover:bg-black ${press}`
-// პატარა ღილაკები (ბარათებში, სათაურის გვერდით)
-export const btnSm = `rounded-xl bg-brand px-4 py-2 text-[14px] font-semibold text-on-brand hover:bg-brand-dark ${press}`
-export const btnSm2 = `rounded-xl bg-fill px-4 py-2 text-[14px] font-semibold text-ink hover:bg-line ${press}`
-export const chip = `rounded-full bg-fill px-3.5 py-2 text-[14px] font-medium text-ink hover:bg-line ${press}`
+// საერთო საშენი ბლოკები. ზომები და ფერები Claude Design-ის ShiftMate მაკეტიდანაა:
+// ბარათი 24px, ღილაკი 16px, დაჭერისას 0.96-მდე პატარავდება.
+
+const press = 'transition duration-150 ease-out active:scale-[0.96] disabled:pointer-events-none disabled:opacity-45'
+export const btn = `w-full rounded-2xl bg-brand px-4 py-4 text-[15px] font-semibold text-on-brand hover:bg-brand-dark ${press}`
+export const btn2 = `w-full rounded-2xl bg-fill px-4 py-4 text-[15px] font-semibold text-ink hover:bg-line ${press}`
+export const btnDark = `w-full rounded-2xl bg-ink px-4 py-4 text-[15px] font-semibold text-white hover:bg-black ${press}`
+export const btnDanger = `rounded-2xl bg-coral-soft px-5 py-4 text-[15px] font-semibold text-[#b42323] ${press}`
+export const btnSm = `rounded-[14px] bg-brand px-4 py-2.5 text-[14px] font-semibold text-on-brand hover:bg-brand-dark ${press}`
+export const btnSm2 = `rounded-[14px] bg-fill px-4 py-2.5 text-[14px] font-semibold text-ink hover:bg-line ${press}`
+export const chip = `rounded-full px-3.5 py-2.5 text-[13px] font-semibold ${press}`
 export const card = 'rounded-3xl bg-white shadow-card'
-export const input = 'w-full rounded-2xl border border-line bg-white px-4 py-3 text-[15px] outline-none transition placeholder:text-quiet focus:border-brand-deep focus:ring-4 focus:ring-brand-soft'
+export const tap = press
+export const input = 'w-full rounded-2xl border border-field bg-white px-4 py-3.5 text-[16px] text-ink outline-none transition placeholder:text-quiet focus:border-brand-deep focus:ring-4 focus:ring-brand-soft'
 export const label = 'mb-1.5 block text-[13px] font-medium text-muted'
+export { money }
 
 export const ICONS = {
   home: 'M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z',
@@ -43,6 +48,9 @@ export const ICONS = {
   moon: 'M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z',
   edit: 'M4 20h4L19 9l-4-4L4 16zm9.5-13.5l4 4',
   mail: 'M4 6h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1zm-1 1l9 6 9-6',
+  star: 'M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z',
+  globe: 'M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z',
+  briefcase: 'M9 6V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1M4 7h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1zm-1 6h18',
   help: 'M9.5 9a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6V14m0 3h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z',
 }
 
@@ -56,25 +64,40 @@ export function Icon({ name, className = 'h-6 w-6', strokeWidth = 2 }) {
 
 export function Title({ eyebrow, children, action }) {
   return (
-    <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+    <div className="mb-4 flex items-end justify-between gap-3 px-1">
       <div className="min-w-0">
         {eyebrow && <p className="text-[14px] text-muted">{eyebrow}</p>}
-        <h1 className="text-[28px] font-bold leading-tight tracking-tight lg:text-[34px]">{children}</h1>
+        <h1 className="text-[26px] font-bold leading-tight tracking-[-0.02em] lg:text-[32px]">{children}</h1>
       </div>
       {action}
     </div>
   )
 }
 
-export function Segmented({ value, onChange, options }) {
+// მრგვალი „+“ ღილაკი სათაურის გვერდით
+export const RoundAdd = ({ onClick, label: aria, tour }) => (
+  <button type="button" onClick={onClick} aria-label={aria} data-tour={tour} className={`grid h-11 w-11 shrink-0 place-items-center rounded-full bg-brand text-on-brand ${press}`}>
+    <Icon name="plus" className="h-[22px] w-[22px]" strokeWidth={2.5} />
+  </button>
+)
+
+// გადამრთველი, რომლის თეთრი ფონი არჩეულ ვარიანტზე სრიალებს
+export function Segmented({ value, onChange, options, size = 'md' }) {
+  const i = Math.max(0, options.findIndex(([v]) => v === value))
+  const n = options.length
   return (
-    <div className="inline-grid w-full rounded-2xl bg-fill p-1 sm:w-auto" style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}>
+    <div className={`relative flex w-full bg-line ${size === 'sm' ? 'rounded-xl p-[3px]' : 'rounded-2xl p-1'}`}>
+      <span
+        className={`absolute bg-white shadow-[0_1px_2px_rgba(21,24,30,.12)] transition-transform duration-300 ease-[cubic-bezier(0.2,0,0,1)] ${size === 'sm' ? 'inset-y-[3px] left-[3px] rounded-[9px]' : 'inset-y-1 left-1 rounded-xl'}`}
+        style={{ width: `calc((100% - ${size === 'sm' ? 6 : 8}px) / ${n})`, transform: `translateX(${i * 100}%)` }}
+      />
       {options.map(([v, text]) => (
         <button
           type="button"
           key={v}
           onClick={() => onChange(v)}
-          className={`flex min-w-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl px-2 py-2 text-[14px] font-semibold transition sm:px-4 ${value === v ? 'bg-white text-ink shadow-sm' : 'text-muted hover:text-ink'}`}
+          aria-pressed={value === v}
+          className={`relative min-w-0 flex-1 truncate font-semibold text-ink ${size === 'sm' ? 'py-[7px] text-[12px]' : 'py-3 text-[14px]'}`}
         >
           {text}
         </button>
@@ -83,13 +106,43 @@ export function Segmented({ value, onChange, options }) {
   )
 }
 
-// ტელეფონზე ქვემოდან ამოდის, კომპიუტერზე ეკრანის შუაში ჩნდება
+// ტელეფონზე ქვემოდან ამოდის და სახელურით ქვემოთ ჩამოწევით იხურება; კომპიუტერზე შუაში ჩნდება
 export function Sheet({ onClose, children }) {
+  const [dy, setDy] = useState(0)
+  const drag = useRef(null)
+  const down = (e) => {
+    e.currentTarget.setPointerCapture(e.pointerId)
+    drag.current = { y0: e.clientY, last: [[e.timeStamp, 0]] }
+  }
+  const move = (e) => {
+    if (!drag.current) return
+    let d = e.clientY - drag.current.y0
+    if (d < 0) d = -((-d * 300 * 0.55) / (300 + 0.55 * -d)) // ზემოთ წევისას რეზინივით ეწინააღმდეგება
+    drag.current.last = [...drag.current.last.slice(-4), [e.timeStamp, d]]
+    setDy(d)
+  }
+  const up = () => {
+    const g = drag.current
+    drag.current = null
+    if (!g) return
+    const [a, b] = [g.last[0], g.last[g.last.length - 1]]
+    const v = b[0] > a[0] ? (b[1] - a[1]) / (b[0] - a[0]) : 0 // პიქსელი მილიწამში
+    if (b[1] + v * 250 > 160 && onClose) onClose()
+    else setDy(0)
+  }
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 animate-fade sm:items-center sm:p-6" onClick={onClose}>
-      <div className="max-h-[92dvh] w-full overflow-y-auto rounded-t-[28px] bg-white px-5 pb-[max(env(safe-area-inset-bottom),1.5rem)] pt-3 animate-sheet sm:max-w-md sm:rounded-[28px] sm:p-6" onClick={(e) => e.stopPropagation()}>
-        <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-line sm:hidden" />
-        {children}
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 animate-fade sm:items-center sm:p-6" onClick={onClose}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        className="flex max-h-[90dvh] w-full flex-col rounded-t-[32px] bg-white shadow-[0_-10px_40px_rgba(21,24,30,.18)] animate-sheet sm:max-w-md sm:rounded-[28px]"
+        style={{ transform: dy ? `translateY(${dy}px)` : undefined, transition: drag.current ? 'none' : 'transform 460ms cubic-bezier(0.32,0.72,0,1)' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} className="shrink-0 cursor-grab touch-none pb-3.5 pt-2.5 sm:hidden">
+          <div className="mx-auto h-[5px] w-11 rounded-full bg-field" />
+        </div>
+        <div className="overflow-y-auto overscroll-contain px-5 pb-[max(env(safe-area-inset-bottom),2rem)] sm:p-6">{children}</div>
       </div>
     </div>
   )
@@ -97,8 +150,8 @@ export function Sheet({ onClose, children }) {
 
 export function Switch({ on, onChange, label: aria }) {
   return (
-    <button type="button" role="switch" aria-checked={on} aria-label={aria} onClick={() => onChange(!on)} className={`relative h-8 w-14 shrink-0 rounded-full transition-colors ${on ? 'bg-brand' : 'bg-line'}`}>
-      <span className={`absolute top-1 h-6 w-6 rounded-full bg-white shadow transition-all ${on ? 'left-7' : 'left-1'}`} />
+    <button type="button" role="switch" aria-checked={on} aria-label={aria} onClick={() => onChange(!on)} className={`relative h-8 w-[52px] shrink-0 rounded-full transition-colors duration-200 ${on ? 'bg-brand-dark' : 'bg-field'}`}>
+      <span className={`absolute left-[3px] top-[3px] h-[26px] w-[26px] rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,.25)] transition-transform duration-300 ease-[cubic-bezier(0.2,0,0,1)] ${on ? 'translate-x-5' : ''}`} />
     </button>
   )
 }
@@ -108,22 +161,56 @@ export const Badge = ({ tone = 'gray', children }) => {
     gray: 'bg-fill text-muted',
     green: 'bg-brand-soft text-brand-deep',
     amber: 'bg-amber-soft text-amber',
-    red: 'bg-coral-soft text-coral',
-    violet: 'bg-[#ebe6f7] text-[#4b3a8a]',
+    red: 'bg-coral-soft text-[#b42323]',
+    violet: 'bg-violet-soft text-violet',
     sky: 'bg-sky-soft text-sky',
+    dark: 'bg-ink text-white',
   }
   return <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-[12px] font-semibold ${tones[tone]}`}>{children}</span>
 }
 
+// ინიციალები: სახელიდან ან კომპანიიდან
+export const initials = (name) => (name || '?').trim().split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase()
+const TINTS = [['#d8e8e6', '#123b36'], ['#efe3cd', '#4a3208'], ['#ebe6f7', '#33255c'], ['#e9ebf8', '#2c3880'], ['#eef1f0', '#15181e']]
+export const tint = (name) => TINTS[[...(name || '')].reduce((a, c) => a + c.charCodeAt(0), 0) % TINTS.length]
+export function Avatar({ name, size = 46, radius = 14, className = '' }) {
+  const [bg, fg] = tint(name)
+  return (
+    <span className={`grid shrink-0 place-items-center font-semibold ${className}`} style={{ width: size, height: size, borderRadius: radius, background: bg, color: fg, fontSize: Math.round(size * 0.32) }}>
+      {initials(name)}
+    </span>
+  )
+}
+
+// −  მნიშვნელობა  +  (საათები, ანაზღაურება)
+export function Stepper({ label: text, value, onDown, onUp, small }) {
+  const b = `grid shrink-0 place-items-center text-[22px] leading-none text-ink transition active:scale-90 ${small ? 'h-11 w-8' : 'h-11 w-11'}`
+  return (
+    <div className={`rounded-2xl bg-bg ${small ? 'px-1.5 py-2 text-center' : 'px-3 py-2.5'}`}>
+      <div className={`text-[12px] text-muted ${small ? 'text-[11px]' : ''}`}>{text}</div>
+      <div className="flex items-center justify-between">
+        <button type="button" onClick={onDown} aria-label="−" className={b}>−</button>
+        <span className={`font-bold tabular-nums ${small ? 'text-[16px]' : 'text-[18px]'}`}>{value}</span>
+        <button type="button" onClick={onUp} aria-label="+" className={b}>+</button>
+      </div>
+    </div>
+  )
+}
+
 export function Empty({ icon, title, text, action }) {
   return (
-    <div className={`${card} flex flex-col items-center px-6 py-10 text-center`}>
-      <span className="grid h-14 w-14 place-items-center rounded-2xl bg-brand-soft text-brand-deep"><Icon name={icon} className="h-7 w-7" /></span>
-      <p className="mt-3 text-[17px] font-semibold">{title}</p>
-      {text && <p className="mt-1 max-w-sm text-[15px] text-muted">{text}</p>}
+    <div className={`${card} flex flex-col items-center px-6 py-9 text-center`}>
+      {icon && <span className="mb-3 grid h-14 w-14 place-items-center rounded-[18px] bg-brand-soft text-brand-deep"><Icon name={icon} className="h-7 w-7" /></span>}
+      <p className="text-[16px] font-semibold">{title}</p>
+      {text && <p className="mt-1 max-w-sm text-[14px] text-muted">{text}</p>}
       {action && <div className="mt-4">{action}</div>}
     </div>
   )
 }
 
-export const money = (n) => `${Number(n).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ₾`
+export const Stars = ({ value, count }) =>
+  value ? (
+    <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-fill px-2.5 py-1 text-[12px] font-semibold text-muted">
+      ★ {Number(value).toFixed(1)}{count != null && <span className="font-medium text-quiet">({count})</span>}
+    </span>
+  ) : null
