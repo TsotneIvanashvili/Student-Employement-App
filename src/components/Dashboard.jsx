@@ -4,7 +4,7 @@ import { todayISO } from '../lib/match.js'
 import { addDays, clashOf, dayNumber, eventsOn, fitInfo, fmtMin, jobEvents, startOfWeek, weekdayOf } from '../lib/schedule.js'
 import { dayShort, payText, tr, useLang } from '../lib/i18n.js'
 import { useRatings } from '../lib/ratings.js'
-import { JobCard, openJob } from './Jobs.jsx'
+import { JobCard, listBox, openJob } from './Jobs.jsx'
 import { RateButton, RateSheet, STATUS_TONE, statusText } from './Applicants.jsx'
 import { Avatar, Badge, Empty, Icon, RoundAdd, card, tap } from './ui.jsx'
 
@@ -148,7 +148,7 @@ export function SeekerHome({ profile, busy, jobs, applications, go, askAI }) {
       )}
       {rate && <RateSheet applicationId={rate.id} who={rate.jobs.company} side="employer" rateeId={rate.jobs.employer_id} onClose={() => setRate(null)} onDone={() => setRated((n) => n + 1)} />}
 
-      <button onClick={() => askAI(tr('მიპოვე სამუშაო შაბათ-კვირისთვის', 'Find me work for Saturday and Sunday'))} className={`flex w-full items-center gap-3 rounded-[20px] bg-brand-soft px-4 py-3.5 text-left text-on-brand ${tap}`}>
+      <button onClick={() => askAI(tr('მიპოვე სამუშაო შაბათ-კვირისთვის', 'Find me work for Saturday and Sunday'))} className={`flex w-full items-center gap-3 rounded-[20px] bg-brand-soft px-4 py-3.5 text-left text-ink ${tap}`}>
         <Icon name="ai" className="h-[22px] w-[22px] shrink-0 text-brand-deep" />
         <span className="block flex-1">
           <span className="block text-[12px] font-semibold text-brand-deep">{tr('ჰკითხე AI-ს', 'Ask AI')}</span>
@@ -181,7 +181,7 @@ export function SeekerHome({ profile, busy, jobs, applications, go, askAI }) {
       {list.length === 0 ? (
         <p className="rounded-3xl bg-white p-5 text-center text-[14px] text-muted">{tr('ამ დღეს შენს თავისუფალ დროში ვაკანსია არ არის', 'No jobs fit your free time on this day')}</p>
       ) : (
-        <ul className="grid grid-cols-1 gap-2.5">{list.map((job) => <li key={job.id}><JobCard job={job} busy={busy} rating={rating(job.employer_id)} /></li>)}</ul>
+        <ul className={listBox}>{list.map((job) => <li key={job.id}><JobCard job={job} busy={busy} rating={rating(job.employer_id)} /></li>)}</ul>
       )}
     </div>
   )
@@ -244,7 +244,7 @@ export function EmployerHome({ profile, go }) {
           <span>
             <span className="block text-[12px] text-[#b9c1c9]">{tr('ახალი განაცხადები', 'New applications')}</span>
             <span className="block text-[30px] font-bold leading-[1.1] tabular-nums">{fresh.length}</span>
-            <span className="block text-[13px] text-[#5fe3a1]">{fresh.length ? tr('ნახე სივი და ტელეფონი, აიყვანე ან უთხარი უარი', 'See the CV and phone, hire or decline') : tr('ახალი განაცხადი ჯერ არ არის', 'No new applications yet')}</span>
+            <span className="block text-[13px] text-white/75">{fresh.length ? tr('ნახე სივი და ტელეფონი, აიყვანე ან უთხარი უარი', 'See the CV and phone, hire or decline') : tr('ახალი განაცხადი ჯერ არ არის', 'No new applications yet')}</span>
           </span>
           <Icon name="chevron" className="h-5 w-5 shrink-0" strokeWidth={2.5} />
         </button>

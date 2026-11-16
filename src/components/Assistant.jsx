@@ -4,7 +4,7 @@ import { splitReply } from '../lib/prompt.js'
 import { freeSlots } from '../lib/schedule.js'
 import { getLang, tr, useLang } from '../lib/i18n.js'
 import LessonProposals from './LessonProposals.jsx'
-import { JobCard } from './Jobs.jsx'
+import { JobCard, listBox } from './Jobs.jsx'
 import { Icon, tap } from './ui.jsx'
 
 // AI ასისტენტი (დიზაინის ვარიანტი B): ჯერ სამი დიდი ქმედება, მერე ჩატი.
@@ -132,7 +132,7 @@ function AssistantMessage({ content, jobs, busy, setLessons }) {
     <div className="space-y-2">
       <p className="whitespace-pre-wrap rounded-[22px] bg-white px-4 py-3 shadow-card">{text || <span className="font-bold tracking-[2px] text-muted">···</span>}</p>
       <LessonProposals lessons={lessons} setLessons={setLessons} />
-      {cards.length > 0 && <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">{cards.map((job) => <JobCard key={job.id} job={job} busy={busy} />)}</div>}
+      {cards.length > 0 && <ul className={listBox}>{cards.map((job) => <li key={job.id}><JobCard job={job} busy={busy} /></li>)}</ul>}
     </div>
   )
 }

@@ -2,12 +2,13 @@
 
 @theme {
   --font-sans: "Inter", "Noto Sans Georgian", system-ui, sans-serif;
-  /* ბრენდის ფერი ერთ ადგილას: ამ ხუთი ხაზის შეცვლით მთელი საიტის პალიტრა იცვლება */
-  --color-brand: #2fd07f;
-  --color-brand-dark: #25bd70;
-  --color-brand-soft: #e2f9ed;
-  --color-brand-deep: #0a7a45;
-  --color-on-brand: #06301c;
+  /* ინტერფეისი შავ-თეთრია. ფერი მხოლოდ მნიშვნელობისთვის: mint = ერგება/აყვანილია, coral = ემთხვევა, ვარსკვლავი = ნარინჯისფერი */
+  --color-brand: #15181e;
+  --color-brand-dark: #000000;
+  --color-brand-soft: #eef1f0;
+  --color-brand-deep: #15181e;
+  --color-on-brand: #ffffff;
+  --color-star: #e8a317;
 
   --color-ink: #15181e;
   --color-mint: #12a065;

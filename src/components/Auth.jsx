@@ -199,7 +199,7 @@ function Register() {
             </>
           )}
           <label className="flex items-start gap-3 rounded-[18px] bg-white p-4 text-[14px] text-muted shadow-[0_1px_2px_rgba(21,24,30,.06)]">
-            <input required type="checkbox" className="mt-0.5 h-5 w-5 shrink-0 accent-[#2fd07f]" />
+            <input required type="checkbox" className="mt-0.5 h-5 w-5 shrink-0 accent-[#15181e]" />
             <span>
               {tr('ვეთანხმები ', 'I agree to the ')}<a href="/terms" target="_blank" rel="noreferrer" className="font-semibold text-ink underline underline-offset-4">{tr('წესებსა და პირობებს', 'Terms')}</a>{tr(' და ', ' and the ')}
               <a href="/privacy" target="_blank" rel="noreferrer" className="font-semibold text-ink underline underline-offset-4">{tr('კონფიდენციალურობის პოლიტიკას', 'Privacy Policy')}</a>

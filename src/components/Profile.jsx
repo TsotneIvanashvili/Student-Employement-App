@@ -288,7 +288,7 @@ function Cv({ profile, onSaved }) {
         </div>
         {!editing && <button onClick={() => { setEditing(true); setNote(null) }} className={`${btnSm2} flex items-center gap-1.5`}><Icon name="edit" className="h-4 w-4" />{tr('რედაქტირება', 'Edit')}</button>}
       </div>
-      {note && <p className={`mb-3 text-[14px] font-medium ${note.ok ? 'text-brand-deep' : 'text-coral'}`}>{note.text}</p>}
+      {note && <p className={`mb-3 text-[14px] font-medium ${note.ok ? 'text-mint-dark' : 'text-coral'}`}>{note.text}</p>}
       {editing ? (
         <CvForm profile={profile} onSaved={onSaved} canCancel={cvDone} setNote={setNote} onClose={() => setEditing(false)} />
       ) : (

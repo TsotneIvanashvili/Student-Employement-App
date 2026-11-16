@@ -24,7 +24,7 @@ export function StudentSchedule({ busy, setLessons, freeHours, onFillWithAI }) {
       <Title eyebrow={tr('მონიშნე, როდის ხარ დაკავებული', "Mark when you're busy")} action={<RoundAdd label={tr('დამატება', 'Add')} onClick={() => setSheet({ date: todayISO(), start: 10 * 60 })} />}>
         {tr('ჩემი კალენდარი', 'My calendar')}
       </Title>
-      <button data-tour="quickadd" onClick={onFillWithAI} className={`mb-3.5 flex w-full items-center gap-2.5 rounded-[18px] bg-brand-soft px-3.5 py-3 text-left text-[14px] font-semibold text-on-brand ${tap}`}>
+      <button data-tour="quickadd" onClick={onFillWithAI} className={`mb-3.5 flex w-full items-center gap-2.5 rounded-[18px] bg-brand-soft px-3.5 py-3 text-left text-[14px] font-semibold text-ink ${tap}`}>
         <Icon name="ai" className="h-5 w-5 shrink-0 text-brand-deep" />
         <span className="flex-1">{tr('AI-ით შევსება', 'Fill with AI')}</span>
         <span className="text-[12px] tabular-nums text-brand-deep">{freeHours} {tr('სთ თავისუფალი', 'h free')}</span>

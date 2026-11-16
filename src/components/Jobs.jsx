@@ -28,33 +28,41 @@ export function FitBadge({ fit }) {
   return <Badge tone={tone}>{n}/{m} {tr('ცვლა ერგება', m === 1 ? 'shift fits' : 'shifts fit')}</Badge>
 }
 
-// ვაკანსიის ბარათი (სიაში, მთავარზე, AI-ს პასუხში)
-export function JobCard({ job, busy, rating, flat = false }) {
+// „3 საათის წინ“ / „2 დღის წინ“
+function ago(iso) {
+  const m = Math.max(1, Math.round((Date.now() - new Date(iso)) / 60000))
+  if (m < 60) return tr(`${m} წუთის წინ`, `${m} min ago`)
+  const h = Math.round(m / 60)
+  if (h < 24) return tr(`${h} საათის წინ`, h === 1 ? '1 hour ago' : `${h} hours ago`)
+  const d = Math.round(h / 24)
+  return tr(`${d} დღის წინ`, d === 1 ? 'yesterday' : `${d} days ago`)
+}
+
+// ვაკანსიის მწკრივი სიაში (Upwork-ის მსგავსად): მშობელი <ul> ხაზებით ყოფს
+export function JobCard({ job, busy, rating }) {
   useLang()
   const fit = busy ? fitInfo(job, busy) : null
+  const shifts = fit?.shifts ?? job.shifts
   return (
-    <button
-      onClick={() => openJob(job.id)}
-      className={`flex w-full items-center gap-3 p-3.5 text-left ${flat ? 'rounded-[20px] bg-bg hover:bg-fill' : `${card} hover:ring-2 hover:ring-brand/40`} ${tap}`}
-      style={{ transitionProperty: 'transform, box-shadow, background-color' }}
-    >
-      <Avatar name={job.company} />
-      <span className="block min-w-0 flex-1">
-        <span className="flex items-baseline justify-between gap-2">
-          <span className="truncate text-[15px] font-semibold">{job.title}</span>
-          <span className="shrink-0 text-[15px] font-semibold tabular-nums">
-            {money(job.pay)}<span className="text-[12px] font-medium text-muted">{payUnit(job.pay_unit)}</span>
-          </span>
-        </span>
-        <span className="block truncate text-[13px] text-muted">{job.company} · {job.remote ? tr('დისტანციური', 'Remote') : job.district}</span>
-        <span className="mt-2 flex flex-wrap gap-1.5">
-          <FitBadge fit={fit} />
-          {rating && <Stars value={rating.avg} />}
-        </span>
+    <button onClick={() => openJob(job.id)} className="group block w-full px-4 py-4 text-left transition-colors hover:bg-bg sm:px-5">
+      <span className="block truncate text-[12px] text-muted">{job.company}{job.created_at && ` · ${ago(job.created_at)}`}</span>
+      <span className="mt-0.5 block text-[17px] font-bold leading-snug group-hover:underline">{job.title}</span>
+      <span className="mt-1.5 flex flex-wrap items-center gap-x-3.5 gap-y-1 text-[13px] text-muted">
+        <span className="font-semibold text-ink tabular-nums">{money(job.pay)}{payUnit(job.pay_unit)}</span>
+        {rating && <Stars value={rating.avg} count={rating.count} />}
+        <span className="flex items-center gap-1"><Icon name={job.remote ? 'globe' : 'pin'} className="h-4 w-4" />{job.remote ? tr('დისტანციური', 'Remote') : job.district}</span>
+        {shifts.length > 0 && <span className="flex items-center gap-1"><Icon name="clock" className="h-4 w-4" />{fmtShift(shifts[0])}{shifts.length > 1 && ` +${shifts.length - 1}`}</span>}
+      </span>
+      <span className="mt-2.5 flex flex-wrap gap-1.5">
+        <FitBadge fit={fit} />
+        <span className="rounded-full bg-fill px-2.5 py-1 text-[12px] font-medium text-ink">{catName(job.category)}</span>
       </span>
     </button>
   )
 }
+
+// ვაკანსიების სია ერთ თეთრ ბლოკში, მწკრივებს შორის ხაზით
+export const listBox = `${card} divide-y divide-line overflow-hidden`
 
 // სია: ძებნა, სფეროები, „მხოლოდ ჩემს კალენდარს მორგებული“
 export function JobList({ jobs, busy, filters, setFilters, onGoCalendar }) {
@@ -99,7 +107,7 @@ export function JobList({ jobs, busy, filters, setFilters, onGoCalendar }) {
       </div>
 
       {!hasSchedule && filters.onlyFit && (
-        <div className="mt-3 flex items-center gap-3 rounded-[20px] bg-brand-soft px-4 py-3.5 text-on-brand">
+        <div className="mt-3 flex items-center gap-3 rounded-[20px] bg-brand-soft px-4 py-3.5 text-ink">
           <Icon name="calendar" className="h-5 w-5 shrink-0 text-brand-deep" />
           <p className="flex-1 text-[14px]">{tr('კალენდარი ჯერ ცარიელია, ამიტომ ყველა ვაკანსია გერგება.', 'Your calendar is empty, so every job fits.')}</p>
           <button onClick={onGoCalendar} className="shrink-0 text-[13px] font-semibold text-brand-deep">{tr('შევსება', 'Fill in')}</button>
@@ -110,7 +118,7 @@ export function JobList({ jobs, busy, filters, setFilters, onGoCalendar }) {
         {rows.length === 0 ? (
           <Empty title={tr('ამ ფილტრით ვაკანსია არ მოიძებნა', 'No jobs match these filters')} text={tr('გამორთე კალენდრის ფილტრი ან შეცვალე სფერო.', 'Turn off the calendar filter or change the field.')} />
         ) : (
-          <ul className="grid grid-cols-1 gap-2.5 md:grid-cols-2">
+          <ul className={listBox}>
             {rows.map(({ job }) => <li key={job.id}><JobCard job={job} busy={busy} rating={rating(job.employer_id)} /></li>)}
           </ul>
         )}
@@ -175,14 +183,14 @@ export function JobDetail({ id, profile, busy, onBack, onGoProfile, onChanged })
                   return (
                     <div key={i} className="flex items-center gap-3 border-t border-fill py-3">
                       {isSeeker && !past && (
-                        <span className={`grid h-[26px] w-[26px] shrink-0 place-items-center rounded-full text-[13px] font-bold ${c ? 'bg-coral-soft text-[#b42323]' : 'bg-brand-soft text-brand-deep'}`}>
+                        <span className={`grid h-[26px] w-[26px] shrink-0 place-items-center rounded-full text-[13px] font-bold ${c ? 'bg-coral-soft text-[#b42323]' : 'bg-mint-soft text-mint-dark'}`}>
                           <Icon name={c ? 'x' : 'check'} className="h-3.5 w-3.5" strokeWidth={3} />
                         </span>
                       )}
                       <div className="min-w-0 flex-1">
                         <p className={`text-[14px] font-semibold tabular-nums ${past ? 'text-quiet line-through' : ''}`}>{fmtShift(s)}</p>
                         {isSeeker && !past && (
-                          <p className={`text-[12px] ${c ? 'text-[#b42323]' : 'text-brand-deep'}`}>
+                          <p className={`text-[12px] ${c ? 'text-[#b42323]' : 'text-mint-dark'}`}>
                             {c ? `${tr('ემთხვევა:', 'Clashes with:')} ${c.title} ${fmtMin(c.start_min)}–${fmtMin(c.end_min)}` : tr('ამ დროს თავისუფალი ხარ', "You're free at this time")}
                           </p>
                         )}
@@ -200,7 +208,7 @@ export function JobDetail({ id, profile, busy, onBack, onGoProfile, onChanged })
               </section>
             )}
 
-            <p className="flex gap-3 rounded-[20px] bg-brand-soft px-4 py-3.5 text-[13px] text-on-brand">
+            <p className="flex gap-3 rounded-[20px] bg-brand-soft px-4 py-3.5 text-[13px] text-ink">
               <Icon name="users" className="h-5 w-5 shrink-0 text-brand-deep" />
               <span className="[text-wrap:pretty]">
                 {tr('ანაზღაურებასა და დეტალებზე დამსაქმებელთან პირდაპირ თანხმდები. ShiftMate თანხას არ იღებს და არ ინახავს.', 'You agree pay and details directly with the employer. ShiftMate does not take or hold any money.')}
@@ -250,7 +258,7 @@ function JobApplicants({ job }) {
       {rows.length === 0 ? (
         <p className={`${card} p-5 text-center text-[14px] text-muted`}>{tr('განმცხადებლები ჯერ არ არის', 'No applicants yet')}</p>
       ) : (
-        <ul className="space-y-2.5">{rows.map((r) => <ApplicantCard key={r.id} app={r} job={job} onChanged={load} />)}</ul>
+        <ul className={listBox}>{rows.map((r) => <ApplicantCard key={r.id} app={r} job={job} onChanged={load} />)}</ul>
       )}
     </section>
   )

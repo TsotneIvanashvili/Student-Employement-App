@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { tr, useLang } from '../lib/i18n.js'
 import { forgetRating, useRatings } from '../lib/ratings.js'
-import { Avatar, Badge, Icon, Sheet, Stars, btn, btn2, btnDark, card, tap } from './ui.jsx'
+import { Avatar, Badge, Icon, Sheet, Stars, btn, btn2, btnDark, tap } from './ui.jsx'
 
 export const STATUS_TONE = { sent: 'violet', accepted: 'green', rejected: 'red', done: 'dark' }
 export function statusText(status, side = 'employer') {
@@ -40,12 +40,15 @@ export function ApplicantCard({ app, job, showJob = false, onChanged }) {
   }
 
   return (
-    <li className={`${card} p-4`}>
+    <li className="px-4 py-4 sm:px-5">
       <button onClick={() => setOpen(!open)} aria-expanded={open} className="flex w-full items-center gap-3 text-left">
         <Avatar name={p.full_name} size={42} radius={14} />
         <span className="block min-w-0 flex-1">
-          <span className="block truncate text-[15px] font-semibold">{p.full_name}</span>
-          <span className="block truncate text-[12px] text-muted">{showJob ? job.title : p.cv_skills || tr('კანდიდატი', 'Candidate')}{r && ` · ★ ${r.avg.toFixed(1)}`}</span>
+          <span className="block truncate text-[16px] font-bold">{p.full_name}</span>
+          <span className="flex min-w-0 items-center gap-2 text-[13px] text-muted">
+            <span className="truncate">{showJob ? job.title : p.cv_skills || tr('კანდიდატი', 'Candidate')}</span>
+            {r && <Stars value={r.avg} />}
+          </span>
         </span>
         <Badge tone={STATUS_TONE[app.status]}>{statusText(app.status)}</Badge>
         <Icon name="chevron" className={`h-5 w-5 shrink-0 text-quiet transition ${open ? 'rotate-90' : ''}`} strokeWidth={2.5} />
@@ -75,7 +78,7 @@ export function ApplicantCard({ app, job, showJob = false, onChanged }) {
           )}
           {app.status === 'accepted' && (
             <>
-              <p className="rounded-2xl bg-brand-soft p-3 text-[13px] text-on-brand">
+              <p className="rounded-2xl bg-brand-soft p-3 text-[13px] text-ink">
                 {tr('აყვანილია: ცვლები მის კალენდარშია. როცა სამუშაო დასრულდება, დაადასტურე და შეაფასე.', 'Hired: the shifts are in their calendar. When the work is done, confirm it and rate them.')}
               </p>
               <button onClick={() => setConfirm('done')} className={btn}>{tr('სამუშაო დასრულდა', 'The work is done')}</button>

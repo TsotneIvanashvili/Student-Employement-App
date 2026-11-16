@@ -159,7 +159,7 @@ export function Switch({ on, onChange, label: aria }) {
 export const Badge = ({ tone = 'gray', children }) => {
   const tones = {
     gray: 'bg-fill text-muted',
-    green: 'bg-brand-soft text-brand-deep',
+    green: 'bg-mint-soft text-mint-dark',
     amber: 'bg-amber-soft text-amber',
     red: 'bg-coral-soft text-[#b42323]',
     violet: 'bg-violet-soft text-violet',
@@ -210,7 +210,7 @@ export function Empty({ icon, title, text, action }) {
 
 export const Stars = ({ value, count }) =>
   value ? (
-    <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-fill px-2.5 py-1 text-[12px] font-semibold text-muted">
-      ★ {Number(value).toFixed(1)}{count != null && <span className="font-medium text-quiet">({count})</span>}
+    <span className="inline-flex items-center gap-1 whitespace-nowrap text-[13px] font-semibold text-ink">
+      <span className="text-star">★</span>{Number(value).toFixed(1)}{count != null && <span className="font-normal text-muted">({count})</span>}
     </span>
   ) : null

@@ -5,7 +5,7 @@ import { addDays, jobEvents } from '../lib/schedule.js'
 import { CATEGORIES, catName, dayShort, payText, payUnit, tr, useLang } from '../lib/i18n.js'
 import BigCalendar from './BigCalendar.jsx'
 import { Legend } from './Schedule.jsx'
-import { fmtShift, openJob } from './Jobs.jsx'
+import { fmtShift, listBox, openJob } from './Jobs.jsx'
 import { ApplicantCard } from './Applicants.jsx'
 import { Badge, Empty, Icon, RoundAdd, Segmented, Stepper, Title, btn, card, chip, input, label, tap } from './ui.jsx'
 
@@ -48,7 +48,7 @@ export function Inbox({ profile, onNew }) {
         ) : (
           <Empty title={tr('აქ ცარიელია', 'Nothing here')} text={tr('ამ ფილტრით განაცხადი არ არის.', 'No applications with this filter.')} />
         ))}
-      <ul className="space-y-2.5">{shown.map((r) => <ApplicantCard key={r.id} app={r} job={r.jobs} showJob onChanged={load} />)}</ul>
+      <ul className={listBox}>{shown.map((r) => <ApplicantCard key={r.id} app={r} job={r.jobs} showJob onChanged={load} />)}</ul>
     </section>
   )
 }
@@ -92,14 +92,14 @@ export function MyJobs({ profile, onNew }) {
         {tr('ჩემი ვაკანსიები', 'My job posts')}
       </Title>
       {jobs?.length === 0 && <Empty icon="briefcase" title={tr('ჯერ ვაკანსია არ გაქვს', "You haven't posted a job yet")} text={tr('პირველი ვაკანსიის დამატებას ერთი წუთი სჭირდება.', 'Posting your first job takes a minute.')} action={<button onClick={onNew} className="rounded-2xl bg-brand px-6 py-3.5 font-semibold text-on-brand">{tr('ვაკანსიის დამატება', 'Post a job')}</button>} />}
-      <ul data-tour="myjobs" className="space-y-2.5">
+      <ul data-tour="myjobs" className={jobs?.length ? listBox : ''}>
         {jobs?.map((job) => {
           const fresh = job.applications.filter((a) => a.status === 'sent').length
           return (
             <li key={job.id}>
-              <button onClick={() => openJob(job.id)} className={`${card} flex w-full flex-col gap-1 p-4 text-left ${tap} ${job.is_open ? '' : 'opacity-60'}`}>
+              <button onClick={() => openJob(job.id)} className={`flex w-full flex-col gap-1 px-4 py-4 text-left transition-colors hover:bg-bg sm:px-5 ${job.is_open ? '' : 'opacity-60'}`}>
                 <span className="flex w-full items-baseline justify-between gap-2.5">
-                  <span className="truncate text-[16px] font-semibold">{job.title}</span>
+                  <span className="truncate text-[17px] font-bold">{job.title}</span>
                   <span className="shrink-0 font-semibold tabular-nums">{payText(job)}</span>
                 </span>
                 <span className="text-[13px] text-muted">{job.shifts.length ? job.shifts.map(fmtShift).join(' · ') : tr('თავისუფალი გრაფიკი', 'Flexible hours')}</span>
@@ -227,7 +227,7 @@ export function NewJob({ profile, onCreated, onCancel }) {
         </label>
       </section>
 
-      <p className="flex gap-3 rounded-[20px] bg-brand-soft px-4 py-3.5 text-[13px] text-on-brand">
+      <p className="flex gap-3 rounded-[20px] bg-brand-soft px-4 py-3.5 text-[13px] text-ink">
         <Icon name="users" className="h-5 w-5 shrink-0 text-brand-deep" />
         {tr('ანაზღაურებაზე თანამშრომელთან პირდაპირ თანხმდები. ShiftMate თანხას არ იღებს და არ ინახავს.', 'You agree pay directly with the worker. ShiftMate does not take or hold any money.')}
       </p>

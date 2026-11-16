@@ -47,7 +47,7 @@ export default function LessonProposals({ lessons, setLessons, onDone, onCancel 
         ))}
       </ul>
       <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
-        {state === 'added' && <span className="mr-auto flex items-center gap-1.5 text-[14px] font-semibold text-brand-deep"><Icon name="check" className="h-4 w-4" strokeWidth={3} />{tr('დაემატა კალენდარში', 'Added to your calendar')}</span>}
+        {state === 'added' && <span className="mr-auto flex items-center gap-1.5 text-[14px] font-semibold text-mint-dark"><Icon name="check" className="h-4 w-4" strokeWidth={3} />{tr('დაემატა კალენდარში', 'Added to your calendar')}</span>}
         {state === 'cancelled' && <span className="mr-auto text-[14px] text-muted">{tr('გაუქმდა', 'Cancelled')}</span>}
         {state === 'error' && <span className="mr-auto text-[14px] font-medium text-coral">{tr('ვერ დაემატა, სცადე თავიდან', 'Could not add, try again')}</span>}
         {open && (
