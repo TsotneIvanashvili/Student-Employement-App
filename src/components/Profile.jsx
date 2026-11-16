@@ -4,14 +4,16 @@ import { navigate } from '../lib/router.jsx'
 import { useInstall } from '../lib/pwa.js'
 import { catName, setLang, tr, useLang } from '../lib/i18n.js'
 import { useRatings } from '../lib/ratings.js'
-import { STATUS_TONE, statusText, tagText } from './Applicants.jsx'
-import { openJob } from './Jobs.jsx'
-import { Avatar, Badge, Icon, Segmented, Sheet, Title, btn, btn2, btnSm2, card, chip, input, label, tap } from './ui.jsx'
+import { tagText } from './Applicants.jsx'
+import { ProfileHeader, SkillsCard, WorkHistory } from './ProfileParts.jsx'
+import { WalletCard } from './Wallet.jsx'
+import { Badge, Icon, Segmented, Sheet, Title, btn, btn2, btnSm2, card, chip, input, label } from './ui.jsx'
 
 const FIELDS = ['general', 'service', 'delivery', 'trades', 'design', 'dev', 'events', 'other']
 const stars = (n) => '★'.repeat(n) + '☆'.repeat(5 - n)
 
-// პროფილი ორივე როლისთვის: შეფასება, პარამეტრები, სივი (მაძიებელი), განაცხადები, შეფასებები
+// პროფილი ორივე როლისთვის (Upwork-ის მსგავსად): ფოტო და სახელი, უნარები, სამუშაო ისტორია, ბალანსი,
+// სივი, შეფასებები და ბოლოს პარამეტრები. განაცხადები ინბოქსშია.
 export default function Profile({ profile, email, onSaved, onHelp, applications = [] }) {
   const lang = useLang()
   const employer = profile.role === 'employer'
@@ -38,15 +40,12 @@ export default function Profile({ profile, email, onSaved, onHelp, applications 
     <div className="mx-auto max-w-3xl space-y-3.5">
       <Title>{tr('პროფილი', 'Profile')}</Title>
       <section className={`${card} space-y-4 p-5`}>
-        <div className="flex items-center gap-3.5">
-          <span className="grid h-16 w-16 shrink-0 place-items-center rounded-[22px] bg-avatar text-[22px] font-bold text-on-avatar">
-            {employer ? (profile.company_name || profile.full_name).slice(0, 2).toUpperCase() : (profile.full_name || '?').trim().split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase()}
-          </span>
-          <div className="min-w-0">
-            <p className="truncate text-[20px] font-bold tracking-[-0.01em]">{employer ? profile.company_name || profile.full_name : profile.full_name}</p>
-            <p className="truncate text-[13px] text-muted">{employer ? `${tr('დამსაქმებელი', 'Employer')} · ${profile.full_name}` : `${tr('სამუშაოს მაძიებელი', 'Job seeker')} · ${catName(profile.field)}`}</p>
-          </div>
-        </div>
+        <ProfileHeader
+          profile={profile}
+          editable
+          onSaved={onSaved}
+          subtitle={employer ? `${tr('დამსაქმებელი', 'Employer')} · ${profile.full_name}` : `${tr('სამუშაოს მაძიებელი', 'Job seeker')} · ${catName(profile.field)}`}
+        />
         <div className={`grid gap-2 ${third === null ? 'grid-cols-2' : 'grid-cols-3'}`}>
           <Stat value={rating ? `★ ${rating.avg.toFixed(1)}` : '—'} text={`${rating?.count ?? 0} ${tr('შეფასება', 'reviews')}`} />
           <Stat value={done ?? '·'} text={tr('დასრულებული', 'Completed')} />
@@ -54,6 +53,28 @@ export default function Profile({ profile, email, onSaved, onHelp, applications 
         </div>
       </section>
 
+      {!employer && <SkillsCard profile={profile} editable onSaved={onSaved} />}
+      {!employer && <WorkHistory personId={profile.id} />}
+      <WalletCard profile={profile} />
+      {!employer && <Cv profile={profile} onSaved={onSaved} />}
+
+
+      <section className="space-y-2.5">
+        <h2 className="px-1 pt-1 text-[18px] font-bold tracking-[-0.01em]">{tr('შეფასებები', 'Reviews')}</h2>
+        {reviews.length === 0 ? (
+          <p className="rounded-[20px] bg-white p-4 text-[14px] text-muted shadow-[0_1px_2px_rgba(21,24,30,.06)]">
+            {employer ? tr('შეფასებები გამოჩნდება, როცა თანამშრომლები სამუშაოს დაასრულებენ.', 'Reviews appear after workers finish a job with you.') : tr('შეფასებები გამოჩნდება პირველი დასრულებული სამუშაოს შემდეგ.', 'Reviews appear after your first completed job.')}
+          </p>
+        ) : (
+          reviews.map((r) => (
+            <div key={r.id} className="rounded-[20px] bg-white px-4 py-3.5 shadow-[0_1px_2px_rgba(21,24,30,.06)]">
+              <div className="flex justify-between gap-2.5"><span className="font-semibold">{r.rater_name}</span><span className="font-semibold tracking-[1px] text-amber">{stars(r.stars)}</span></div>
+              {r.tags.length > 0 && <p className="mt-1 text-[14px] text-muted">{r.tags.map(tagText).join(' · ')}</p>}
+            </div>
+          ))
+        )}
+      </section>
+      <h2 className="px-1 pt-1 text-[18px] font-bold tracking-[-0.01em]">{tr('პარამეტრები', 'Settings')}</h2>
       <section className={`${card} px-4 py-1.5`}>
         <Row title={tr('ენა', 'Language')}>
           <div className="w-[150px]"><Segmented size="sm" value={lang} onChange={setLang} options={[['ka', 'ქართული'], ['en', 'English']]} /></div>
@@ -83,44 +104,6 @@ export default function Profile({ profile, email, onSaved, onHelp, applications 
           <a href="/privacy" target="_blank" rel="noreferrer" className="text-muted hover:text-ink">{tr('კონფიდენციალურობა', 'Privacy')}</a>
         </div>
         <SignOut profile={profile} />
-      </section>
-
-      {!employer && <Cv profile={profile} onSaved={onSaved} />}
-
-      {!employer && applications.length > 0 && (
-        <section className="space-y-2.5">
-          <h2 className="px-1 pt-1 text-[18px] font-bold tracking-[-0.01em]">{tr('ჩემი განაცხადები', 'My applications')}</h2>
-          <ul className="space-y-2">
-            {applications.map((a) => (
-              <li key={a.id}>
-                <button onClick={() => openJob(a.jobs.id)} className={`${card} flex w-full items-center gap-3 p-3.5 text-left ${tap}`}>
-                  <Avatar name={a.jobs.company} size={42} radius={14} />
-                  <span className="block min-w-0 flex-1">
-                    <span className="block truncate text-[15px] font-semibold">{a.jobs.title}</span>
-                    <span className="block truncate text-[12px] text-muted">{a.jobs.company}</span>
-                  </span>
-                  <Badge tone={STATUS_TONE[a.status]}>{statusText(a.status, 'seeker')}</Badge>
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      <section className="space-y-2.5">
-        <h2 className="px-1 pt-1 text-[18px] font-bold tracking-[-0.01em]">{tr('შეფასებები', 'Reviews')}</h2>
-        {reviews.length === 0 ? (
-          <p className="rounded-[20px] bg-white p-4 text-[14px] text-muted shadow-[0_1px_2px_rgba(21,24,30,.06)]">
-            {employer ? tr('შეფასებები გამოჩნდება, როცა თანამშრომლები სამუშაოს დაასრულებენ.', 'Reviews appear after workers finish a job with you.') : tr('შეფასებები გამოჩნდება პირველი დასრულებული სამუშაოს შემდეგ.', 'Reviews appear after your first completed job.')}
-          </p>
-        ) : (
-          reviews.map((r) => (
-            <div key={r.id} className="rounded-[20px] bg-white px-4 py-3.5 shadow-[0_1px_2px_rgba(21,24,30,.06)]">
-              <div className="flex justify-between gap-2.5"><span className="font-semibold">{r.rater_name}</span><span className="font-semibold tracking-[1px] text-amber">{stars(r.stars)}</span></div>
-              {r.tags.length > 0 && <p className="mt-1 text-[14px] text-muted">{r.tags.map(tagText).join(' · ')}</p>}
-            </div>
-          ))
-        )}
       </section>
       {nameSheet && <NameSheet profile={profile} email={email} onSaved={onSaved} onClose={() => setNameSheet(false)} />}
     </div>
@@ -294,10 +277,7 @@ function Cv({ profile, onSaved }) {
       ) : (
         <dl className="space-y-2">
           <Fact name={tr('გამოცდილება', 'Experience')} value={profile.cv_experience} />
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <Fact name={tr('უნარები', 'Skills')} value={profile.cv_skills} />
-            <Fact name={tr('ენები', 'Languages')} value={profile.cv_languages} />
-          </div>
+          <Fact name={tr('ენები', 'Languages')} value={profile.cv_languages} />
           {profile.cv_path && (
             <button onClick={openPdf} className="flex w-full items-center gap-2 rounded-2xl bg-bg px-4 py-3 text-left text-[15px] font-semibold hover:bg-fill">
               <Icon name="doc" className="h-5 w-5 text-brand-deep" />{tr('PDF სივის ნახვა', 'Open the PDF CV')}
@@ -317,7 +297,7 @@ const Fact = ({ name, value }) => (
 )
 
 function CvForm({ profile, onSaved, canCancel, setNote, onClose }) {
-  const [form, setForm] = useState({ cv_experience: profile.cv_experience ?? '', cv_skills: profile.cv_skills ?? '', cv_languages: profile.cv_languages ?? '' })
+  const [form, setForm] = useState({ cv_experience: profile.cv_experience ?? '', cv_languages: profile.cv_languages ?? '' })
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value })
 
   async function save(e) {
@@ -346,10 +326,7 @@ function CvForm({ profile, onSaved, canCancel, setNote, onClose }) {
         <span className={label}>{tr('გამოცდილება', 'Experience')}</span>
         <textarea className={`${input} resize-none`} rows={3} maxLength={1000} value={form.cv_experience} onChange={set('cv_experience')} placeholder={tr('მაგ. 3 თვე ბარისტად, 1 წელი გაყიდვებში', 'e.g. 3 months as a barista, 1 year in sales')} />
       </label>
-      <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
-        <label className="block"><span className={label}>{tr('უნარები', 'Skills')}</span><input maxLength={200} className={input} value={form.cv_skills} onChange={set('cv_skills')} placeholder={tr('კომუნიკაცია, Excel', 'Communication, Excel')} /></label>
-        <label className="block"><span className={label}>{tr('ენები', 'Languages')}</span><input maxLength={200} className={input} value={form.cv_languages} onChange={set('cv_languages')} placeholder={tr('ინგლისური B2', 'English B2')} /></label>
-      </div>
+      <label className="block"><span className={label}>{tr('ენები', 'Languages')}</span><input maxLength={200} className={input} value={form.cv_languages} onChange={set('cv_languages')} placeholder={tr('ინგლისური B2', 'English B2')} /></label>
       <label className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl border border-dashed border-field px-4 py-4 hover:border-brand-deep">
         <span className="flex items-center gap-2 font-medium"><Icon name="doc" className="h-5 w-5 text-brand-deep" />{profile.cv_path ? tr('PDF სივი ატვირთულია', 'PDF CV uploaded') : tr('PDF სივი (არასავალდებულო)', 'PDF CV (optional)')}</span>
         <span className="font-semibold text-brand-deep">{profile.cv_path ? tr('შეცვლა', 'Replace') : tr('ატვირთვა', 'Upload')}</span>

@@ -2,7 +2,11 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { tr, useLang } from '../lib/i18n.js'
 import { forgetRating, useRatings } from '../lib/ratings.js'
+import { lari } from '../lib/money.js'
 import { Avatar, Badge, Icon, Sheet, Stars, btn, btn2, btnDark, tap } from './ui.jsx'
+import { Chat, ChatButton } from './Chat.jsx'
+import { HireSheet, PaySheet, useEscrow } from './Wallet.jsx'
+import { PublicProfile } from './ProfileParts.jsx'
 
 export const STATUS_TONE = { sent: 'violet', accepted: 'green', rejected: 'red', done: 'dark' }
 export function statusText(status, side = 'employer') {
@@ -11,9 +15,11 @@ export function statusText(status, side = 'employer') {
 }
 
 // ერთი განაცხადი დამსაქმებლისთვის: სივი, წერილი, ტელეფონი; აყვანა/უარყოფა; დასრულება და შეფასება.
-export function ApplicantCard({ app, job, showJob = false, onChanged }) {
+export function ApplicantCard({ app, job, showJob = false, onChanged, unread = 0 }) {
   useLang()
-  const [confirm, setConfirm] = useState(null) // 'accepted' | 'rejected' | 'done'
+  const [confirm, setConfirm] = useState(null) // 'rejected' | 'done'
+  const [sheet, setSheet] = useState(null) // 'hire' | 'pay' | 'profile' | 'chat'
+  const escrow = useEscrow(['accepted', 'done'].includes(app.status) ? app.id : null)
   const [rate, setRate] = useState(false)
   const [rated, setRated] = useState(0)
   const [open, setOpen] = useState(app.status !== 'rejected')
@@ -23,9 +29,11 @@ export function ApplicantCard({ app, job, showJob = false, onChanged }) {
   const r = rating(app.student_id)
 
   async function setStatus(status) {
-    const { error } = await supabase.from('applications').update({ status }).eq('id', app.id)
+    // უარი პირდაპირ იწერება; დასრულება (ფიქსირებული ფასი) სერვერის ფუნქციით, რომელიც დეპოზიტს მუშაკს ურიცხავს
+    const { error } = status === 'done' ? await supabase.rpc('finish_job', { app: app.id }) : await supabase.from('applications').update({ status }).eq('id', app.id)
     if (error) return setError(tr('ვერ შეინახა. სცადე თავიდან.', 'Could not save. Try again.'))
     setConfirm(null)
+    window.dispatchEvent(new Event('sm-money'))
     onChanged()
   }
   async function openPdf() {
@@ -34,15 +42,20 @@ export function ApplicantCard({ app, job, showJob = false, onChanged }) {
   }
 
   const ask = {
-    accepted: [tr(`აიყვან ${p.full_name}-ს?`, `Hire ${p.full_name}?`), tr(`„${job.title}“-ის ცვლები მის კალენდარში გამოჩნდება. ანაზღაურებასა და დეტალებზე პირდაპირ შეთანხმდით.`, `The shifts of "${job.title}" will appear in their calendar. Agree pay and details directly.`), tr('აყვანა', 'Hire')],
     rejected: [tr(`უარს ეტყვი ${p.full_name}-ს?`, `Decline ${p.full_name}?`), tr('კანდიდატი დაინახავს, რომ განაცხადი უარყოფილია.', 'The candidate will see that the application was declined.'), tr('უარყოფა', 'Decline')],
-    done: [tr('სამუშაო დასრულდა?', 'Is the work done?'), tr('ამის შემდეგ ერთმანეთს შეაფასებთ. დასრულებულ სამუშაოს ვეღარ შეცვლი.', 'After this you can rate each other. Completed work cannot be changed.'), tr('დადასტურება', 'Confirm')],
+    done: [
+      tr('სამუშაო დასრულდა?', 'Is the work done?'),
+      escrow?.held > 0
+        ? tr(`დეპოზიტიდან ${lari(escrow.held)} ჩაერიცხება ${p.full_name}-ს, 10%-იანი საკომისიოს გამოკლებით. ამის შემდეგ ერთმანეთს შეაფასებთ.`, `${lari(escrow.held)} from the deposit goes to ${p.full_name}, minus the 10% fee. Then you can rate each other.`)
+        : tr('ამის შემდეგ ერთმანეთს შეაფასებთ. დასრულებულ სამუშაოს ვეღარ შეცვლი.', 'After this you can rate each other. Completed work cannot be changed.'),
+      tr('დადასტურება', 'Confirm'),
+    ],
   }
 
   return (
     <li className="px-4 py-4 sm:px-5">
       <button onClick={() => setOpen(!open)} aria-expanded={open} className="flex w-full items-center gap-3 text-left">
-        <Avatar name={p.full_name} size={42} radius={14} />
+        <Avatar name={p.full_name} src={p.avatar_url} size={42} radius={21} />
         <span className="block min-w-0 flex-1">
           <span className="block truncate text-[16px] font-bold">{p.full_name}</span>
           <span className="flex min-w-0 items-center gap-2 text-[13px] text-muted">
@@ -50,6 +63,7 @@ export function ApplicantCard({ app, job, showJob = false, onChanged }) {
             {r && <Stars value={r.avg} />}
           </span>
         </span>
+        {unread > 0 && <span className="grid h-5 min-w-5 place-items-center rounded-full bg-coral px-1.5 text-[11px] font-bold text-white" aria-label={tr('ახალი შეტყობინება', 'New message')}>{unread}</span>}
         <Badge tone={STATUS_TONE[app.status]}>{statusText(app.status)}</Badge>
         <Icon name="chevron" className={`h-5 w-5 shrink-0 text-quiet transition ${open ? 'rotate-90' : ''}`} strokeWidth={2.5} />
       </button>
@@ -57,8 +71,11 @@ export function ApplicantCard({ app, job, showJob = false, onChanged }) {
       {open && (
         <div className="mt-3.5 space-y-3">
           {app.message && <p className="rounded-2xl bg-bg p-3 text-[14px]">„{app.message}“</p>}
-          <dl className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-            {[[tr('გამოცდილება', 'Experience'), p.cv_experience], [tr('უნარები', 'Skills'), p.cv_skills], [tr('ენები', 'Languages'), p.cv_languages]].filter(([, v]) => v).map(([k, v]) => (
+          {p.skills?.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">{p.skills.map((s) => <span key={s} className="rounded-full bg-fill px-2.5 py-1 text-[12px] font-medium">{s}</span>)}</div>
+          )}
+          <dl className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            {[[tr('გამოცდილება', 'Experience'), p.cv_experience], [tr('ენები', 'Languages'), p.cv_languages]].filter(([, v]) => v).map(([k, v]) => (
               <div key={k} className="rounded-2xl bg-bg px-3 py-2.5">
                 <dt className="text-[12px] text-muted">{k}</dt>
                 <dd className="whitespace-pre-wrap break-words text-[14px]">{v}</dd>
@@ -69,22 +86,37 @@ export function ApplicantCard({ app, job, showJob = false, onChanged }) {
             {app.phone && <a href={`tel:${app.phone}`} className="flex items-center gap-1.5 text-ink"><Icon name="phone" className="h-5 w-5" />{app.phone}</a>}
             {p.cv_path && <button onClick={openPdf} className="flex items-center gap-1.5"><Icon name="doc" className="h-5 w-5" />{tr('სივის PDF', 'CV (PDF)')}</button>}
             {r && <Stars value={r.avg} count={r.count} />}
+            <button onClick={() => setSheet('profile')} className="flex items-center gap-1.5"><Icon name="profile" className="h-5 w-5" />{tr('პროფილის ნახვა', 'View profile')}</button>
           </div>
           {app.status === 'sent' && (
             <div className="grid grid-cols-2 gap-2.5 pt-1">
               <button onClick={() => setConfirm('rejected')} className={btn2}>{tr('უარყოფა', 'Decline')}</button>
-              <button onClick={() => setConfirm('accepted')} className={btn}>{tr('აყვანა', 'Hire')}</button>
+              <button onClick={() => setSheet('hire')} className={btn}>{tr('აყვანა', 'Hire')}</button>
             </div>
           )}
           {app.status === 'accepted' && (
             <>
               <p className="rounded-2xl bg-brand-soft p-3 text-[13px] text-ink">
-                {tr('აყვანილია: ცვლები მის კალენდარშია. როცა სამუშაო დასრულდება, დაადასტურე და შეაფასე.', 'Hired: the shifts are in their calendar. When the work is done, confirm it and rate them.')}
+                {escrow
+                  ? tr(`აყვანილია: ცვლები მის კალენდარშია. დეპოზიტში: ${lari(escrow.held)}, ჩარიცხული: ${lari(escrow.paid_total)}.`, `Hired: the shifts are in their calendar. On deposit: ${lari(escrow.held)}, paid so far: ${lari(escrow.paid_total)}.`)
+                  : tr('აყვანილია: ცვლები მის კალენდარშია. როცა სამუშაო დასრულდება, დაადასტურე და შეაფასე.', 'Hired: the shifts are in their calendar. When the work is done, confirm it and rate them.')}
               </p>
-              <button onClick={() => setConfirm('done')} className={btn}>{tr('სამუშაო დასრულდა', 'The work is done')}</button>
+              <div className="grid grid-cols-2 gap-2.5">
+                <ChatButton unread={unread} onClick={() => setSheet('chat')} />
+                {escrow && escrow.unit !== 'fixed' ? (
+                  <button onClick={() => setSheet('pay')} className={btn}>{tr('ნამუშევრის გადახდა', 'Pay for work')}</button>
+                ) : (
+                  <button onClick={() => setConfirm('done')} className={btn}>{tr('სამუშაო დასრულდა', 'The work is done')}</button>
+                )}
+              </div>
             </>
           )}
-          {app.status === 'done' && <RateButton key={rated} applicationId={app.id} who={p.full_name} onOpen={() => setRate(true)} />}
+          {app.status === 'done' && (
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+              <ChatButton unread={unread} onClick={() => setSheet('chat')} />
+              <RateButton key={rated} applicationId={app.id} who={p.full_name} onOpen={() => setRate(true)} />
+            </div>
+          )}
         </div>
       )}
 
@@ -100,6 +132,10 @@ export function ApplicantCard({ app, job, showJob = false, onChanged }) {
         </Sheet>
       )}
       {rate && <RateSheet applicationId={app.id} who={p.full_name} side="worker" rateeId={app.student_id} onClose={() => setRate(false)} onDone={() => setRated((n) => n + 1)} />}
+      {sheet === 'hire' && <HireSheet app={app} job={job} who={p.full_name} onClose={() => setSheet(null)} onDone={() => { setSheet(null); onChanged() }} />}
+      {sheet === 'pay' && escrow && <PaySheet app={app} job={job} escrow={escrow} who={p.full_name} onClose={() => setSheet(null)} onDone={() => { setSheet(null); onChanged() }} />}
+      {sheet === 'profile' && <PublicProfile person={p} personId={app.student_id} onClose={() => setSheet(null)} />}
+      {sheet === 'chat' && <Chat app={app.id} me={job.employer_id} title={p.full_name} subtitle={job.title} avatar={p.avatar_url} onClose={() => setSheet(null)} />}
     </li>
   )
 }

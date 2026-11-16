@@ -129,3 +129,17 @@ export function fitInfo(job, events, today = todayISO()) {
   const expired = !flexible && m.shifts.length === 0
   return { ...m, flexible, expired, full: flexible || (!expired && m.fitting.length === m.shifts.length) }
 }
+
+// რამდენი სამუშაოა ვაკანსიის ცვლებში ორ თარიღს შორის (ორივე ჩათვლით):
+// საათები (pay_unit = hour) ან სამუშაო დღეები (pay_unit = day). თავისუფალ გრაფიკს ცვლები არ აქვს: 0.
+export function workBetween(job, from, to) {
+  let hours = 0
+  let days = 0
+  for (let d = from; d <= to; d = addDays(d, 1)) {
+    const today = job.shifts.filter((s) => (s.date ? s.date === d : s.day === weekdayOf(d)))
+    if (!today.length) continue
+    days += 1
+    hours += today.reduce((a, s) => a + (s.end - s.start), 0)
+  }
+  return job.pay_unit === 'day' ? days : Math.round(hours * 10) / 10
+}

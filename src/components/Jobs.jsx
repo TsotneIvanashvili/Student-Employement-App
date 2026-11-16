@@ -5,6 +5,7 @@ import { clashOf, fitInfo, fmtMin } from '../lib/schedule.js'
 import { CATEGORIES, catName, dayShort, money, monthShort, payText, payUnit, tr, useLang } from '../lib/i18n.js'
 import { useRatings } from '../lib/ratings.js'
 import { ApplicantCard, STATUS_TONE, statusText } from './Applicants.jsx'
+import { useUnread } from './Chat.jsx'
 import { Avatar, Badge, Empty, Icon, Sheet, Stars, Switch, Title, btn, btn2, card, chip, input, tap } from './ui.jsx'
 
 export const openJob = (id) => (window.location.hash = `#job/${id}`)
@@ -127,7 +128,7 @@ export function JobList({ jobs, busy, filters, setFilters, onGoCalendar }) {
   )
 }
 
-const APP_FIELDS = '*, profiles(full_name, cv_experience, cv_skills, cv_languages, cv_path)'
+const APP_FIELDS = '*, profiles(full_name, cv_experience, cv_skills, cv_languages, cv_path, avatar_url, skills, field)'
 
 // ვაკანსიის გვერდი. ტელეფონზე მარჯვნიდან შემოსრიალდება და ქვედა მენიუს ფარავს.
 export function JobDetail({ id, profile, busy, onBack, onGoProfile, onChanged }) {
@@ -211,7 +212,7 @@ export function JobDetail({ id, profile, busy, onBack, onGoProfile, onChanged })
             <p className="flex gap-3 rounded-[20px] bg-brand-soft px-4 py-3.5 text-[13px] text-ink">
               <Icon name="users" className="h-5 w-5 shrink-0 text-brand-deep" />
               <span className="[text-wrap:pretty]">
-                {tr('ანაზღაურებასა და დეტალებზე დამსაქმებელთან პირდაპირ თანხმდები. ShiftMate თანხას არ იღებს და არ ინახავს.', 'You agree pay and details directly with the employer. ShiftMate does not take or hold any money.')}
+                {tr('დამსაქმებელი აყვანისას თანხას დეპოზიტად დებს, ასე რომ, ანაზღაურება დაცულია. გეხდება ნამუშევრის დადასტურების შემდეგ (საათობრივზე ყოველთვიურად), 10%-იანი საკომისიოს გამოკლებით. ჯერ სადემონსტრაციო რეჟიმია.', 'The employer puts the pay on deposit when hiring, so your pay is secured. You are paid once the work is confirmed (hourly: every month), minus a 10% fee. Demo mode for now.')}
               </span>
             </p>
 
@@ -246,6 +247,7 @@ function OwnerControls({ job, setJob }) {
 }
 
 function JobApplicants({ job }) {
+  const unread = useUnread(job.employer_id)
   const [rows, setRows] = useState(null)
   const load = () => supabase.from('applications').select(APP_FIELDS).eq('job_id', job.id).order('created_at', { ascending: false }).then(({ data }) => setRows(data ?? []))
   useEffect(() => {
@@ -258,7 +260,7 @@ function JobApplicants({ job }) {
       {rows.length === 0 ? (
         <p className={`${card} p-5 text-center text-[14px] text-muted`}>{tr('განმცხადებლები ჯერ არ არის', 'No applicants yet')}</p>
       ) : (
-        <ul className={listBox}>{rows.map((r) => <ApplicantCard key={r.id} app={r} job={job} onChanged={load} />)}</ul>
+        <ul className={listBox}>{rows.map((r) => <ApplicantCard key={r.id} app={r} job={job} onChanged={load} unread={unread[r.id]} />)}</ul>
       )}
     </section>
   )

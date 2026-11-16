@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase.js'
 import { Link, navigate } from '../lib/router.jsx'
 import { catName, setLang, tr, useLang } from '../lib/i18n.js'
 import { CalendarMock, Logo, usePageTitle } from './Site.jsx'
+import { blobToDataUrl, keepPendingAvatar, shrinkImage } from '../lib/avatar.js'
 import { Icon, Segmented, btn, btn2, chip, input, tap } from './ui.jsx'
 
 // სადემონსტრაციო ანგარიშები. ჯერჯერობით ყველას უჩანს; SHOW_DEMO = false-ის შემდეგ მხოლოდ /login?demo-ზე გამოჩნდება
@@ -141,7 +142,13 @@ function Register() {
   const [step, setStep] = useState(0)
   const [form, setForm] = useState({ email: '', password: '', full_name: '', company_name: '', field: 'general' })
   const [sentTo, setSentTo] = useState('')
+  const [photo, setPhoto] = useState('') // არასავალდებულო; პირველ შესვლაზე აიტვირთება
   const { busy, error, run } = useSubmit()
+  async function pickPhoto(e) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (file) setPhoto(await blobToDataUrl(await shrinkImage(file)).catch(() => ''))
+  }
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value })
 
   const submit = (e) => {
@@ -153,6 +160,7 @@ function Register() {
       if (error) throw error
       // არსებული ელფოსტისას Supabase ცარიელ identities-ს აბრუნებს (ელფოსტას არ ამჟღავნებს)
       if (data.user?.identities?.length === 0) throw new Error('User already registered')
+      if (photo) keepPendingAvatar(form.email, photo)
       if (data.session) navigate('/', { replace: true })
       else setSentTo(form.email) // ელფოსტის დადასტურება ჩართულია
     })
@@ -170,6 +178,18 @@ function Register() {
             {tr('დამატებითი სამუშაო შენს თავისუფალ დროში', 'Extra work that fits your free time')}
           </H1>
           <Segmented value={role} onChange={setRole} options={[['student', tr('ვეძებ სამუშაოს', 'I want work')], ['employer', tr('ვქირაობ', "I'm hiring")]]} />
+          <label className="flex cursor-pointer items-center gap-3.5 rounded-[18px] bg-white p-3 shadow-[0_1px_2px_rgba(21,24,30,.06)] hover:bg-bg">
+            {photo ? (
+              <img src={photo} alt="" className="h-14 w-14 shrink-0 rounded-full object-cover" />
+            ) : (
+              <span className="grid h-14 w-14 shrink-0 place-items-center rounded-full border-[1.5px] border-dashed border-field text-muted"><Icon name="camera" className="h-6 w-6" /></span>
+            )}
+            <span className="min-w-0">
+              <span className="block text-[15px] font-semibold">{photo ? tr('ფოტო არჩეულია', 'Photo selected') : role === 'student' ? tr('დაამატე ფოტო', 'Add a photo') : tr('დაამატე ლოგო ან ფოტო', 'Add a logo or photo')}</span>
+              <span className="block text-[13px] text-muted">{photo ? tr('შესაცვლელად დააჭირე', 'Tap to change') : tr('არასავალდებულო. ფოტოიანი პროფილი მეტ ნდობას იწვევს.', 'Optional. Profiles with a photo get more trust.')}</span>
+            </span>
+            <input type="file" accept="image/*" className="sr-only" onChange={pickPhoto} data-register-photo />
+          </label>
           <Field label={role === 'student' ? tr('სახელი და გვარი', 'Full name') : tr('საკონტაქტო პირი', 'Contact person')}>
             <input required minLength={2} maxLength={80} autoComplete="name" className={input} value={form.full_name} onChange={set('full_name')} placeholder={tr('ნინო ბერიძე', 'Nino Beridze')} />
           </Field>

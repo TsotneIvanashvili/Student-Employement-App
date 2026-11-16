@@ -24,6 +24,8 @@ export const ICONS = {
   jobs: 'M9 6V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1M4 7h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1zm-1 6h18',
   ai: 'M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z',
   profile: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm-7 9a7 7 0 0 1 14 0',
+  chat: 'M5 5h14a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H9l-4 3.5V6a1 1 0 0 1 1-1zm3 5h8m-8 3h5',
+  camera: 'M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1zm8 9a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z',
   inbox: 'M4 13l2.5-7.5A1 1 0 0 1 7.4 5h9.2a1 1 0 0 1 .9.5L20 13M4 13v6a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-6M4 13h4l1.5 3h5L16 13h4',
   plus: 'M12 5v14M5 12h14',
   bolt: 'M13 3L4 14h7l-1 7 9-11h-7z',
@@ -173,8 +175,9 @@ export const Badge = ({ tone = 'gray', children }) => {
 export const initials = (name) => (name || '?').trim().split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase()
 const TINTS = [['#d8e8e6', '#123b36'], ['#efe3cd', '#4a3208'], ['#ebe6f7', '#33255c'], ['#e9ebf8', '#2c3880'], ['#eef1f0', '#15181e']]
 export const tint = (name) => TINTS[[...(name || '')].reduce((a, c) => a + c.charCodeAt(0), 0) % TINTS.length]
-export function Avatar({ name, size = 46, radius = 14, className = '' }) {
+export function Avatar({ name, src, size = 46, radius = 14, className = '' }) {
   const [bg, fg] = tint(name)
+  if (src) return <img src={src} alt="" className={`shrink-0 object-cover ${className}`} style={{ width: size, height: size, borderRadius: radius }} />
   return (
     <span className={`grid shrink-0 place-items-center font-semibold ${className}`} style={{ width: size, height: size, borderRadius: radius, background: bg, color: fg, fontSize: Math.round(size * 0.32) }}>
       {initials(name)}

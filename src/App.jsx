@@ -10,9 +10,12 @@ import { EmployerHome, SeekerHome, weekFreeHours } from './components/Dashboard.
 import { StudentSchedule } from './components/Schedule.jsx'
 import Assistant from './components/Assistant.jsx'
 import Profile from './components/Profile.jsx'
+import SeekerInbox from './components/SeekerInbox.jsx'
+import { useUnread } from './components/Chat.jsx'
+import { uploadPendingAvatar } from './lib/avatar.js'
 import { EmployerSchedule, Inbox, MyJobs, NewJob } from './components/Employer.jsx'
 import Tour, { employerSteps, seekerSteps } from './components/Tour.jsx'
-import { Icon, btn } from './components/ui.jsx'
+import { Avatar, Icon, btn } from './components/ui.jsx'
 
 function useHash() {
   const [hash, setHash] = useState(window.location.hash)
@@ -95,6 +98,14 @@ export default function App() {
 
   const patch = (changes) => setProfile((p) => ({ ...p, ...changes }))
   const email = session.user.email
+  return <SignedIn profile={profile} email={email} patch={patch} />
+}
+
+// რეგისტრაციისას არჩეული ფოტო პირველ შესვლაზე იტვირთება (ელფოსტის დადასტურებამდე ატვირთვა შეუძლებელია)
+function SignedIn({ profile, email, patch }) {
+  useEffect(() => {
+    uploadPendingAvatar(profile, email).then((url) => url && patch({ avatar_url: url })).catch(() => {})
+  }, [profile.id]) // eslint-disable-line react-hooks/exhaustive-deps
   return profile.role === 'employer' ? <EmployerApp profile={profile} email={email} patch={patch} /> : <StudentApp profile={profile} email={email} patch={patch} />
 }
 
@@ -122,11 +133,12 @@ const seekerTabs = () => [
   ['calendar', tr('კალენდარი', 'Calendar')],
   ['jobs', tr('ვაკანსიები', 'Jobs')],
   ['ai', 'AI'],
+  ['inbox', tr('ინბოქსი', 'Inbox')],
   ['profile', tr('პროფილი', 'Profile')],
 ]
 const employerTabs = () => [
   ['home', tr('მთავარი', 'Home')],
-  ['inbox', tr('განაცხადები', 'Applicants')],
+  ['inbox', tr('ინბოქსი', 'Inbox')],
   ['calendar', tr('კალენდარი', 'Calendar')],
   ['jobs', tr('ვაკანსიები', 'Jobs')],
   ['profile', tr('პროფილი', 'Profile')],
@@ -134,7 +146,7 @@ const employerTabs = () => [
 
 // ტელეფონზე: მცურავი ქვედა მენიუ (პროფილი ერთ-ერთი ჩანართია). კომპიუტერზე: მარცხენა მენიუ,
 // პროფილი კი ქვედა მარცხენა სახელის ბარათით იხსნება და იხურება.
-function Shell({ profile, tabs, tab, onTab, cta, detail, children }) {
+function Shell({ profile, tabs, tab, onTab, cta, detail, badges = {}, children }) {
   const visible = tabs.filter(([id]) => id !== 'profile')
   const i = Math.max(0, tabs.findIndex(([id]) => id === tab))
   const name = profile.role === 'employer' ? profile.company_name || profile.full_name : profile.full_name
@@ -147,6 +159,7 @@ function Shell({ profile, tabs, tab, onTab, cta, detail, children }) {
           {visible.map(([id, text]) => (
             <button key={id} data-tour={`tab-${id}`} onClick={() => onTab(id)} className={`flex items-center gap-3 rounded-2xl px-4 py-3 text-[15px] font-semibold transition ${tab === id ? 'bg-brand-soft text-brand-deep' : 'text-muted hover:bg-fill hover:text-ink'}`}>
               <Icon name={ICON[id]} className="h-[22px] w-[22px]" />{text}
+              {badges[id] > 0 && <span className="ml-auto grid h-5 min-w-5 place-items-center rounded-full bg-coral px-1.5 text-[11px] font-bold text-white">{badges[id]}</span>}
             </button>
           ))}
         </div>
@@ -156,7 +169,7 @@ function Shell({ profile, tabs, tab, onTab, cta, detail, children }) {
           aria-pressed={tab === 'profile'}
           className={`mt-auto flex w-full items-center gap-3 rounded-2xl p-3 text-left transition ${tab === 'profile' ? 'bg-brand-soft' : 'bg-bg hover:bg-fill'}`}
         >
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-avatar text-[14px] font-bold text-on-avatar">{(name || '?').slice(0, 1).toUpperCase()}</span>
+          <Avatar name={name} src={profile.avatar_url} size={40} radius={20} />
           <span className="min-w-0 flex-1">
             <span className="block truncate text-[14px] font-semibold">{name}</span>
             <span className="block truncate text-[12px] text-muted">{profile.role === 'employer' ? tr('დამსაქმებელი', 'Employer') : tr('სამუშაოს მაძიებელი', 'Job seeker')}</span>
@@ -170,7 +183,7 @@ function Shell({ profile, tabs, tab, onTab, cta, detail, children }) {
         {detail}
       </div>
 
-      <nav className="glass fixed inset-x-3 bottom-[max(env(safe-area-inset-bottom),16px)] z-30 rounded-[32px] p-1.5 shadow-[0_0_0_1px_rgba(21,24,30,.06),0_12px_32px_-12px_rgba(21,24,30,.3)] lg:hidden">
+      <nav className={`glass fixed ${tabs.length > 5 ? 'inset-x-2 p-1' : 'inset-x-3 p-1.5'} bottom-[max(env(safe-area-inset-bottom),16px)] z-30 rounded-[32px] shadow-[0_0_0_1px_rgba(21,24,30,.06),0_12px_32px_-12px_rgba(21,24,30,.3)] lg:hidden`}>
         <div className="relative flex">
           <span className="absolute inset-y-0 left-0 rounded-[26px] bg-brand-soft transition-transform duration-[380ms] ease-[cubic-bezier(0.2,0,0,1)]" style={{ width: `${100 / tabs.length}%`, transform: `translateX(${i * 100}%)` }} />
           {tabs.map(([id, text]) => (
@@ -180,10 +193,13 @@ function Shell({ profile, tabs, tab, onTab, cta, detail, children }) {
               onClick={() => onTab(id)}
               aria-label={text}
               aria-current={tab === id ? 'page' : undefined}
-              className={`relative flex min-w-0 flex-1 flex-col items-center gap-[3px] pb-[7px] pt-2 text-[10px] font-semibold transition-colors ${tab === id ? 'text-brand-deep' : 'text-muted'}`}
+              className={`relative flex min-w-0 flex-1 flex-col items-center gap-[3px] pb-[7px] pt-2 text-[10px] font-semibold tracking-[-0.02em] transition-colors ${tabs.length > 5 ? 'max-[399px]:text-[9.5px] max-[374px]:text-[9px]' : ''} ${tab === id ? 'text-brand-deep' : 'text-muted'}`}
             >
-              <Icon name={ICON[id]} className="h-[22px] w-[22px]" />
-              <span className="max-w-full truncate px-0.5">{text}</span>
+              <span className="relative">
+                <Icon name={ICON[id]} className="h-[22px] w-[22px]" />
+                {badges[id] > 0 && <span className="absolute -right-2 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-coral px-1 text-[10px] font-bold leading-none text-white">{badges[id]}</span>}
+              </span>
+              <span className="max-w-full truncate">{text}</span>
             </button>
           ))}
         </div>
@@ -205,16 +221,19 @@ function StudentApp({ profile, email, patch }) {
   const [draft, setDraft] = useState('')
   const [filters, setFilters] = useState({ query: '', cat: profile.field && profile.field !== 'general' ? profile.field : 'all', onlyFit: true })
   const [showTour, openTour, closeTour] = useTour(`sj_tour_student_${profile.id}`)
+  const unread = useUnread(profile.id)
+  const unreadTotal = Object.values(unread).reduce((a, b) => a + b, 0)
 
   useEffect(() => {
     supabase.from('jobs').select('*').eq('is_open', true).order('created_at', { ascending: false }).then(({ data }) => setJobs(data ?? []))
     supabase.from('events').select('*').then(({ data }) => setLessons(data ?? []))
   }, [])
-  // განაცხადები ახლდება ვაკანსიის გვერდიდან დაბრუნებისას; მიღებული სამუშაოს ცვლები თავისით ჩნდება კალენდარში
+  // განაცხადები ახლდება ვაკანსიის გვერდიდან დაბრუნებისას, ჩანართის გადართვისას და ახალ შეტყობინებაზე
+  // (ასე „აგიყვანეს“ თავისით ჩნდება); მიღებული სამუშაოს ცვლები თავისით ჩნდება კალენდარში
   useEffect(() => {
     if (jobId) return
-    supabase.from('applications').select('id, status, jobs(*)').eq('student_id', profile.id).order('created_at', { ascending: false }).then(({ data }) => setApplications(data ?? []))
-  }, [jobId, profile.id, version])
+    supabase.from('applications').select('id, status, created_at, jobs(*)').eq('student_id', profile.id).order('created_at', { ascending: false }).then(({ data }) => setApplications(data ?? []))
+  }, [jobId, profile.id, version, tab, unreadTotal])
   useEffect(toTop, [jobId])
 
   const busy = useMemo(
@@ -230,10 +249,12 @@ function StudentApp({ profile, email, patch }) {
       tabs={seekerTabs()}
       tab={tab}
       onTab={go}
+      badges={{ inbox: unreadTotal }}
       detail={jobId && <JobDetail key={jobId} id={jobId} profile={profile} busy={busy} onBack={() => (history.length > 1 ? history.back() : closeJob())} onGoProfile={() => go('profile')} onChanged={() => setVersion((v) => v + 1)} />}
     >
       <div className={jobId ? 'hidden' : ''}>
-        {tab === 'home' && <SeekerHome profile={profile} busy={busy} jobs={jobs} applications={applications} go={go} askAI={askAI} />}
+        {tab === 'home' && <SeekerHome profile={profile} busy={busy} jobs={jobs} applications={applications} unread={unread} go={go} askAI={askAI} />}
+        {tab === 'inbox' && <SeekerInbox profile={profile} applications={applications} unread={unread} onFindJobs={() => go('jobs')} />}
         {tab === 'calendar' && <StudentSchedule busy={busy} setLessons={setLessons} freeHours={weekFreeHours(busy)} onFillWithAI={() => askAI(tr('ორშაბათიდან პარასკევამდე 10-დან 18-მდე ვმუშაობ', 'I work Monday to Friday from 10 to 18'))} />}
         {tab === 'jobs' && <JobList jobs={jobs} busy={busy} filters={filters} setFilters={setFilters} onGoCalendar={() => go('calendar')} />}
         {tab === 'ai' && <Assistant jobs={jobs} busy={busy} setLessons={setLessons} draft={draft} onDraftUsed={() => setDraft('')} />}
@@ -252,6 +273,8 @@ function EmployerApp({ profile, email, patch }) {
   const [tab, setTab] = useState('home')
   const [version, setVersion] = useState(0)
   const [showTour, openTour, closeTour] = useTour(`sj_tour_employer_${profile.id}`)
+  const unread = useUnread(profile.id)
+  const unreadTotal = Object.values(unread).reduce((a, b) => a + b, 0)
   useEffect(toTop, [jobId])
   const go = (t) => { closeJob(); setTab(t); toTop() }
 
@@ -261,12 +284,13 @@ function EmployerApp({ profile, email, patch }) {
       tabs={employerTabs()}
       tab={tab === 'new' ? 'jobs' : tab}
       onTab={go}
+      badges={{ inbox: unreadTotal }}
       cta={<button onClick={() => go('new')} className={`${btn} flex items-center justify-center gap-2 py-3.5`}><Icon name="plus" className="h-5 w-5" strokeWidth={2.5} />{tr('ახალი ვაკანსია', 'New job post')}</button>}
       detail={jobId && <JobDetail key={jobId} id={jobId} profile={profile} busy={null} onBack={() => (history.length > 1 ? history.back() : closeJob())} onGoProfile={() => {}} />}
     >
       <div className={jobId ? 'hidden' : ''}>
         {tab === 'home' && <EmployerHome key={version} profile={profile} go={go} />}
-        {tab === 'inbox' && <Inbox key={version} profile={profile} onNew={() => go('new')} />}
+        {tab === 'inbox' && <Inbox key={version} profile={profile} unread={unread} onNew={() => go('new')} />}
         {tab === 'calendar' && <EmployerSchedule profile={profile} />}
         {tab === 'jobs' && <MyJobs key={version} profile={profile} onNew={() => go('new')} />}
         {tab === 'new' && <NewJob profile={profile} onCancel={() => go('jobs')} onCreated={() => { setVersion((v) => v + 1); go('jobs') }} />}

@@ -227,7 +227,7 @@ const faq = () => [
   [tr('ShiftMate ფასიანია?', 'Does ShiftMate cost anything?'), tr('ამჟამად რეგისტრაცია, ვაკანსიის განთავსება და განაცხადის გაგზავნა უფასოა. თუ ეს შეიცვლება, წინასწარ შეგატყობინებთ.', 'Signing up, posting jobs and applying are free right now. If that changes, we will tell you in advance.')],
   [tr('როგორ ირჩევა, რომელი ვაკანსია „მერგება“?', 'How do you decide which jobs "fit"?'), tr('ცვლა გერგება, თუ მისი არცერთი საათი არ ემთხვევა იმ დროს, რომელიც კალენდარში დაკავებულად გაქვს ჩაწერილი. ვაკანსიის გვერდზე ჩანს, რომელი ცვლა რას ემთხვევა.', 'A shift fits if none of its hours overlap the busy time in your calendar. The job page shows which shift clashes with what.')],
   [tr('ვინ შეიძლება დარეგისტრირდეს?', 'Who can sign up?'), tr('ნებისმიერი სრულწლოვანი ადამიანი, ვისაც დამატებითი სამუშაო უნდა, და ნებისმიერი კომპანია ან ინდივიდუალური მეწარმე, ვინც თანამშრომელს ეძებს.', 'Any adult who wants extra work, and any company or sole trader looking for someone to hire.')],
-  [tr('როგორ ვიღებ ანაზღაურებას?', 'How do I get paid?'), tr('ანაზღაურებაზე პირდაპირ დამსაქმებელს უთანხმდები. ShiftMate გადახდებს არ ამუშავებს და თანხას არ ინახავს.', 'You agree pay directly with the employer. ShiftMate does not process payments or hold any money.')],
+  [tr('როგორ ვიღებ ანაზღაურებას?', 'How do I get paid?'), tr('დამსაქმებელი აყვანისას თანხას დეპოზიტად დებს. სამუშაოს შემდეგ (საათობრივზე ყოველთვიურად) თანხა შენს ბალანსზე ჩაირიცხება, 10%-იანი საკომისიოს გამოკლებით. ჯერ ეს სადემონსტრაციო რეჟიმია: რეალური ფული არ მოძრაობს.', 'The employer puts the pay on deposit when hiring you. After the work (hourly: every month) it lands in your balance, minus a 10% fee. For now this is a demo: no real money moves.')],
   [tr('როგორ მუშაობს შეფასება?', 'How do ratings work?'), tr('როცა დამსაქმებელი დაადასტურებს, რომ სამუშაო დასრულდა, ორივე მხარე ერთმანეთს 1–5 ვარსკვლავით აფასებს. საშუალო შეფასება ჩანს პროფილზე და ვაკანსიებზე.', 'When the employer confirms the work is done, both sides rate each other from 1 to 5 stars. The average shows on profiles and job posts.')],
   [tr('ვინ ხედავს ჩემს სივს და ტელეფონს?', 'Who sees my CV and phone number?'), tr('მხოლოდ ის დამსაქმებლები, რომელთა ვაკანსიაზეც განაცხადი გააგზავნე.', 'Only the employers whose jobs you applied to.')],
   [tr('რას აკეთებს AI ასისტენტი?', 'What does the AI assistant do?'), tr('გირჩევს ვაკანსიებს შენი თავისუფალი დროის მიხედვით და შეუძლია კალენდარში დაკავებული დრო ჩაგიწეროს. ნებისმიერ ცვლილებას ჯერ შენ ადასტურებ.', 'It suggests jobs that fit your free time and can add busy time to your calendar. You confirm every change first.')],
@@ -345,7 +345,7 @@ export function Terms({ signedIn }) {
             <li>The employer uses candidate data only for hiring.</li>
           </ul>
           <h2>4. Employment and pay</h2>
-          <p>The parties agree working conditions, contracts and pay directly. ShiftMate does not process payments, does not hold money and is not responsible for settlements between the parties. Each party is responsible for taxes and legal compliance.</p>
+          <p>The parties agree working conditions and contracts directly. Payments in ShiftMate are currently a <b>demo</b>: balances, deposits and payouts are for illustration only, no real money is charged, held or paid out, and ShiftMate is not responsible for settlements between the parties. In the demo, the employer puts the pay aside as a deposit when hiring, and the worker is credited after the work is confirmed, minus a 10% ShiftMate fee. Each party is responsible for taxes and legal compliance.</p>
           <h2>5. Ratings</h2>
           <p>After the employer marks work as done, both parties can rate each other once with 1 to 5 stars and short tags. Ratings must be honest and based on the actual work. Ratings are visible to signed-in users and cannot be edited.</p>
           <h2>6. AI assistant</h2>
@@ -383,7 +383,7 @@ export function Terms({ signedIn }) {
             <li>დამსაქმებელი კანდიდატის მონაცემებს მხოლოდ დასაქმების მიზნით იყენებს.</li>
           </ul>
           <h2>4. შრომითი ურთიერთობა და ანაზღაურება</h2>
-          <p>სამუშაო პირობებზე, ხელშეკრულებასა და ანაზღაურებაზე მხარეები პირდაპირ თანხმდებიან. ShiftMate გადახდებს არ ამუშავებს, თანხას არ ინახავს და მხარეებს შორის ანგარიშსწორებაზე პასუხს არ აგებს. გადასახადებსა და კანონმდებლობის დაცვაზე პასუხისმგებელია თითოეული მხარე.</p>
+          <p>სამუშაო პირობებსა და ხელშეკრულებაზე მხარეები პირდაპირ თანხმდებიან. ShiftMate-ში გადახდები ჯერ <b>სადემონსტრაციოა</b>: ბალანსი, დეპოზიტი და ჩარიცხვები მხოლოდ საჩვენებელია, რეალური ფული არ ჩამოიჭრება, არ ინახება და არ ირიცხება, და ShiftMate მხარეებს შორის ანგარიშსწორებაზე პასუხს არ აგებს. დემოში დამსაქმებელი აყვანისას თანხას დეპოზიტად დებს, მუშაკს კი ნამუშევრის დადასტურების შემდეგ ერიცხება, ShiftMate-ის 10%-იანი საკომისიოს გამოკლებით. გადასახადებსა და კანონმდებლობის დაცვაზე პასუხისმგებელია თითოეული მხარე.</p>
           <h2>5. შეფასებები</h2>
           <p>როცა დამსაქმებელი სამუშაოს დასრულებულად მონიშნავს, ორივე მხარეს შეუძლია ერთხელ შეაფასოს მეორე 1–5 ვარსკვლავით და მოკლე ნიშნებით. შეფასება უნდა იყოს გულწრფელი და რეალურ სამუშაოს ეფუძნებოდეს. შეფასებებს ხედავენ ავტორიზებული მომხმარებლები და მათი შეცვლა შეუძლებელია.</p>
           <h2>6. AI ასისტენტი</h2>
@@ -422,6 +422,9 @@ export function Privacy({ signedIn }) {
             <li><b>Calendar:</b> the time you mark as busy, its name and type.</li>
             <li><b>Applications:</b> which jobs you applied to, your note and phone number.</li>
             <li><b>Ratings:</b> stars and tags you give and receive, and the name of the person or company who gave them.</li>
+            <li><b>Profile:</b> your photo (if you add one) and skills.</li>
+            <li><b>Messages:</b> chat messages between a worker and the employer who hired them.</li>
+            <li><b>Demo payments:</b> deposits, payouts and fees recorded in your demo balance.</li>
             <li><b>Job posts:</b> what employers publish.</li>
             <li><b>Assistant chats:</b> your messages and your weekly free hours, to prepare an answer.</li>
           </ul>
@@ -438,6 +441,7 @@ export function Privacy({ signedIn }) {
             <li>Your CV, note and phone number are seen only by the employers whose jobs you applied to.</li>
             <li>Only you see your calendar. An employer only sees that you are hired for their shift.</li>
             <li>Ratings and your average rating are visible to signed-in users.</li>
+            <li>Your photo, skills and work history are seen by employers you applied to. Chat messages are seen only by the worker and the employer in that chat.</li>
             <li>Published job posts are public.</li>
           </ul>
           <h2>4. Service providers</h2>
@@ -470,6 +474,9 @@ export function Privacy({ signedIn }) {
             <li><b>კალენდარი:</b> დრო, რომელსაც დაკავებულად ჩაწერ, მისი სახელწოდება და ტიპი.</li>
             <li><b>განაცხადები:</b> რომელ ვაკანსიაზე გააგზავნე, წერილი და ტელეფონის ნომერი.</li>
             <li><b>შეფასებები:</b> ვარსკვლავები და ნიშნები, რომლებსაც აძლევ და იღებ, და შემფასებლის სახელი.</li>
+            <li><b>პროფილი:</b> შენი ფოტო (თუ დაამატებ) და უნარები.</li>
+            <li><b>შეტყობინებები:</b> ჩატი მუშაკსა და იმ დამსაქმებელს შორის, რომელმაც ის აიყვანა.</li>
+            <li><b>სადემონსტრაციო გადახდები:</b> დეპოზიტები, ჩარიცხვები და საკომისიოები შენს სადემონსტრაციო ბალანსზე.</li>
             <li><b>ვაკანსიები:</b> დამსაქმებლის მიერ გამოქვეყნებული ინფორმაცია.</li>
             <li><b>ასისტენტთან მიმოწერა:</b> შენი შეტყობინებები და კვირის თავისუფალი საათები პასუხის მოსამზადებლად.</li>
           </ul>
@@ -486,6 +493,7 @@ export function Privacy({ signedIn }) {
             <li>სივს, წერილსა და ტელეფონს ხედავს მხოლოდ იმ ვაკანსიის დამსაქმებელი, რომელზეც განაცხადი გააგზავნე.</li>
             <li>კალენდარს მხოლოდ შენ ხედავ. დამსაქმებელი ხედავს მხოლოდ იმას, რომ მის ცვლაზე აყვანილი ხარ.</li>
             <li>შეფასებებს და საშუალო შეფასებას ხედავენ ავტორიზებული მომხმარებლები.</li>
+            <li>შენს ფოტოს, უნარებსა და სამუშაო ისტორიას ხედავენ ის დამსაქმებლები, ვისაც განაცხადი გაუგზავნე. ჩატს ხედავენ მხოლოდ მასში მყოფი მუშაკი და დამსაქმებელი.</li>
             <li>გამოქვეყნებული ვაკანსიები საჯაროა.</li>
           </ul>
           <h2>4. მომსახურების მომწოდებლები</h2>

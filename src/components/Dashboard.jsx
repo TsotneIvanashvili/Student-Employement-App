@@ -6,6 +6,8 @@ import { dayShort, payText, tr, useLang } from '../lib/i18n.js'
 import { useRatings } from '../lib/ratings.js'
 import { JobCard, listBox, openJob } from './Jobs.jsx'
 import { RateButton, RateSheet, STATUS_TONE, statusText } from './Applicants.jsx'
+import { Chat, ChatButton } from './Chat.jsx'
+import { EscrowLine } from './Wallet.jsx'
 import { Avatar, Badge, Empty, Icon, RoundAdd, card, tap } from './ui.jsx'
 
 const DAY_START = 8 * 60
@@ -32,22 +34,23 @@ export const weekFreeHours = (events, today = todayISO()) => {
   return Math.round(Array.from({ length: 7 }, (_, i) => dayBusy(events, addDays(mon, i)).free).reduce((a, b) => a + b, 0) / 60)
 }
 
-const Hello = ({ name, sub, onAvatar, action }) => (
+const Hello = ({ name, src, sub, onAvatar, action }) => (
   <div className="mb-3.5 flex items-center justify-between gap-3 px-1">
     <div className="min-w-0">
       <p className="text-[14px] text-muted">{sub ?? `${tr('გამარჯობა', 'Hello')},`}</p>
       <h1 className="truncate text-[26px] font-bold leading-tight tracking-[-0.02em] lg:text-[32px]">{firstName(name)}</h1>
     </div>
     {action ?? (
-      <button onClick={onAvatar} aria-label={tr('პროფილი', 'Profile')} className={`grid h-11 w-11 shrink-0 place-items-center rounded-full bg-avatar text-[15px] font-semibold text-on-avatar lg:hidden ${tap}`}>
-        {(name || '?').trim().split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase()}
+      <button onClick={onAvatar} aria-label={tr('პროფილი', 'Profile')} className={`shrink-0 rounded-full lg:hidden ${tap}`}>
+        <Avatar name={name} src={src} size={44} radius={22} />
       </button>
     )}
   </div>
 )
 
 // მაძიებლის მთავარი (დიზაინის ვარიანტი B): კვირის თავისუფალი საათები დღეების მიხედვით
-export function SeekerHome({ profile, busy, jobs, applications, go, askAI }) {
+export function SeekerHome({ profile, busy, jobs, applications, unread = {}, go, askAI }) {
+  const [chat, setChat] = useState(null)
   useLang()
   const today = todayISO()
   const mon = startOfWeek(today)
@@ -77,7 +80,7 @@ export function SeekerHome({ profile, busy, jobs, applications, go, askAI }) {
 
   return (
     <div className="mx-auto max-w-3xl space-y-3.5">
-      <Hello name={profile.full_name} onAvatar={() => go('profile')} />
+      <Hello name={profile.full_name} src={profile.avatar_url} onAvatar={() => go('profile')} />
 
       {!hasSchedule && (
         <section className="space-y-2.5">
@@ -143,9 +146,14 @@ export function SeekerHome({ profile, busy, jobs, applications, go, askAI }) {
             <i className="h-2 w-2 shrink-0 rounded-full bg-[#5fe3a1]" />
             {current.status === 'accepted' ? tr('აგიყვანეს: ცვლები შენს კალენდარშია', "You're hired: the shifts are in your calendar") : tr('სამუშაო დასრულდა', 'The work is done')}
           </p>
-          {current.status === 'done' && <RateButton key={rated} dark applicationId={current.id} who={current.jobs.company} onOpen={() => setRate(current)} />}
+          <EscrowLine applicationId={current.id} dark />
+          <div className={`grid gap-2.5 ${current.status === 'done' ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1'}`}>
+            <ChatButton dark unread={unread[current.id]} onClick={() => setChat(current)} />
+            {current.status === 'done' && <RateButton key={rated} dark applicationId={current.id} who={current.jobs.company} onOpen={() => setRate(current)} />}
+          </div>
         </section>
       )}
+      {chat && <Chat app={chat.id} me={profile.id} title={chat.jobs.company} subtitle={chat.jobs.title} onClose={() => setChat(null)} />}
       {rate && <RateSheet applicationId={rate.id} who={rate.jobs.company} side="employer" rateeId={rate.jobs.employer_id} onClose={() => setRate(null)} onDone={() => setRated((n) => n + 1)} />}
 
       <button onClick={() => askAI(tr('მიპოვე სამუშაო შაბათ-კვირისთვის', 'Find me work for Saturday and Sunday'))} className={`flex w-full items-center gap-3 rounded-[20px] bg-brand-soft px-4 py-3.5 text-left text-ink ${tap}`}>
@@ -166,7 +174,7 @@ export function SeekerHome({ profile, busy, jobs, applications, go, askAI }) {
             </button>
           )}
           {pending > 0 && (
-            <button onClick={() => go('profile')} className={`${card} flex items-center gap-3 p-4 text-left ${tap}`}>
+            <button onClick={() => go('inbox')} className={`${card} flex items-center gap-3 p-4 text-left ${tap}`}>
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-violet-soft text-violet"><Icon name="inbox" className="h-5 w-5" /></span>
               <span className="block flex-1 text-[14px] font-semibold">{tr(`${pending} განაცხადი პასუხს ელოდება`, `${pending} application${pending > 1 ? 's' : ''} waiting for a reply`)}</span>
             </button>

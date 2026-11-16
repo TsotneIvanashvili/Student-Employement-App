@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { eventsOn, shiftFits, matchJob, freeSlots, layoutDay, weekdayOf, startOfWeek, addMonths, jobEvents } from '../src/lib/schedule.js'
+import { eventsOn, shiftFits, matchJob, freeSlots, layoutDay, weekdayOf, startOfWeek, addMonths, jobEvents, workBetween } from '../src/lib/schedule.js'
 
 const mondayLesson = { id: 'a', weekday: 0, date: null, start_min: 13 * 60, end_min: 16 * 60, skip_dates: ['2026-11-16'] }
 const oneOff = { id: 'b', weekday: null, date: '2026-11-21', start_min: 11 * 60, end_min: 12 * 60, skip_dates: [] }
@@ -69,4 +69,14 @@ test('fitInfo: full, partial, flexible and expired jobs', async () => {
   const old = fitInfo(job([{ date: '2026-01-01', start: 10, end: 12 }]), busy, '2026-11-16')
   assert.equal(old.expired, true)
   assert.equal(old.full, false)
+})
+
+test('workBetween counts hours or days of a job between two dates', () => {
+  const weekly = { pay_unit: 'hour', shifts: [{ day: 0, start: 10, end: 14 }, { day: 2, start: 18, end: 21.5 }] }
+  // 2026-11-16 is a Monday; Mon 16, Wed 18, Mon 23, Wed 25 → 4 + 3.5 + 4 + 3.5
+  assert.equal(workBetween(weekly, '2026-11-16', '2026-11-25'), 15)
+  assert.equal(workBetween({ ...weekly, pay_unit: 'day' }, '2026-11-16', '2026-11-25'), 4)
+  assert.equal(workBetween({ pay_unit: 'hour', shifts: [{ date: '2026-11-20', start: 9, end: 17 }] }, '2026-11-16', '2026-12-15'), 8)
+  assert.equal(workBetween({ pay_unit: 'hour', shifts: [] }, '2026-11-16', '2026-12-15'), 0)
+  assert.equal(workBetween(weekly, '2026-11-20', '2026-11-19'), 0)
 })

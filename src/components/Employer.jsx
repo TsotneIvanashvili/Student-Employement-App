@@ -9,10 +9,10 @@ import { fmtShift, listBox, openJob } from './Jobs.jsx'
 import { ApplicantCard } from './Applicants.jsx'
 import { Badge, Empty, Icon, RoundAdd, Segmented, Stepper, Title, btn, card, chip, input, label, tap } from './ui.jsx'
 
-const APP_FIELDS = '*, profiles(full_name, cv_experience, cv_skills, cv_languages, cv_path), jobs!inner(*)'
+const APP_FIELDS = '*, profiles(full_name, cv_experience, cv_skills, cv_languages, cv_path, avatar_url, skills, field), jobs!inner(*)'
 
 // ყველა განაცხადი ერთ ადგილას, ყველა ვაკანსიიდან
-export function Inbox({ profile, onNew }) {
+export function Inbox({ profile, onNew, unread = {} }) {
   useLang()
   const [rows, setRows] = useState(null)
   const [filter, setFilter] = useState('sent')
@@ -31,7 +31,7 @@ export function Inbox({ profile, onNew }) {
     load().then((data) => !data.some((x) => x.status === 'sent') && setFilter('all'))
   }, [profile.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const title = <Title eyebrow={profile.company_name}>{tr('განაცხადები', 'Applications')}</Title>
+  const title = <Title eyebrow={profile.company_name}>{tr('ინბოქსი', 'Inbox')}</Title>
   if (!rows) return title
   const count = (...s) => rows.filter((r) => s.includes(r.status)).length
   const shown = filter === 'all' ? rows : rows.filter((r) => (filter === 'accepted' ? ['accepted', 'done'] : [filter]).includes(r.status))
@@ -48,7 +48,7 @@ export function Inbox({ profile, onNew }) {
         ) : (
           <Empty title={tr('აქ ცარიელია', 'Nothing here')} text={tr('ამ ფილტრით განაცხადი არ არის.', 'No applications with this filter.')} />
         ))}
-      <ul className={listBox}>{shown.map((r) => <ApplicantCard key={r.id} app={r} job={r.jobs} showJob onChanged={load} />)}</ul>
+      <ul className={listBox}>{shown.map((r) => <ApplicantCard key={r.id} app={r} job={r.jobs} showJob onChanged={load} unread={unread[r.id]} />)}</ul>
     </section>
   )
 }
@@ -229,7 +229,7 @@ export function NewJob({ profile, onCreated, onCancel }) {
 
       <p className="flex gap-3 rounded-[20px] bg-brand-soft px-4 py-3.5 text-[13px] text-ink">
         <Icon name="users" className="h-5 w-5 shrink-0 text-brand-deep" />
-        {tr('ანაზღაურებაზე თანამშრომელთან პირდაპირ თანხმდები. ShiftMate თანხას არ იღებს და არ ინახავს.', 'You agree pay directly with the worker. ShiftMate does not take or hold any money.')}
+        {tr('აყვანისას თანხას წინასწარ დებ დეპოზიტად (საათობრივზე: ერთი თვის). მუშაკს ერიცხება ნამუშევრის დადასტურების შემდეგ, 10%-იანი საკომისიოს გამოკლებით. ჯერ სადემონსტრაციო რეჟიმია: რეალური ფული არ მოძრაობს.', 'When you hire, you put the pay aside as a deposit (hourly: one month). The worker is paid after you confirm the work, minus a 10% fee. Demo mode for now: no real money moves.')}
       </p>
       {error && <p className="text-[14px] font-medium text-coral">{error}</p>}
       <button disabled={!ready || busy} className={btn}>{busy ? tr('ქვეყნდება…', 'Posting…') : tr('გამოქვეყნება', 'Publish')}</button>
