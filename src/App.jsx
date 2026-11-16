@@ -98,6 +98,8 @@ export default function App() {
 
   const patch = (changes) => setProfile((p) => ({ ...p, ...changes }))
   const email = session.user.email
+  // Google-ით პირველად შემოსულმა ჯერ როლი უნდა აირჩიოს
+  if (profile.onboarded === false) return <Auth mode="onboarding" profile={profile} onDone={patch} />
   return <SignedIn profile={profile} email={email} patch={patch} />
 }
 

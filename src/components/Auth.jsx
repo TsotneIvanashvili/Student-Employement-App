@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase.js'
+import { SUPABASE_KEY, SUPABASE_URL } from '../lib/config.js'
 import { Link, navigate } from '../lib/router.jsx'
 import { catName, setLang, tr, useLang } from '../lib/i18n.js'
 import { CalendarMock, Logo, usePageTitle } from './Site.jsx'
@@ -38,7 +39,7 @@ function Top({ back = true }) {
 }
 
 // mode: 'login' | 'register' | 'reset' | 'new-password'
-export default function Auth({ mode }) {
+export default function Auth({ mode, profile, onDone }) {
   useLang()
   return (
     <div className="min-h-dvh lg:grid lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
@@ -52,11 +53,12 @@ export default function Auth({ mode }) {
       </aside>
       <main className="flex justify-center px-5 pb-12 pt-[max(env(safe-area-inset-top),1.25rem)] lg:items-center lg:px-10">
         <div className="w-full max-w-[402px]">
-          <Top back={mode !== 'new-password'} />
+          <Top back={mode !== 'new-password' && mode !== 'onboarding'} />
           {mode === 'login' && <Login />}
           {mode === 'register' && <Register />}
           {mode === 'reset' && <Reset />}
           {mode === 'new-password' && <NewPassword />}
+          {mode === 'onboarding' && <Onboarding profile={profile} onDone={onDone} />}
         </div>
       </main>
     </div>
@@ -94,6 +96,110 @@ const H1 = ({ children, sub }) => (
   </div>
 )
 
+// Google-ით შესვლა. ღილაკი ჩანს მხოლოდ მაშინ, როცა Google ჩართულია Supabase-ში (Authentication → Providers),
+// ასე რომ, მანამდე ვერავინ მიიღებს შეცდომის გვერდს.
+let googleCheck
+function GoogleButton({ role }) {
+  const [on, setOn] = useState(false)
+  const [error, setError] = useState('')
+  useEffect(() => {
+    googleCheck ??= fetch(`${SUPABASE_URL}/auth/v1/settings`, { headers: { apikey: SUPABASE_KEY } })
+      .then((r) => r.json())
+      .then((d) => Boolean(d.external?.google))
+      .catch(() => false)
+    googleCheck.then(setOn)
+  }, [])
+  if (!on) return null
+  async function go() {
+    try {
+      if (role) localStorage.setItem('sm_pending_role', role)
+    } catch {}
+    const { error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin } })
+    if (error) setError(errorText(error))
+  }
+  return (
+    <div className="space-y-4" data-google>
+      <button type="button" onClick={go} className="flex w-full items-center justify-center gap-2.5 rounded-2xl border border-line bg-white py-4 text-[15px] font-semibold shadow-[0_1px_2px_rgba(21,24,30,.06)] transition hover:bg-bg active:scale-[.98]">
+        <Icon name="globe" className="h-5 w-5" />{tr('Google-ით გაგრძელება', 'Continue with Google')}
+      </button>
+      <ErrorNote>{error}</ErrorNote>
+      <div className="flex items-center gap-3 text-[13px] text-quiet"><span className="h-px flex-1 bg-line" />{tr('ან ელფოსტით', 'or with email')}<span className="h-px flex-1 bg-line" /></div>
+    </div>
+  )
+}
+
+function FieldPicker({ value, onChange }) {
+  return (
+    <div className="grid grid-cols-2 gap-2.5" role="radiogroup">
+      {FIELDS.map((f) => {
+        const on = value === f
+        return (
+          <button key={f} type="button" role="radio" aria-checked={on} onClick={() => onChange(f)} className={`flex items-center justify-between gap-2 rounded-[18px] px-3.5 py-4 text-left text-[14px] font-semibold ${tap} ${on ? 'bg-brand-soft text-brand-deep ring-[1.5px] ring-inset ring-brand-deep' : 'bg-white shadow-[0_1px_2px_rgba(21,24,30,.08)]'}`}>
+            {catName(f)}<Icon name="check" className={`h-4 w-4 shrink-0 transition-opacity ${on ? 'opacity-100' : 'opacity-0'}`} strokeWidth={3} />
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+const Consent = () => (
+  <label className="flex items-start gap-3 rounded-[18px] bg-white p-4 text-[14px] text-muted shadow-[0_1px_2px_rgba(21,24,30,.06)]">
+    <input required type="checkbox" className="mt-0.5 h-5 w-5 shrink-0 accent-[#15181e]" />
+    <span>
+      {tr('ვეთანხმები ', 'I agree to the ')}<a href="/terms" target="_blank" rel="noreferrer" className="font-semibold text-ink underline underline-offset-4">{tr('წესებსა და პირობებს', 'Terms')}</a>{tr(' და ', ' and the ')}
+      <a href="/privacy" target="_blank" rel="noreferrer" className="font-semibold text-ink underline underline-offset-4">{tr('კონფიდენციალურობის პოლიტიკას', 'Privacy Policy')}</a>
+    </span>
+  </label>
+)
+
+// Google-ით პირველი შესვლის შემდეგ: ვინ ხარ, სფერო ან კომპანია, წესებზე თანხმობა (ერთხელ)
+function Onboarding({ profile, onDone }) {
+  usePageTitle(tr('რეგისტრაციის დასრულება', 'Finish signing up'))
+  const [role, setRole] = useState(() => {
+    try {
+      return localStorage.getItem('sm_pending_role') === 'employer' ? 'employer' : 'student'
+    } catch {
+      return 'student'
+    }
+  })
+  const [field, setField] = useState('general')
+  const [company, setCompany] = useState('')
+  const { busy, error, run } = useSubmit()
+  const first = (profile.full_name || '').trim().split(/\s+/)[0]
+
+  const submit = (e) => {
+    e.preventDefault()
+    run(async () => {
+      const { error } = await supabase.rpc('finish_onboarding', { new_role: role, company: role === 'employer' ? company.trim() : null, new_field: role === 'student' ? field : 'general' })
+      if (error) throw error
+      try {
+        localStorage.removeItem('sm_pending_role')
+      } catch {}
+      onDone({ role, field: role === 'student' ? field : 'general', company_name: role === 'employer' ? company.trim() : null, onboarded: true })
+    })
+  }
+
+  return (
+    <form onSubmit={submit} className="space-y-4" data-onboarding>
+      <H1 sub={tr('ერთი ნაბიჯი დარჩა: აირჩიე, ეძებ სამუშაოს თუ ქირაობ.', "One step left: tell us whether you're looking for work or hiring.")}>{first ? tr(`მოგესალმებით, ${first}!`, `Welcome, ${first}!`) : tr('მოგესალმებით!', 'Welcome!')}</H1>
+      <Segmented value={role} onChange={setRole} options={[['student', tr('ვეძებ სამუშაოს', 'I want work')], ['employer', tr('ვქირაობ', "I'm hiring")]]} />
+      {role === 'student' ? (
+        <>
+          <p className="text-[15px] font-semibold">{tr('რომელ სფეროში გინდა მუშაობა?', 'Which field do you want to work in?')}</p>
+          <FieldPicker value={field} onChange={setField} />
+        </>
+      ) : (
+        <Field label={tr('კომპანია', 'Company')}><input required minLength={2} maxLength={80} className={input} value={company} onChange={(e) => setCompany(e.target.value)} placeholder="Coffee Lab" /></Field>
+      )}
+      <Consent />
+      <ErrorNote>{error}</ErrorNote>
+      <button disabled={busy} className={btn}>{busy ? tr('იტვირთება…', 'Loading…') : tr('დაწყება', 'Get started')}</button>
+      <button type="button" onClick={() => supabase.auth.signOut()} className="w-full py-2 text-[14px] font-medium text-muted">{tr('გასვლა', 'Log out')}</button>
+    </form>
+  )
+}
+
 function Login() {
   usePageTitle(tr('შესვლა', 'Log in'))
   const [form, setForm] = useState({ email: '', password: '' })
@@ -109,6 +215,7 @@ function Login() {
   return (
     <div className="space-y-4">
       <H1>{tr('შესვლა', 'Log in')}</H1>
+      <GoogleButton />
       <form onSubmit={(e) => { e.preventDefault(); signIn(form) }} className="space-y-4">
         <Field label={tr('ელფოსტა', 'Email')}><input required type="email" inputMode="email" autoComplete="email" className={input} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></Field>
         <Field label={tr('პაროლი', 'Password')}><input required type="password" autoComplete="current-password" className={input} value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></Field>
@@ -178,6 +285,7 @@ function Register() {
             {tr('დამატებითი სამუშაო შენს თავისუფალ დროში', 'Extra work that fits your free time')}
           </H1>
           <Segmented value={role} onChange={setRole} options={[['student', tr('ვეძებ სამუშაოს', 'I want work')], ['employer', tr('ვქირაობ', "I'm hiring")]]} />
+          <GoogleButton role={role} />
           <label className="flex cursor-pointer items-center gap-3.5 rounded-[18px] bg-white p-3 shadow-[0_1px_2px_rgba(21,24,30,.06)] hover:bg-bg">
             {photo ? (
               <img src={photo} alt="" className="h-14 w-14 shrink-0 rounded-full object-cover" />
@@ -203,16 +311,7 @@ function Register() {
           {role === 'student' ? (
             <>
               <H1 sub={tr('თუ ჯერ არ იცი, აირჩიე „ზოგადი“ და ყველა ვაკანსიას გაჩვენებთ.', "Not sure yet? Pick General and we'll show you everything.")}>{tr('რომელ სფეროში გინდა მუშაობა?', 'Which field do you want to work in?')}</H1>
-              <div className="grid grid-cols-2 gap-2.5" role="radiogroup">
-                {FIELDS.map((f) => {
-                  const on = form.field === f
-                  return (
-                    <button key={f} type="button" role="radio" aria-checked={on} onClick={() => setForm({ ...form, field: f })} className={`flex items-center justify-between gap-2 rounded-[18px] px-3.5 py-4 text-left text-[14px] font-semibold ${tap} ${on ? 'bg-brand-soft text-brand-deep ring-[1.5px] ring-inset ring-brand-deep' : 'bg-white shadow-[0_1px_2px_rgba(21,24,30,.08)]'}`}>
-                      {catName(f)}<Icon name="check" className={`h-4 w-4 shrink-0 transition-opacity ${on ? 'opacity-100' : 'opacity-0'}`} strokeWidth={3} />
-                    </button>
-                  )
-                })}
-              </div>
+              <FieldPicker value={form.field} onChange={(f) => setForm({ ...form, field: f })} />
             </>
           ) : (
             <>
@@ -220,13 +319,7 @@ function Register() {
               <Field label={tr('კომპანია', 'Company')}><input required minLength={2} maxLength={80} className={input} value={form.company_name} onChange={set('company_name')} placeholder="Coffee Lab" /></Field>
             </>
           )}
-          <label className="flex items-start gap-3 rounded-[18px] bg-white p-4 text-[14px] text-muted shadow-[0_1px_2px_rgba(21,24,30,.06)]">
-            <input required type="checkbox" className="mt-0.5 h-5 w-5 shrink-0 accent-[#15181e]" />
-            <span>
-              {tr('ვეთანხმები ', 'I agree to the ')}<a href="/terms" target="_blank" rel="noreferrer" className="font-semibold text-ink underline underline-offset-4">{tr('წესებსა და პირობებს', 'Terms')}</a>{tr(' და ', ' and the ')}
-              <a href="/privacy" target="_blank" rel="noreferrer" className="font-semibold text-ink underline underline-offset-4">{tr('კონფიდენციალურობის პოლიტიკას', 'Privacy Policy')}</a>
-            </span>
-          </label>
+          <Consent />
           <ErrorNote>{error}</ErrorNote>
           <div className="grid grid-cols-[auto_1fr] gap-2.5">
             <button type="button" onClick={() => setStep(0)} className={`${btn2} px-5`}>{tr('უკან', 'Back')}</button>
