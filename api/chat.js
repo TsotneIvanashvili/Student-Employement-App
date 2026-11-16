@@ -18,6 +18,16 @@ export default async function handler(req, res) {
   const userRes = await fetch(`${SUPABASE_URL}/auth/v1/user`, { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}` } })
   if (!userRes.ok) return res.status(401).send('Sign in required')
 
+  // ლიმიტი თითო მომხმარებელზე (20 შეტყობინება 10 წუთში, 150 დღეში), რომ ერთმა ანგარიშმა საერთო AI ლიმიტი ვერ დახარჯოს.
+  // ბაზა თვლის (ai_allow). ბაზის ხარვეზისას AI არ ითიშება: ეს ხარჯის კონტროლია, არა დაცვა.
+  const quota = await fetch(`${SUPABASE_URL}/rest/v1/rpc/ai_allow`, {
+    method: 'POST',
+    headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: '{}',
+  })
+  if (quota.ok && (await quota.json()) === false) return res.status(429).send('Too many requests')
+  if (!quota.ok) console.error('ai_allow failed', quota.status)
+
   let body
   try {
     body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body

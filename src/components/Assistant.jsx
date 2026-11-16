@@ -141,7 +141,7 @@ export default function Assistant({ userId, jobs, busy, setLessons, draft, onDra
             {import.meta.env.DEV
               ? `Ollama: ollama serve && ollama pull ${model}`
               : error.includes('429')
-                ? tr('ასისტენტი ახლა დატვირთულია. სცადე ერთ წუთში.', 'The assistant is busy right now. Try again in a minute.')
+                ? tr('ბევრი შეტყობინება გაიგზავნა. სცადე რამდენიმე წუთში.', 'Too many messages for now. Try again in a few minutes.')
                 : tr('ასისტენტი დროებით მიუწვდომელია. სცადე ცოტა ხანში.', 'The assistant is unavailable right now. Try again soon.')}
           </p>
         )}
