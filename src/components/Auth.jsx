@@ -5,7 +5,8 @@ import { catName, setLang, tr, useLang } from '../lib/i18n.js'
 import { CalendarMock, Logo, usePageTitle } from './Site.jsx'
 import { Icon, Segmented, btn, btn2, chip, input, tap } from './ui.jsx'
 
-// სადემონსტრაციო ანგარიშები: ღილაკები ჩანს მხოლოდ /login?demo მისამართზე
+// სადემონსტრაციო ანგარიშები. ჯერჯერობით ყველას უჩანს; SHOW_DEMO = false-ის შემდეგ მხოლოდ /login?demo-ზე გამოჩნდება
+const SHOW_DEMO = true
 const DEMO = { student: 'demo.student@studentshifts.ge', employer: 'demo.employer@studentshifts.ge' }
 const DEMO_PASSWORD = 'Demo-12345'
 
@@ -102,7 +103,7 @@ function Login() {
       if (error) throw error
       navigate('/', { replace: true })
     })
-  const demo = new URLSearchParams(window.location.search).has('demo')
+  const demo = SHOW_DEMO || new URLSearchParams(window.location.search).has('demo')
 
   return (
     <div className="space-y-4">
@@ -120,6 +121,7 @@ function Login() {
       {demo && (
         <div className="rounded-3xl border border-dashed border-field p-4">
           <p className="text-center text-[12px] font-semibold uppercase tracking-wide text-quiet">{tr('სადემონსტრაციო ანგარიშები', 'Demo accounts')}</p>
+          <p className="mt-1 text-center text-[13px] text-muted">{tr('სცადე რეგისტრაციის გარეშე', 'Try it without signing up')}</p>
           <div className="mt-3 grid grid-cols-2 gap-2">
             <button disabled={busy} onClick={() => signIn({ email: DEMO.student, password: DEMO_PASSWORD })} className={`${chip} bg-fill`}>{tr('მაძიებელი', 'Job seeker')}</button>
             <button disabled={busy} onClick={() => signIn({ email: DEMO.employer, password: DEMO_PASSWORD })} className={`${chip} bg-fill`}>{tr('დამსაქმებელი', 'Employer')}</button>
