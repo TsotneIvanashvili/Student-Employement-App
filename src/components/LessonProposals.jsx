@@ -12,25 +12,32 @@ const when = (l) =>
 
 // AI-ს შემოთავაზებული დაკავებული დრო. პასუხის დასრულებისთანავე თავად ემატება კალენდარში; „გაუქმება“ უკან შლის.
 // (ადრე „დამატებას“ ხელით აჭერდა, AI კი წერდა „დავამატე“, ამიტომ ხალხი ფიქრობდა, რომ უკვე დაემატა.)
-export default function LessonProposals({ lessons, setLessons, ready }) {
+// live = ახლახან მოსული პასუხი (თავად ემატება). შენახული ძველი პასუხი არასოდეს ემატება თავიდან:
+// saved-ში წერია, რა მოხდა (added/removed), ხოლო თუ არაფერი, ხელით „დამატება“ ღილაკი ჩანს.
+export default function LessonProposals({ lessons, setLessons, ready, live = true, saved, onSaved }) {
   useLang()
-  const [state, setState] = useState('saving') // saving | added | removed | error
-  const [ids, setIds] = useState([])
-  const started = useRef(false)
+  const [state, setState] = useState(() => (saved && saved.state !== 'saving' ? saved.state : live ? 'saving' : 'pending')) // pending | saving | added | removed | error
+  const [ids, setIds] = useState(saved?.ids ?? [])
+  const started = useRef(Boolean(saved) || !live)
+  const report = (next, nextIds) => {
+    setState(next)
+    onSaved?.({ state: next, ids: nextIds })
+  }
 
   async function add() {
     setState('saving')
     const { data, error } = await supabase.from('events').insert(lessons).select()
-    if (error) return setState('error')
-    setIds(data.map((e) => e.id))
+    if (error) return report('error', ids)
+    const newIds = data.map((e) => e.id)
+    setIds(newIds)
     setLessons((list) => [...list, ...data])
-    setState('added')
+    report('added', newIds)
   }
   async function undo() {
     const { error } = await supabase.from('events').delete().in('id', ids)
-    if (error) return setState('error')
+    if (error) return report('error', ids)
     setLessons((list) => list.filter((e) => !ids.includes(e.id)))
-    setState('removed')
+    report('removed', ids)
   }
   useEffect(() => {
     if (ready && lessons.length && !started.current) {
@@ -54,6 +61,8 @@ export default function LessonProposals({ lessons, setLessons, ready }) {
         ))}
       </ul>
       <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
+        {state === 'pending' && <span className="mr-auto text-[14px] text-muted">{tr('ჯერ არ დამატებულა', 'Not added yet')}</span>}
+        {state === 'pending' && <button type="button" onClick={add} className={btnSm}>{tr('კალენდარში დამატება', 'Add to calendar')}</button>}
         {state === 'saving' && <span className="mr-auto text-[14px] text-muted">{tr('ემატება…', 'Adding…')}</span>}
         {state === 'added' && <span className="mr-auto flex items-center gap-1.5 text-[14px] font-semibold text-mint-dark"><Icon name="check" className="h-4 w-4" strokeWidth={3} />{tr('დაემატა კალენდარში', 'Added to your calendar')}</span>}
         {state === 'removed' && <span className="mr-auto text-[14px] text-muted">{tr('კალენდრიდან ამოიშალა', 'Removed from your calendar')}</span>}

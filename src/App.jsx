@@ -67,6 +67,12 @@ export default function App() {
       setSession(s)
       // პაროლის აღდგენის ბმულით მოსული მომხმარებელი ახალი პაროლის გვერდზე გადადის
       if (event === 'PASSWORD_RECOVERY') navigate('/new-password', { replace: true })
+      // გასვლისას AI-ის საუბრები ამ მოწყობილობიდან იშლება (საერთო კომპიუტერზე სხვამ რომ ვერ ნახოს)
+      if (event === 'SIGNED_OUT') {
+        try {
+          Object.keys(localStorage).filter((k) => k.startsWith('sm_ai_')).forEach((k) => localStorage.removeItem(k))
+        } catch {}
+      }
     })
     return () => data.subscription.unsubscribe()
   }, [])
@@ -259,7 +265,7 @@ function StudentApp({ profile, email, patch }) {
         {tab === 'inbox' && <SeekerInbox profile={profile} applications={applications} unread={unread} onFindJobs={() => go('jobs')} />}
         {tab === 'calendar' && <StudentSchedule busy={busy} setLessons={setLessons} freeHours={weekFreeHours(busy)} onFillWithAI={() => askAI(tr('ორშაბათიდან პარასკევამდე 10-დან 18-მდე ვმუშაობ', 'I work Monday to Friday from 10 to 18'))} />}
         {tab === 'jobs' && <JobList jobs={jobs} busy={busy} filters={filters} setFilters={setFilters} onGoCalendar={() => go('calendar')} />}
-        {tab === 'ai' && <Assistant jobs={jobs} busy={busy} setLessons={setLessons} draft={draft} onDraftUsed={() => setDraft('')} />}
+        {tab === 'ai' && <Assistant userId={profile.id} jobs={jobs} busy={busy} setLessons={setLessons} draft={draft} onDraftUsed={() => setDraft('')} />}
         {tab === 'profile' && <Profile profile={profile} email={email} onSaved={patch} applications={applications} onHelp={() => { go('home'); openTour() }} />}
       </div>
       {showTour && !jobId && <Tour steps={seekerSteps()} onClose={closeTour} onTab={go} />}

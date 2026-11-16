@@ -9,10 +9,30 @@ import { Icon, tap } from './ui.jsx'
 
 // AI ასისტენტი (დიზაინის ვარიანტი B): ჯერ სამი დიდი ქმედება, მერე ჩატი.
 // draft: სხვა გვერდიდან გადმოცემული შეტყობინება (მაგ. „AI-ით შევსება“ კალენდრიდან).
-export default function Assistant({ jobs, busy, setLessons, draft, onDraftUsed }) {
+// საუბარი ინახება ამ მოწყობილობაზე (თითო მომხმარებელს თავისი), ამიტომ გვერდების გადართვისას და
+// გადატვირთვისას არ იკარგება. გასვლისას იშლება (App.jsx). ბოლო 40 შეტყობინება.
+const KEEP = 40
+const storeKey = (userId) => `sm_ai_${userId}`
+function loadChat(userId) {
+  try {
+    const list = JSON.parse(localStorage.getItem(storeKey(userId)) || '[]')
+    return Array.isArray(list) ? list.filter((m) => m && typeof m.content === 'string' && m.content) : []
+  } catch {
+    return []
+  }
+}
+function saveChat(userId, list) {
+  try {
+    if (list.length) localStorage.setItem(storeKey(userId), JSON.stringify(list.slice(-KEEP)))
+    else localStorage.removeItem(storeKey(userId))
+  } catch {}
+}
+
+export default function Assistant({ userId, jobs, busy, setLessons, draft, onDraftUsed }) {
   const lang = useLang()
   const [model, setModel] = useState('llama3.2')
-  const [messages, setMessages] = useState([])
+  const [messages, setMessages] = useState(() => loadChat(userId))
+  const liveFrom = useRef(messages.length) // ამაზე ძველი პასუხები შენახულიდანაა და თავიდან აღარ ემატება
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -28,6 +48,9 @@ export default function Assistant({ jobs, busy, setLessons, draft, onDraftUsed }
   useEffect(() => {
     if (messages.length) end.current?.scrollIntoView({ block: 'end', behavior: 'smooth' })
   }, [messages.length, loading])
+  useEffect(() => {
+    if (!loading) saveChat(userId, messages)
+  }, [messages, loading, userId])
 
   async function send(text) {
     if (!text.trim() || loading) return
@@ -36,14 +59,21 @@ export default function Assistant({ jobs, busy, setLessons, draft, onDraftUsed }
     setInput('')
     setError('')
     setLoading(true)
+    saveChat(userId, history)
+    let reply = ''
     try {
       await chat({
         model,
         context: { lang: getLang(), free: [...freeSlots(busy)] },
         jobs,
         messages: history,
-        onToken: (full) => setMessages([...history, { role: 'assistant', content: full }]),
+        onToken: (full) => {
+          reply = full
+          setMessages([...history, { role: 'assistant', content: full }])
+        },
       })
+      // სხვა გვერდზე გადასვლის შემთხვევაშიც პასუხი შეინახება და დაბრუნებისას გამოჩნდება
+      if (reply) saveChat(userId, [...history, { role: 'assistant', content: reply }])
     } catch (e) {
       setMessages(history)
       setError(e.message)
@@ -63,7 +93,12 @@ export default function Assistant({ jobs, busy, setLessons, draft, onDraftUsed }
     <section className="mx-auto flex max-w-3xl flex-col">
       <div className="mb-3 flex items-center gap-2.5 px-1">
         <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-soft text-brand-deep"><Icon name="ai" className="h-5 w-5" /></span>
-        <h1 className="text-[22px] font-bold tracking-[-0.02em]">{tr('AI ასისტენტი', 'AI assistant')}</h1>
+        <h1 className="whitespace-nowrap text-[22px] font-bold tracking-[-0.02em]">{tr('AI ასისტენტი', 'AI assistant')}</h1>
+        {messages.length > 0 && !loading && (
+          <button onClick={() => { setMessages([]); liveFrom.current = 0; setError('') }} className="ml-auto flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-white px-3.5 py-2 text-[14px] font-semibold shadow-card hover:bg-fill" aria-label={tr('ახალი საუბარი', 'New chat')}>
+            <Icon name="plus" className="h-4 w-4" /><span className="sm:hidden">{tr('ახალი', 'New')}</span><span className="hidden sm:inline">{tr('ახალი საუბარი', 'New chat')}</span>
+          </button>
+        )}
         {import.meta.env.DEV && <input value={model} onChange={(e) => setModel(e.target.value)} className="ml-auto w-24 rounded-lg bg-white px-2 py-0.5 text-xs text-muted" aria-label="Ollama model" />}
       </div>
 
@@ -88,7 +123,17 @@ export default function Assistant({ jobs, busy, setLessons, draft, onDraftUsed }
           m.role === 'user' ? (
             <p key={i} className="ml-auto max-w-[84%] whitespace-pre-wrap px-0.5 pt-2 text-right font-bold">{m.content}</p>
           ) : (
-            <AssistantMessage key={i} content={m.content} ready={!loading || i < messages.length - 1} jobs={jobs} busy={busy} setLessons={setLessons} />
+            <AssistantMessage
+              key={i}
+              content={m.content}
+              ready={!loading || i < messages.length - 1}
+              live={i >= liveFrom.current}
+              saved={m.proposal}
+              onSaved={(proposal) => setMessages((list) => list.map((x, j) => (j === i ? { ...x, proposal } : x)))}
+              jobs={jobs}
+              busy={busy}
+              setLessons={setLessons}
+            />
           ),
         )}
         {error && (
@@ -125,13 +170,13 @@ export default function Assistant({ jobs, busy, setLessons, draft, onDraftUsed }
 }
 
 // AI-ს ტექსტი + ვაკანსიების ბარათები („JOBS: …“) + დაკავებული დროის დადასტურება („LESSON: {…}“)
-function AssistantMessage({ content, ready, jobs, busy, setLessons }) {
+function AssistantMessage({ content, ready, live, saved, onSaved, jobs, busy, setLessons }) {
   const { text, refs, lessons } = splitReply(content)
   const cards = refs.map((r) => jobs.find((j) => j.id.startsWith(r))).filter(Boolean)
   return (
     <div className="space-y-2">
       <p className="whitespace-pre-wrap rounded-[22px] bg-white px-4 py-3 shadow-card">{text || <span className="font-bold tracking-[2px] text-muted">···</span>}</p>
-      <LessonProposals lessons={lessons} setLessons={setLessons} ready={ready} />
+      <LessonProposals lessons={lessons} setLessons={setLessons} ready={ready} live={live} saved={saved} onSaved={onSaved} />
       {cards.length > 0 && <ul className={listBox}>{cards.map((job) => <li key={job.id}><JobCard job={job} busy={busy} /></li>)}</ul>}
     </div>
   )
