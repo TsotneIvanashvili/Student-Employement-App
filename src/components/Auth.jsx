@@ -120,7 +120,9 @@ function GoogleButton({ role }) {
   return (
     <div className="space-y-4" data-google>
       <button type="button" onClick={go} className="flex w-full items-center justify-center gap-2.5 rounded-2xl border border-line bg-white py-4 text-[15px] font-semibold shadow-[0_1px_2px_rgba(21,24,30,.06)] transition hover:bg-bg active:scale-[.98]">
-        <Icon name="globe" className="h-5 w-5" />{tr('Google-ით გაგრძელება', 'Continue with Google')}
+        {/* Google-ის ოფიციალური ნიშანი „Sign in with Google“ ღილაკებისთვის, Google-ის სერვერიდან */}
+        <img src="https://developers.google.com/identity/images/g-logo.png" alt="" width="20" height="20" className="h-5 w-5" />
+        {tr('Google-ით გაგრძელება', 'Continue with Google')}
       </button>
       <ErrorNote>{error}</ErrorNote>
       <div className="flex items-center gap-3 text-[13px] text-quiet"><span className="h-px flex-1 bg-line" />{tr('ან ელფოსტით', 'or with email')}<span className="h-px flex-1 bg-line" /></div>
