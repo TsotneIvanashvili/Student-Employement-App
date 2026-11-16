@@ -71,3 +71,11 @@ test('splitReply extracts valid LESSON lines and hides them', () => {
   assert.equal(splitReply('კარგი\nLESS').text, 'კარგი')
   assert.equal(splitReply('LESSON: {"weekday":1,"date":null,"start":"20:00","end":"18:00"}').lessons.length, 0)
 })
+
+test('splitReply: one-digit hours and list or bold markers still add the lesson', () => {
+  const r = splitReply('ჩაგიწერ.\n- LESSON: {"title":"ლექცია","weekday":4,"date":null,"start":"9:00","end":"11:00"}\n**LESSON:** {"title":"სპორტი","type":"personal","weekday":1,"date":null,"start":"14:00","end":"17:00"}')
+  assert.equal(r.text, 'ჩაგიწერ.')
+  assert.equal(r.lessons.length, 2)
+  assert.equal(r.lessons[0].start_min, 540)
+  assert.equal(r.lessons[1].type, 'personal')
+})

@@ -88,7 +88,7 @@ export default function Assistant({ jobs, busy, setLessons, draft, onDraftUsed }
           m.role === 'user' ? (
             <p key={i} className="ml-auto max-w-[84%] whitespace-pre-wrap px-0.5 pt-2 text-right font-bold">{m.content}</p>
           ) : (
-            <AssistantMessage key={i} content={m.content} jobs={jobs} busy={busy} setLessons={setLessons} />
+            <AssistantMessage key={i} content={m.content} ready={!loading || i < messages.length - 1} jobs={jobs} busy={busy} setLessons={setLessons} />
           ),
         )}
         {error && (
@@ -125,13 +125,13 @@ export default function Assistant({ jobs, busy, setLessons, draft, onDraftUsed }
 }
 
 // AI-ს ტექსტი + ვაკანსიების ბარათები („JOBS: …“) + დაკავებული დროის დადასტურება („LESSON: {…}“)
-function AssistantMessage({ content, jobs, busy, setLessons }) {
+function AssistantMessage({ content, ready, jobs, busy, setLessons }) {
   const { text, refs, lessons } = splitReply(content)
   const cards = refs.map((r) => jobs.find((j) => j.id.startsWith(r))).filter(Boolean)
   return (
     <div className="space-y-2">
       <p className="whitespace-pre-wrap rounded-[22px] bg-white px-4 py-3 shadow-card">{text || <span className="font-bold tracking-[2px] text-muted">···</span>}</p>
-      <LessonProposals lessons={lessons} setLessons={setLessons} />
+      <LessonProposals lessons={lessons} setLessons={setLessons} ready={ready} />
       {cards.length > 0 && <ul className={listBox}>{cards.map((job) => <li key={job.id}><JobCard job={job} busy={busy} /></li>)}</ul>}
     </div>
   )
