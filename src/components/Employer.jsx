@@ -9,7 +9,7 @@ import { fmtShift, listBox, openJob } from './Jobs.jsx'
 import { ApplicantCard } from './Applicants.jsx'
 import { Badge, Empty, Icon, RoundAdd, Segmented, Stepper, Title, btn, card, chip, input, label, tap } from './ui.jsx'
 
-const APP_FIELDS = '*, profiles(full_name, cv_experience, cv_skills, cv_languages, cv_path, avatar_url, skills, field), jobs!inner(*)'
+const APP_FIELDS = '*, profiles(full_name, cv_experience, cv_skills, cv_languages, cv_path, avatar_url, skills, field, headline, university, faculty, year, about, experience, languages), jobs!inner(*)'
 
 // ყველა განაცხადი ერთ ადგილას, ყველა ვაკანსიიდან
 export function Inbox({ profile, onNew, unread = {} }) {
@@ -216,7 +216,7 @@ export function NewJob({ profile, onCreated, onCancel }) {
             <Stepper label={tr('მდე', 'To')} value={`${f.end}:00`} onDown={setTime('end', -1)} onUp={setTime('end', 1)} />
           </div>
         ) : (
-          <p className="text-[13px] text-muted">{tr('ფიქსირებული საათები არ აქვს, მაგ. დისტანციური ან ვადიანი დავალება. ყველა მაძიებელი დაინახავს.', 'No fixed hours, e.g. remote work or a task with a deadline. Every job seeker will see it.')}</p>
+          <p className="text-[13px] text-muted">{tr('ფიქსირებული საათები არ აქვს, მაგ. დისტანციური ან ვადიანი დავალება. ყველა სტუდენტი დაინახავს.', 'No fixed hours, e.g. remote work or a task with a deadline. Every student will see it.')}</p>
         )}
       </section>
 

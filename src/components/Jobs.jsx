@@ -1,7 +1,8 @@
+import { profileFilled } from '../lib/student.js'
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { dayOf } from '../lib/match.js'
-import { clashOf, fitInfo, fmtMin } from '../lib/schedule.js'
+import { clashOf, fitInfo, fitsFreeTime, fmtMin } from '../lib/schedule.js'
 import { CATEGORIES, catName, dayShort, money, monthShort, payText, payUnit, tr, useLang } from '../lib/i18n.js'
 import { useRatings } from '../lib/ratings.js'
 import { ApplicantCard, STATUS_TONE, statusText } from './Applicants.jsx'
@@ -65,7 +66,50 @@ export function JobCard({ job, busy, rating }) {
 // ვაკანსიების სია ერთ თეთრ ბლოკში, მწკრივებს შორის ხაზით
 export const listBox = `${card} divide-y divide-line overflow-hidden`
 
-// სია: ძებნა, სფეროები, „მხოლოდ ჩემს კალენდარს მორგებული“
+const HOURS = Array.from({ length: 17 }, (_, i) => i + 7) // 07:00–23:00
+
+// „როდის ხარ თავისუფალი?“: დღეები და საათები; ინახება ამ მოწყობილობაზე
+function FreeTime({ value, onChange }) {
+  useLang()
+  const free = value ?? { days: [], from: 10, to: 20 }
+  const save = (v) => {
+    const next = v.days.length ? v : null
+    onChange(next)
+    try {
+      next ? localStorage.setItem('sm_free', JSON.stringify(next)) : localStorage.removeItem('sm_free')
+    } catch {}
+  }
+  const toggle = (d) => save({ ...free, days: free.days.includes(d) ? free.days.filter((x) => x !== d) : [...free.days, d].sort() })
+  const sel = 'rounded-xl border border-field bg-white px-2.5 py-2 text-[15px] font-semibold tabular-nums outline-none focus:border-brand-deep'
+  return (
+    <div className={`${card} space-y-3 p-3.5`} data-free-time>
+      <div className="flex items-center gap-2.5">
+        <Icon name="clock" className="h-[22px] w-[22px] shrink-0 text-brand-deep" />
+        <span className="flex-1 text-[15px] font-semibold">{tr('როდის ხარ თავისუფალი?', 'When are you free?')}</span>
+        {value && <button onClick={() => save({ ...free, days: [] })} className="text-[13px] font-semibold text-muted underline underline-offset-4">{tr('გასუფთავება', 'Clear')}</button>}
+      </div>
+      <div className="grid grid-cols-7 gap-1.5">
+        {[0, 1, 2, 3, 4, 5, 6].map((d) => (
+          <button key={d} onClick={() => toggle(d)} aria-pressed={free.days.includes(d)} className={`rounded-xl py-2.5 text-[13px] font-semibold transition ${free.days.includes(d) ? 'bg-ink text-white' : 'bg-fill text-ink hover:bg-line'}`} data-free-day={d}>
+            {dayShort(d)}
+          </button>
+        ))}
+      </div>
+      <div className="flex flex-wrap items-center gap-2 text-[14px]">
+        <select className={sel} value={free.from} onChange={(e) => save({ ...free, from: Math.min(Number(e.target.value), free.to - 1) })} aria-label={tr('საიდან', 'From')} data-free-from>
+          {HOURS.slice(0, -1).map((h) => <option key={h} value={h}>{hh(h)}</option>)}
+        </select>
+        <span className="text-muted">–</span>
+        <select className={sel} value={free.to} onChange={(e) => save({ ...free, to: Math.max(Number(e.target.value), free.from + 1) })} aria-label={tr('სადამდე', 'Until')} data-free-to>
+          {HOURS.slice(1).map((h) => <option key={h} value={h}>{hh(h)}</option>)}
+        </select>
+        <span className="text-[13px] text-muted">{free.days.length ? tr('მხოლოდ ამ დროში არსებული ცვლები', 'Only shifts inside this time') : tr('აირჩიე დღეები', 'Pick the days')}</span>
+      </div>
+    </div>
+  )
+}
+
+// სია: ძებნა, სფეროები, თავისუფალი დრო, „ლექციებს არ ეჯახება“
 export function JobList({ jobs, busy, filters, setFilters, onGoCalendar }) {
   useLang()
   const rating = useRatings(jobs.map((j) => j.employer_id))
@@ -79,8 +123,9 @@ export function JobList({ jobs, busy, filters, setFilters, onGoCalendar }) {
         .filter(({ job }) => filters.cat === 'all' || job.category === filters.cat)
         .filter(({ job }) => !q || `${job.title} ${job.company} ${job.district}`.toLowerCase().includes(q))
         .filter(({ fit }) => !filters.onlyFit || fit.full)
+        .filter(({ job }) => fitsFreeTime(job, filters.free))
         .sort((a, b) => Number(b.fit.full) - Number(a.fit.full) || b.fit.fitting.length - a.fit.fitting.length),
-    [jobs, busy, filters.cat, filters.onlyFit, q],
+    [jobs, busy, filters.cat, filters.onlyFit, filters.free, q],
   )
   const set = (k) => (v) => setFilters({ ...filters, [k]: v })
 
@@ -99,9 +144,10 @@ export function JobList({ jobs, busy, filters, setFilters, onGoCalendar }) {
             </button>
           ))}
         </div>
+        <FreeTime value={filters.free} onChange={set('free')} />
         <label className={`${card} flex cursor-pointer items-center gap-3 px-3.5 py-3`}>
           <Icon name="calendar" className="h-[22px] w-[22px] shrink-0 text-brand-deep" />
-          <span className="flex-1 text-[14px] font-semibold">{tr('მხოლოდ ჩემს კალენდარს მორგებული', 'Only jobs that fit my calendar')}</span>
+          <span className="flex-1 text-[14px] font-semibold">{tr('ლექციებს არ ეჯახება (კალენდრიდან)', "Doesn't clash with my lectures (calendar)")}</span>
           <Switch on={filters.onlyFit} onChange={set('onlyFit')} label={tr('მხოლოდ მორგებული', 'Only fitting jobs')} />
         </label>
         <p className="px-1 text-[13px] text-muted">{rows.length} {tr('ვაკანსია', rows.length === 1 ? 'job' : 'jobs')}</p>
@@ -117,7 +163,7 @@ export function JobList({ jobs, busy, filters, setFilters, onGoCalendar }) {
 
       <div className="mt-3">
         {rows.length === 0 ? (
-          <Empty title={tr('ამ ფილტრით ვაკანსია არ მოიძებნა', 'No jobs match these filters')} text={tr('გამორთე კალენდრის ფილტრი ან შეცვალე სფერო.', 'Turn off the calendar filter or change the field.')} />
+          <Empty title={tr('ამ ფილტრით ვაკანსია არ მოიძებნა', 'No jobs match these filters')} text={tr('სცადე მეტი დღე ან საათი, გამორთე კალენდრის ფილტრი ან შეცვალე სფერო.', 'Try more days or hours, turn off the calendar filter or change the field.')} />
         ) : (
           <ul className={listBox}>
             {rows.map(({ job }) => <li key={job.id}><JobCard job={job} busy={busy} rating={rating(job.employer_id)} /></li>)}
@@ -128,7 +174,7 @@ export function JobList({ jobs, busy, filters, setFilters, onGoCalendar }) {
   )
 }
 
-const APP_FIELDS = '*, profiles(full_name, cv_experience, cv_skills, cv_languages, cv_path, avatar_url, skills, field)'
+const APP_FIELDS = '*, profiles(full_name, cv_experience, cv_skills, cv_languages, cv_path, avatar_url, skills, field, headline, university, faculty, year, about, experience, languages)'
 
 // ვაკანსიის გვერდი. ტელეფონზე მარჯვნიდან შემოსრიალდება და ქვედა მენიუს ფარავს.
 export function JobDetail({ id, profile, busy, onBack, onGoProfile, onChanged }) {
@@ -239,7 +285,7 @@ function OwnerControls({ job, setJob }) {
     <label className={`${card} flex items-center justify-between gap-3 px-4 py-3.5`}>
       <span>
         <span className="block text-[15px] font-semibold">{job.is_open ? tr('ვაკანსია ღიაა', 'Job is open') : tr('ვაკანსია დახურულია', 'Job is closed')}</span>
-        <span className="text-[13px] text-muted">{job.is_open ? tr('მაძიებლები ხედავენ და აგზავნიან განაცხადს', 'Job seekers can see it and apply') : tr('ახალი განაცხადები აღარ შემოვა', 'No new applications will come in')}</span>
+        <span className="text-[13px] text-muted">{job.is_open ? tr('სტუდენტები ხედავენ და აგზავნიან განაცხადს', 'Students can see it and apply') : tr('ახალი განაცხადები აღარ შემოვა', 'No new applications will come in')}</span>
       </span>
       <Switch on={job.is_open} onChange={toggle} label={tr('ვაკანსიის გახსნა ან დახურვა', 'Open or close the job')} />
     </label>
@@ -279,7 +325,7 @@ function Apply({ job, profile, onGoProfile, onChanged }) {
   })
   const [error, setError] = useState('')
   const [sending, setSending] = useState(false)
-  const hasCv = Boolean(profile.cv_experience || profile.cv_skills || profile.cv_path)
+  const hasCv = profileFilled(profile)
 
   useEffect(() => {
     supabase.from('applications').select('*').eq('job_id', job.id).eq('student_id', profile.id).maybeSingle().then(({ data }) => setApplication(data))
@@ -320,9 +366,9 @@ function Apply({ job, profile, onGoProfile, onChanged }) {
           {!hasCv ? (
             <div className="text-center">
               <span className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-[18px] bg-brand-soft text-brand-deep"><Icon name="doc" className="h-7 w-7" /></span>
-              <h2 className="text-[20px] font-bold">{tr('ჯერ სივი შეავსე', 'Fill in your CV first')}</h2>
-              <p className="mt-1 text-[15px] text-muted">{tr('ერთხელ შეავსებ და ყველა ვაკანსიაზე გამოიყენება.', 'You fill it in once and it is used for every job.')}</p>
-              <button onClick={onGoProfile} className={`${btn} mt-5`}>{tr('სივის შევსება', 'Fill in my CV')}</button>
+              <h2 className="text-[20px] font-bold">{tr('ჯერ პროფილი შეავსე', 'Fill in your profile first')}</h2>
+              <p className="mt-1 text-[15px] text-muted">{tr('პროფესია, ჩემ შესახებ ან გამოცდილება. სივიდანაც შეგიძლია შეავსო.', 'Your profession, about me or experience. You can also fill it in from your CV.')}</p>
+              <button onClick={onGoProfile} className={`${btn} mt-5`}>{tr('პროფილის შევსება', 'Fill in my profile')}</button>
             </div>
           ) : (
             <form onSubmit={send} className="space-y-3.5">

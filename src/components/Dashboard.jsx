@@ -1,3 +1,4 @@
+import { profileFilled } from '../lib/student.js'
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { todayISO } from '../lib/match.js'
@@ -76,7 +77,7 @@ export function SeekerHome({ profile, busy, jobs, applications, unread = {}, go,
   const list = fitsOn(sel).slice(0, 4)
   const current = applications.find((a) => a.status === 'accepted' || a.status === 'done')
   const pending = applications.filter((a) => a.status === 'sent').length
-  const cvDone = Boolean(profile.cv_experience || profile.cv_skills || profile.cv_path)
+  const cvDone = profileFilled(profile)
 
   return (
     <div className="mx-auto max-w-3xl space-y-3.5">
@@ -170,7 +171,7 @@ export function SeekerHome({ profile, busy, jobs, applications, unread = {}, go,
           {!cvDone && (
             <button onClick={() => go('profile')} className={`${card} flex items-center gap-3 p-4 text-left ${tap}`}>
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-amber-soft text-amber"><Icon name="doc" className="h-5 w-5" /></span>
-              <span className="block flex-1 text-[14px] font-semibold">{tr('შეავსე სივი, რომ განაცხადი გააგზავნო', 'Fill in your CV so you can apply')}</span>
+              <span className="block flex-1 text-[14px] font-semibold">{tr('შეავსე პროფილი (ან ატვირთე სივი), რომ განაცხადი გააგზავნო', 'Fill in your profile (or upload a CV) so you can apply')}</span>
             </button>
           )}
           {pending > 0 && (

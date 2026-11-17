@@ -55,6 +55,16 @@ function useTour(key) {
 const PUBLIC = { '/how': How, '/about': About, '/terms': Terms, '/privacy': Privacy }
 const AUTH = { '/login': 'login', '/register': 'register', '/reset': 'reset' }
 
+// „როდის ხარ თავისუფალი“ ფილტრი ამ მოწყობილობაზე ინახება
+const savedFree = () => {
+  try {
+    const v = JSON.parse(localStorage.getItem('sm_free'))
+    return Array.isArray(v?.days) && v.days.length ? v : null
+  } catch {
+    return null
+  }
+}
+
 export default function App() {
   const path = usePath().replace(/\/+$/, '') || '/'
   const [session, setSession] = useState(undefined)
@@ -180,7 +190,7 @@ function Shell({ profile, tabs, tab, onTab, cta, detail, badges = {}, children }
           <Avatar name={name} src={profile.avatar_url} size={40} radius={20} />
           <span className="min-w-0 flex-1">
             <span className="block truncate text-[14px] font-semibold">{name}</span>
-            <span className="block truncate text-[12px] text-muted">{profile.role === 'employer' ? tr('დამსაქმებელი', 'Employer') : tr('სამუშაოს მაძიებელი', 'Job seeker')}</span>
+            <span className="block truncate text-[12px] text-muted">{profile.role === 'employer' ? tr('დამსაქმებელი', 'Employer') : tr('სტუდენტი', 'Student')}</span>
           </span>
           <Icon name="chevron" className={`h-4 w-4 shrink-0 text-quiet transition ${tab === 'profile' ? 'rotate-90' : ''}`} strokeWidth={2.5} />
         </button>
@@ -221,13 +231,13 @@ function StudentApp({ profile, email, patch }) {
   usePageTitle('')
   const hash = useHash()
   const jobId = hash.startsWith('#job/') ? hash.slice(5) : null
-  const [tab, setTab] = useState('home')
+  const [tab, setTab] = useState(() => (sessionStorage.getItem('sm_gcal') ? 'calendar' : 'home')) // Google Calendar-დან დაბრუნება
   const [jobs, setJobs] = useState([])
   const [lessons, setLessons] = useState([])
   const [applications, setApplications] = useState([])
   const [version, setVersion] = useState(0)
   const [draft, setDraft] = useState('')
-  const [filters, setFilters] = useState({ query: '', cat: profile.field && profile.field !== 'general' ? profile.field : 'all', onlyFit: true })
+  const [filters, setFilters] = useState(() => ({ query: '', cat: profile.field && profile.field !== 'general' ? profile.field : 'all', onlyFit: true, free: savedFree() }))
   const [showTour, openTour, closeTour] = useTour(`sj_tour_student_${profile.id}`)
   const unread = useUnread(profile.id)
   const unreadTotal = Object.values(unread).reduce((a, b) => a + b, 0)

@@ -1,3 +1,4 @@
+import { studyLine } from '../lib/student.js'
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase.js'
 import { tr, useLang } from '../lib/i18n.js'
@@ -59,7 +60,7 @@ export function ApplicantCard({ app, job, showJob = false, onChanged, unread = 0
         <span className="block min-w-0 flex-1">
           <span className="block truncate text-[16px] font-bold">{p.full_name}</span>
           <span className="flex min-w-0 items-center gap-2 text-[13px] text-muted">
-            <span className="truncate">{showJob ? job.title : p.cv_skills || tr('კანდიდატი', 'Candidate')}</span>
+            <span className="truncate">{showJob ? job.title : p.headline || p.university || tr('სტუდენტი', 'Student')}</span>
             {r && <Stars value={r.avg} />}
           </span>
         </span>
@@ -75,7 +76,7 @@ export function ApplicantCard({ app, job, showJob = false, onChanged, unread = 0
             <div className="flex flex-wrap gap-1.5">{p.skills.map((s) => <span key={s} className="rounded-full bg-fill px-2.5 py-1 text-[12px] font-medium">{s}</span>)}</div>
           )}
           <dl className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {[[tr('გამოცდილება', 'Experience'), p.cv_experience], [tr('ენები', 'Languages'), p.cv_languages]].filter(([, v]) => v).map(([k, v]) => (
+            {[[tr('სწავლა', 'Studies'), studyLine(p)], [tr('გამოცდილება', 'Experience'), (p.experience ?? []).map((e) => [e.role, e.place].filter(Boolean).join(' · ') || e.text).join('\n') || p.cv_experience], [tr('ენები', 'Languages'), p.languages?.join(', ') || p.cv_languages]].filter(([, v]) => v).map(([k, v]) => (
               <div key={k} className="rounded-2xl bg-bg px-3 py-2.5">
                 <dt className="text-[12px] text-muted">{k}</dt>
                 <dd className="whitespace-pre-wrap break-words text-[14px]">{v}</dd>

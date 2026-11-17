@@ -4,6 +4,7 @@ import { catName, monthShort, tr, useLang } from '../lib/i18n.js'
 import { saveAvatar, shrinkImage } from '../lib/avatar.js'
 import { useRatings } from '../lib/ratings.js'
 import { tagText } from './Applicants.jsx'
+import { studyLine } from '../lib/student.js'
 import { Avatar, Icon, Sheet, Stars, btn, card, input } from './ui.jsx'
 
 // სქილების მინიშნებები სფეროს მიხედვით; მომხმარებელს ნებისმიერის ჩაწერა შეუძლია
@@ -172,7 +173,7 @@ export function WorkHistory({ personId, bare }) {
   return bare ? <div>{body}</div> : <section className={`${card} p-5`} data-history>{body}</section>
 }
 
-// სხვისი პროფილი (დამსაქმებელი ხედავს კანდიდატს): ფოტო, უნარები, ისტორია, სივი
+// სხვისი პროფილი (დამსაქმებელი ხედავს კანდიდატს): ფოტო, პროფესია, სწავლა, უნარები, გამოცდილება, ენები, ისტორია
 export function PublicProfile({ person, personId, onClose }) {
   useLang()
   const rating = useRatings([personId])(personId)
@@ -183,7 +184,13 @@ export function PublicProfile({ person, personId, onClose }) {
   return (
     <Sheet onClose={onClose}>
       <div className="space-y-5">
-        <ProfileHeader profile={{ ...person, id: personId, role: 'student' }} subtitle={`${tr('სამუშაოს მაძიებელი', 'Job seeker')}${person.field ? ` · ${catName(person.field)}` : ''}`} rating={rating} />
+        <ProfileHeader profile={{ ...person, id: personId, role: 'student' }} subtitle={person.headline || tr('სტუდენტი', 'Student')} rating={rating} />
+        {(studyLine(person) || person.about) && (
+          <div className="space-y-1.5">
+            {studyLine(person) && <p className="flex items-start gap-2 text-[15px] font-medium"><Icon name="cap" className="mt-0.5 h-[18px] w-[18px] shrink-0" />{studyLine(person)}</p>}
+            {person.about && <p className="whitespace-pre-wrap text-[15px]">{person.about}</p>}
+          </div>
+        )}
         <div>
           <h2 className={sectionTitle}>{tr('უნარები', 'Skills')}</h2>
           {person.skills?.length ? (
@@ -192,15 +199,23 @@ export function PublicProfile({ person, personId, onClose }) {
             <p className="mt-2 text-[15px] text-muted">{person.cv_skills || tr('უნარები არ არის მითითებული', 'No skills listed')}</p>
           )}
         </div>
-        <WorkHistory personId={personId} bare />
-        {(person.cv_experience || person.cv_languages || person.cv_path) && (
-          <div className="space-y-2">
-            <h2 className={sectionTitle}>{tr('სივი', 'CV')}</h2>
-            {person.cv_experience && <p className="whitespace-pre-wrap text-[15px]">{person.cv_experience}</p>}
-            {person.cv_languages && <p className="text-[14px] text-muted">{tr('ენები', 'Languages')}: {person.cv_languages}</p>}
-            {person.cv_path && <button onClick={openPdf} className="flex items-center gap-2 text-[15px] font-semibold"><Icon name="doc" className="h-5 w-5" />{tr('PDF სივის ნახვა', 'Open the PDF CV')}</button>}
+        {person.experience?.length > 0 && (
+          <div>
+            <h2 className={sectionTitle}>{tr('გამოცდილება', 'Experience')}</h2>
+            <ul className="mt-2 space-y-2.5">
+              {person.experience.map((e, i) => (
+                <li key={i}>
+                  {(e.role || e.place) && <p className="font-semibold">{[e.role, e.place].filter(Boolean).join(' · ')}</p>}
+                  {e.period && <p className="text-[13px] text-muted">{e.period}</p>}
+                  {e.text && <p className="text-[15px]">{e.text}</p>}
+                </li>
+              ))}
+            </ul>
           </div>
         )}
+        {person.languages?.length > 0 && <p className="text-[15px]"><span className="font-semibold">{tr('ენები', 'Languages')}:</span> {person.languages.join(', ')}</p>}
+        <WorkHistory personId={personId} bare />
+        {person.cv_path && <button onClick={openPdf} className="flex items-center gap-2 text-[15px] font-semibold"><Icon name="doc" className="h-5 w-5" />{tr('PDF სივის ნახვა', 'Open the PDF CV')}</button>}
       </div>
     </Sheet>
   )

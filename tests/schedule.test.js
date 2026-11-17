@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { eventsOn, shiftFits, matchJob, freeSlots, layoutDay, weekdayOf, startOfWeek, addMonths, jobEvents, workBetween } from '../src/lib/schedule.js'
+import { eventsOn, shiftFits, matchJob, freeSlots, layoutDay, weekdayOf, startOfWeek, addMonths, jobEvents, workBetween, fitsFreeTime } from '../src/lib/schedule.js'
 
 const mondayLesson = { id: 'a', weekday: 0, date: null, start_min: 13 * 60, end_min: 16 * 60, skip_dates: ['2026-11-16'] }
 const oneOff = { id: 'b', weekday: null, date: '2026-11-21', start_min: 11 * 60, end_min: 12 * 60, skip_dates: [] }
@@ -79,4 +79,18 @@ test('workBetween counts hours or days of a job between two dates', () => {
   assert.equal(workBetween({ pay_unit: 'hour', shifts: [{ date: '2026-11-20', start: 9, end: 17 }] }, '2026-11-16', '2026-12-15'), 8)
   assert.equal(workBetween({ pay_unit: 'hour', shifts: [] }, '2026-11-16', '2026-12-15'), 0)
   assert.equal(workBetween(weekly, '2026-11-20', '2026-11-19'), 0)
+})
+
+test('free-time filter: one shift inside the chosen days and hours is enough', () => {
+  const free = { days: [0, 2], from: 14, to: 20 }
+  const today = '2026-11-17'
+  const job = (shifts) => ({ shifts })
+  assert.equal(fitsFreeTime(job([{ day: 0, start: 15, end: 19 }]), free, today), true)
+  assert.equal(fitsFreeTime(job([{ day: 0, start: 12, end: 16 }]), free, today), false, 'starts before free time')
+  assert.equal(fitsFreeTime(job([{ day: 1, start: 15, end: 18 }]), free, today), false, 'wrong day')
+  assert.equal(fitsFreeTime(job([{ day: 1, start: 15, end: 18 }, { day: 2, start: 14, end: 20 }]), free, today), true)
+  assert.equal(fitsFreeTime(job([{ date: '2026-11-18', start: 15, end: 17 }]), free, today), true, 'dated Wednesday')
+  assert.equal(fitsFreeTime(job([{ date: '2026-11-16', start: 15, end: 17 }]), free, today), false, 'past date')
+  assert.equal(fitsFreeTime(job([]), free, today), true, 'flexible hours')
+  assert.equal(fitsFreeTime(job([{ day: 4, start: 9, end: 12 }]), null, today), true, 'no filter')
 })

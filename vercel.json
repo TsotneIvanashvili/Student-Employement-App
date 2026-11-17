@@ -27,7 +27,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://kqyhbnwsiuwsjvantqhd.supabase.co https://lh3.googleusercontent.com https://developers.google.com; connect-src 'self' data: https://kqyhbnwsiuwsjvantqhd.supabase.co wss://kqyhbnwsiuwsjvantqhd.supabase.co; manifest-src 'self'; worker-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://kqyhbnwsiuwsjvantqhd.supabase.co https://lh3.googleusercontent.com https://developers.google.com; connect-src 'self' data: https://kqyhbnwsiuwsjvantqhd.supabase.co wss://kqyhbnwsiuwsjvantqhd.supabase.co https://www.googleapis.com; manifest-src 'self'; worker-src 'self'; frame-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
         },
         {
           "key": "Cross-Origin-Opener-Policy",

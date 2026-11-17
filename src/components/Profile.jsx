@@ -7,6 +7,8 @@ import { useRatings } from '../lib/ratings.js'
 import { tagText } from './Applicants.jsx'
 import { ProfileHeader, SkillsCard, WorkHistory } from './ProfileParts.jsx'
 import { WalletCard } from './Wallet.jsx'
+import { StudentSections } from './StudentProfile.jsx'
+import { studyLine } from '../lib/student.js'
 import { Badge, Icon, Segmented, Sheet, Title, btn, btn2, btnSm2, card, chip, input, label } from './ui.jsx'
 
 const FIELDS = ['general', 'service', 'delivery', 'trades', 'design', 'dev', 'events', 'other']
@@ -44,7 +46,7 @@ export default function Profile({ profile, email, onSaved, onHelp, applications 
           profile={profile}
           editable
           onSaved={onSaved}
-          subtitle={employer ? `${tr('დამსაქმებელი', 'Employer')} · ${profile.full_name}` : `${tr('სამუშაოს მაძიებელი', 'Job seeker')} · ${catName(profile.field)}`}
+          subtitle={employer ? `${tr('დამსაქმებელი', 'Employer')} · ${profile.full_name}` : profile.headline || studyLine(profile) || tr('სტუდენტი', 'Student')}
         />
         <div className={`grid gap-2 ${third === null ? 'grid-cols-2' : 'grid-cols-3'}`}>
           <Stat value={rating ? `★ ${rating.avg.toFixed(1)}` : '—'} text={`${rating?.count ?? 0} ${tr('შეფასება', 'reviews')}`} />
@@ -53,10 +55,10 @@ export default function Profile({ profile, email, onSaved, onHelp, applications 
         </div>
       </section>
 
+      {!employer && <StudentSections profile={profile} editable onSaved={onSaved} />}
       {!employer && <SkillsCard profile={profile} editable onSaved={onSaved} />}
       {!employer && <WorkHistory personId={profile.id} />}
       <WalletCard profile={profile} />
-      {!employer && <Cv profile={profile} onSaved={onSaved} />}
 
 
       <section className="space-y-2.5">
@@ -252,90 +254,3 @@ function NameSheet({ profile, email, onSaved, onClose }) {
   )
 }
 
-// სივი: საჩვენებლად, „რედაქტირების“ ღილაკით იხსნება
-function Cv({ profile, onSaved }) {
-  useLang()
-  const cvDone = Boolean(profile.cv_experience || profile.cv_skills || profile.cv_languages || profile.cv_path)
-  const [editing, setEditing] = useState(!cvDone)
-  const [note, setNote] = useState(null)
-  async function openPdf() {
-    const { data } = await supabase.storage.from('cvs').createSignedUrl(profile.cv_path, 600)
-    if (data) window.open(data.signedUrl, '_blank', 'noopener')
-  }
-  return (
-    <section className={`${card} p-4`} data-cv>
-      <div className="mb-3.5 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-2.5">
-          <h2 className="text-[18px] font-bold">{tr('სივი', 'CV')}</h2>
-          <Badge tone={cvDone ? 'green' : 'amber'}>{cvDone ? tr('შევსებულია', 'Filled in') : tr('შესავსებია', 'To fill in')}</Badge>
-        </div>
-        {!editing && <button onClick={() => { setEditing(true); setNote(null) }} className={`${btnSm2} flex items-center gap-1.5`}><Icon name="edit" className="h-4 w-4" />{tr('რედაქტირება', 'Edit')}</button>}
-      </div>
-      {note && <p className={`mb-3 text-[14px] font-medium ${note.ok ? 'text-mint-dark' : 'text-coral'}`}>{note.text}</p>}
-      {editing ? (
-        <CvForm profile={profile} onSaved={onSaved} canCancel={cvDone} setNote={setNote} onClose={() => setEditing(false)} />
-      ) : (
-        <dl className="space-y-2">
-          <Fact name={tr('გამოცდილება', 'Experience')} value={profile.cv_experience} />
-          <Fact name={tr('ენები', 'Languages')} value={profile.cv_languages} />
-          {profile.cv_path && (
-            <button onClick={openPdf} className="flex w-full items-center gap-2 rounded-2xl bg-bg px-4 py-3 text-left text-[15px] font-semibold hover:bg-fill">
-              <Icon name="doc" className="h-5 w-5 text-brand-deep" />{tr('PDF სივის ნახვა', 'Open the PDF CV')}
-            </button>
-          )}
-        </dl>
-      )}
-    </section>
-  )
-}
-
-const Fact = ({ name, value }) => (
-  <div className="rounded-2xl bg-bg px-4 py-3">
-    <dt className="text-[12px] text-muted">{name}</dt>
-    <dd className={`whitespace-pre-wrap break-words text-[15px] ${value ? '' : 'text-quiet'}`}>{value || tr('არ არის შევსებული', 'Not filled in')}</dd>
-  </div>
-)
-
-function CvForm({ profile, onSaved, canCancel, setNote, onClose }) {
-  const [form, setForm] = useState({ cv_experience: profile.cv_experience ?? '', cv_languages: profile.cv_languages ?? '' })
-  const set = (k) => (e) => setForm({ ...form, [k]: e.target.value })
-
-  async function save(e) {
-    e.preventDefault()
-    const { error } = await supabase.from('profiles').update(form).eq('id', profile.id)
-    if (error) return setNote({ text: tr('ვერ შეინახა. სცადე თავიდან.', 'Could not save. Try again.') })
-    onSaved(form)
-    setNote({ ok: true, text: tr('შენახულია', 'Saved') })
-    onClose()
-  }
-  async function upload(e) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    if (file.type !== 'application/pdf') return setNote({ text: tr('მხოლოდ PDF ფაილი.', 'PDF files only.') })
-    if (file.size > 5 * 1024 * 1024) return setNote({ text: tr('ფაილი 5 MB-ზე მეტია.', 'The file is larger than 5 MB.') })
-    const path = `${profile.id}/cv.pdf`
-    const { error } = await supabase.storage.from('cvs').upload(path, file, { upsert: true, contentType: 'application/pdf' })
-    if (error) return setNote({ text: tr('ფაილი ვერ აიტვირთა. სცადე თავიდან.', 'The file could not be uploaded. Try again.') })
-    await supabase.from('profiles').update({ cv_path: path }).eq('id', profile.id)
-    onSaved({ cv_path: path })
-    setNote({ ok: true, text: tr('PDF ატვირთულია', 'PDF uploaded') })
-  }
-  return (
-    <form onSubmit={save} className="space-y-3.5">
-      <label className="block">
-        <span className={label}>{tr('გამოცდილება', 'Experience')}</span>
-        <textarea className={`${input} resize-none`} rows={3} maxLength={1000} value={form.cv_experience} onChange={set('cv_experience')} placeholder={tr('მაგ. 3 თვე ბარისტად, 1 წელი გაყიდვებში', 'e.g. 3 months as a barista, 1 year in sales')} />
-      </label>
-      <label className="block"><span className={label}>{tr('ენები', 'Languages')}</span><input maxLength={200} className={input} value={form.cv_languages} onChange={set('cv_languages')} placeholder={tr('ინგლისური B2', 'English B2')} /></label>
-      <label className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl border border-dashed border-field px-4 py-4 hover:border-brand-deep">
-        <span className="flex items-center gap-2 font-medium"><Icon name="doc" className="h-5 w-5 text-brand-deep" />{profile.cv_path ? tr('PDF სივი ატვირთულია', 'PDF CV uploaded') : tr('PDF სივი (არასავალდებულო)', 'PDF CV (optional)')}</span>
-        <span className="font-semibold text-brand-deep">{profile.cv_path ? tr('შეცვლა', 'Replace') : tr('ატვირთვა', 'Upload')}</span>
-        <input type="file" accept="application/pdf" className="hidden" onChange={upload} />
-      </label>
-      <div className={`grid gap-2.5 ${canCancel ? 'grid-cols-2' : 'grid-cols-1'}`}>
-        {canCancel && <button type="button" onClick={onClose} className={btn2}>{tr('გაუქმება', 'Cancel')}</button>}
-        <button className={btn}>{tr('შენახვა', 'Save')}</button>
-      </div>
-    </form>
-  )
-}

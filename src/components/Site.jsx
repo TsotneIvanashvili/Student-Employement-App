@@ -59,7 +59,7 @@ function Layout({ signedIn, children }) {
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-10 sm:px-6 md:flex-row md:items-start md:justify-between">
           <div>
             <Logo className="text-[17px]" />
-            <p className="mt-3 max-w-xs text-[14px] text-muted">{tr('დამატებითი სამუშაო შენს თავისუფალ დროში.', 'Extra work that fits your free time.')}</p>
+            <p className="mt-3 max-w-xs text-[14px] text-muted">{tr('სტუდენტური დასაქმების პორტალი.', 'The student job portal.')}</p>
             <div className="mt-4 sm:hidden"><LangSwitch /></div>
           </div>
           <nav className="grid grid-cols-2 gap-x-10 gap-y-2 text-[14px]">
@@ -108,7 +108,7 @@ export function CalendarMock() {
 }
 
 const seekerSteps = () => [
-  ['calendar', tr('ჩაწერე, როდის ხარ დაკავებული', "Write down when you're busy"), tr('სწავლა, ძირითადი სამსახური ან სხვა საქმე. ერთხელ ჩაწერ და ყოველ კვირა თავისით მეორდება.', 'Classes, a main job or anything else. Write it once and it repeats every week.')],
+  ['calendar', tr('აირჩიე, როდის ხარ თავისუფალი', "Pick when you're free"), tr('მონიშნე დღეები და საათები. სურვილისამებრ ლექციები კალენდარში ჩაწერე ან Google Calendar-დან შემოიტანე.', 'Pick the days and hours. If you like, add your lectures to the calendar or import them from Google Calendar.')],
   ['search', tr('ნახე მხოლოდ შესაფერისი ვაკანსიები', 'See only the jobs that fit'), tr('სიაში რჩება ის ცვლები, რომლებიც შენს თავისუფალ დროში ჯდება: მუდმივი, ერთჯერადი ან თავისუფალი გრაფიკით.', 'The list keeps only shifts that fit your free time: weekly, one-off or flexible.')],
   ['send', tr('გაგზავნე განაცხადი ერთი დაჭერით', 'Apply in one tap'), tr('თუ აგიყვანენ, ცვლები თავისით ჩნდება შენს კალენდარში. სამუშაოს ბოლოს ერთმანეთს აფასებთ.', 'If you are hired, the shifts appear in your calendar. When the work is done you rate each other.')],
 ]
@@ -146,10 +146,10 @@ export function Home({ signedIn }) {
     <Layout signedIn={signedIn}>
       <section className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-12 sm:px-6 lg:grid-cols-2 lg:py-20">
         <div>
-          <h1 className="text-[36px] font-bold leading-[1.1] tracking-[-0.02em] [text-wrap:balance] sm:text-[52px]">{tr('დამატებითი სამუშაო შენს თავისუფალ დროში', 'Extra work that fits your free time')}</h1>
-          <p className="mt-4 max-w-md text-[17px] text-muted [text-wrap:pretty]">{tr('სწავლობ, მუშაობ თუ სხვა საქმე გაქვს: შეავსე კალენდარი და ShiftMate გაჩვენებს მხოლოდ იმ ვაკანსიებს, რომლებიც შენს გრაფიკს ერგება.', 'Studying, working or busy with something else? Fill in your calendar and ShiftMate shows only the jobs that fit your schedule.')}</p>
+          <h1 className="text-[36px] font-bold leading-[1.1] tracking-[-0.02em] [text-wrap:balance] sm:text-[52px]">{tr('სამსახური, რომელიც ლექციებს არ ეჯახება', "Student jobs that don't clash with your lectures")}</h1>
+          <p className="mt-4 max-w-md text-[17px] text-muted [text-wrap:pretty]">{tr('სტუდენტური დასაქმების პორტალი: აირჩიე, რომელ დღეებსა და საათებში ხარ თავისუფალი, და ShiftMate გაჩვენებს მხოლოდ იმ ვაკანსიებს, რომლებიც ლექციებს არ ეჯახება.', "A student job portal: pick the days and hours you are free, and ShiftMate shows only the jobs that don't clash with your lectures.")}</p>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-            <Link to="/register" className={`${btn} px-6 text-center sm:w-auto`}>{tr('ვეძებ სამუშაოს', 'I want work')}</Link>
+            <Link to="/register" className={`${btn} px-6 text-center sm:w-auto`}>{tr('სტუდენტი ვარ', "I'm a student")}</Link>
             <Link to="/register?role=employer" className={`${btn2} px-6 text-center !text-ink sm:w-auto`}>{tr('ვქირაობ', "I'm hiring")}</Link>
           </div>
           <p className="mt-3 text-[13px] text-quiet">{tr('რეგისტრაცია უფასოა და ერთ წუთს გრძელდება.', 'Signing up is free and takes a minute.')}</p>
@@ -226,7 +226,7 @@ export function Home({ signedIn }) {
 const faq = () => [
   [tr('ShiftMate ფასიანია?', 'Does ShiftMate cost anything?'), tr('ამჟამად რეგისტრაცია, ვაკანსიის განთავსება და განაცხადის გაგზავნა უფასოა. თუ ეს შეიცვლება, წინასწარ შეგატყობინებთ.', 'Signing up, posting jobs and applying are free right now. If that changes, we will tell you in advance.')],
   [tr('როგორ ირჩევა, რომელი ვაკანსია „მერგება“?', 'How do you decide which jobs "fit"?'), tr('ცვლა გერგება, თუ მისი არცერთი საათი არ ემთხვევა იმ დროს, რომელიც კალენდარში დაკავებულად გაქვს ჩაწერილი. ვაკანსიის გვერდზე ჩანს, რომელი ცვლა რას ემთხვევა.', 'A shift fits if none of its hours overlap the busy time in your calendar. The job page shows which shift clashes with what.')],
-  [tr('ვინ შეიძლება დარეგისტრირდეს?', 'Who can sign up?'), tr('ნებისმიერი სრულწლოვანი ადამიანი, ვისაც დამატებითი სამუშაო უნდა, და ნებისმიერი კომპანია ან ინდივიდუალური მეწარმე, ვინც თანამშრომელს ეძებს.', 'Any adult who wants extra work, and any company or sole trader looking for someone to hire.')],
+  [tr('ვინ შეიძლება დარეგისტრირდეს?', 'Who can sign up?'), tr('სრულწლოვანი სტუდენტები (რეგისტრაციისას უნივერსიტეტს უთითებ) და ნებისმიერი კომპანია ან ინდივიდუალური მეწარმე, ვინც სტუდენტს ეძებს ნახევარ განაკვეთზე ან ერთჯერად სამუშაოზე.', 'Adult university students (you name your university when you sign up), and any company or sole trader looking for a student for part-time or one-off work.')],
   [tr('როგორ ვიღებ ანაზღაურებას?', 'How do I get paid?'), tr('დამსაქმებელი აყვანისას თანხას დეპოზიტად დებს. სამუშაოს შემდეგ (საათობრივზე ყოველთვიურად) თანხა შენს ბალანსზე ჩაირიცხება, 10%-იანი საკომისიოს გამოკლებით. ჯერ ეს სადემონსტრაციო რეჟიმია: რეალური ფული არ მოძრაობს.', 'The employer puts the pay on deposit when hiring you. After the work (hourly: every month) it lands in your balance, minus a 10% fee. For now this is a demo: no real money moves.')],
   [tr('როგორ მუშაობს შეფასება?', 'How do ratings work?'), tr('როცა დამსაქმებელი დაადასტურებს, რომ სამუშაო დასრულდა, ორივე მხარე ერთმანეთს 1–5 ვარსკვლავით აფასებს. საშუალო შეფასება ჩანს პროფილზე და ვაკანსიებზე.', 'When the employer confirms the work is done, both sides rate each other from 1 to 5 stars. The average shows on profiles and job posts.')],
   [tr('ვინ ხედავს ჩემს სივს და ტელეფონს?', 'Who sees my CV and phone number?'), tr('მხოლოდ ის დამსაქმებლები, რომელთა ვაკანსიაზეც განაცხადი გააგზავნე.', 'Only the employers whose jobs you applied to.')],
@@ -241,7 +241,7 @@ export function How({ signedIn }) {
     <Layout signedIn={signedIn}>
       <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
         <h1 className="text-[34px] font-bold tracking-[-0.02em] sm:text-[42px]">{tr('როგორ მუშაობს', 'How it works')}</h1>
-        <p className="mt-3 text-[17px] text-muted">{tr('ShiftMate აკავშირებს ადამიანებს, ვისაც დამატებითი სამუშაო უნდა, და დამსაქმებლებს, ვისაც კონკრეტულ საათებში სჭირდებათ თანამშრომელი.', 'ShiftMate connects people who want extra work with employers who need someone at specific hours.')}</p>
+        <p className="mt-3 text-[17px] text-muted">{tr('ShiftMate აკავშირებს სტუდენტებს და დამსაქმებლებს, ვისაც კონკრეტულ საათებში სჭირდებათ თანამშრომელი.', 'ShiftMate connects students with employers who need someone at specific hours.')}</p>
         <h2 className="mb-3 mt-10 text-[22px] font-bold">{tr('თუ სამუშაოს ეძებ', 'If you want work')}</h2>
         <Steps steps={seekerSteps()} />
         <h2 className="mb-3 mt-10 text-[22px] font-bold">{tr('თუ თანამშრომელს ეძებ', "If you're hiring")}</h2>
@@ -294,7 +294,7 @@ export function About({ signedIn }) {
     <Article signedIn={signedIn} title={tr('ჩვენ შესახებ', 'About us')}>
       {lang === 'en' ? (
         <>
-          <p>Many people want extra income but cannot put their studies, main job or family on hold. Most job ads do not say which days and hours the work is, so finding something that fits wastes time.</p>
+          <p>Most students need an income but cannot skip their lectures. Most job ads do not say which days and hours the work is, so finding something that fits wastes time.</p>
           <p>ShiftMate solves this with a calendar: you write when you are busy, the employer writes when they need someone, and you only see jobs that fit your free time.</p>
           <h2>What we believe</h2>
           <ul>
@@ -306,7 +306,7 @@ export function About({ signedIn }) {
         </>
       ) : (
         <>
-          <p>ბევრ ადამიანს უნდა დამატებითი შემოსავალი, მაგრამ სწავლას, ძირითად სამსახურს ან ოჯახს ვერ გადადებს. ვაკანსიების უმეტესობაში კი არ წერია, რომელ დღეებსა და საათებშია სამუშაო, ამიტომ შესაფერისის პოვნა დროის კარგვად იქცევა.</p>
+          <p>სტუდენტების უმეტესობას შემოსავალი სჭირდება, მაგრამ ლექციებს ვერ გააცდენს. ვაკანსიების უმეტესობაში კი არ წერია, რომელ დღეებსა და საათებშია სამუშაო, ამიტომ შესაფერისის პოვნა დროის კარგვად იქცევა.</p>
           <p>ShiftMate ამ პრობლემას კალენდრით წყვეტს: შენ წერ, როდის ხარ დაკავებული, დამსაქმებელი წერს, როდის სჭირდება ადამიანი, და მხოლოდ იმ ვაკანსიებს ხედავ, რომლებიც შენს თავისუფალ დროში ჯდება.</p>
           <h2>რისი გვჯერა</h2>
           <ul>
@@ -330,7 +330,7 @@ export function Terms({ signedIn }) {
         <>
           <p>By using ShiftMate you agree to these terms. If you do not agree, please do not use the platform.</p>
           <h2>1. What ShiftMate is</h2>
-          <p>ShiftMate is an online platform where employers post jobs with their shift days and hours, and job seekers find work that fits their free time. ShiftMate is not an employer, a recruitment agency or a party to any employment contract.</p>
+          <p>ShiftMate is an online platform where employers post jobs with their shift days and hours, and students find work that fits around their lectures. ShiftMate is not an employer, a recruitment agency or a party to any employment contract.</p>
           <h2>2. Your account</h2>
           <ul>
             <li>You must be 18 or older to sign up.</li>
@@ -341,7 +341,7 @@ export function Terms({ signedIn }) {
           <ul>
             <li>The employer is responsible for the accuracy of a job post: role, pay, place, days and hours.</li>
             <li>Posts that are illegal, discriminatory, misleading or that ask for payment up front are not allowed.</li>
-            <li>By applying, a job seeker agrees that the employer of that job may see their name, CV, note and phone number.</li>
+            <li>By applying, a student agrees that the employer of that job may see their name, CV, note and phone number.</li>
             <li>The employer uses candidate data only for hiring.</li>
           </ul>
           <h2>4. Employment and pay</h2>
@@ -368,7 +368,7 @@ export function Terms({ signedIn }) {
         <>
           <p>ShiftMate-ის გამოყენებით ეთანხმები ამ წესებს. თუ არ ეთანხმები, გთხოვთ, პლატფორმა არ გამოიყენო.</p>
           <h2>1. რა არის ShiftMate</h2>
-          <p>ShiftMate არის ონლაინ პლატფორმა, სადაც დამსაქმებლები აქვეყნებენ ვაკანსიებს ცვლის დღეებითა და საათებით, ხოლო სამუშაოს მაძიებლები პოულობენ მათ თავისუფალ დროზე მორგებულ სამუშაოს. ShiftMate არ არის დამსაქმებელი, დასაქმების სააგენტო ან შრომითი ხელშეკრულების მხარე.</p>
+          <p>ShiftMate არის ონლაინ პლატფორმა, სადაც დამსაქმებლები აქვეყნებენ ვაკანსიებს ცვლის დღეებითა და საათებით, ხოლო სტუდენტები პოულობენ ლექციებზე მორგებულ სამუშაოს. ShiftMate არ არის დამსაქმებელი, დასაქმების სააგენტო ან შრომითი ხელშეკრულების მხარე.</p>
           <h2>2. ანგარიში</h2>
           <ul>
             <li>რეგისტრაცია შეუძლია 18 წელს მიღწეულ პირს.</li>
@@ -379,7 +379,7 @@ export function Terms({ signedIn }) {
           <ul>
             <li>დამსაქმებელი პასუხისმგებელია ვაკანსიის სისწორეზე: პოზიცია, ანაზღაურება, ადგილი, დღეები და საათები.</li>
             <li>აკრძალულია უკანონო, დისკრიმინაციული, შეცდომაში შემყვანი ან წინასწარი გადახდის მომთხოვნი განცხადებები.</li>
-            <li>განაცხადის გაგზავნით მაძიებელი თანახმაა, რომ ამ ვაკანსიის დამსაქმებელმა ნახოს მისი სახელი, სივი, წერილი და ტელეფონის ნომერი.</li>
+            <li>განაცხადის გაგზავნით სტუდენტი თანახმაა, რომ ამ ვაკანსიის დამსაქმებელმა ნახოს მისი სახელი, სივი, წერილი და ტელეფონის ნომერი.</li>
             <li>დამსაქმებელი კანდიდატის მონაცემებს მხოლოდ დასაქმების მიზნით იყენებს.</li>
           </ul>
           <h2>4. შრომითი ურთიერთობა და ანაზღაურება</h2>
@@ -417,7 +417,7 @@ export function Privacy({ signedIn }) {
           <p>This explains what data we collect, why we use it and how you can manage it.</p>
           <h2>1. What we collect</h2>
           <ul>
-            <li><b>Account:</b> full name, email, role (job seeker or employer), company name, the field you want to work in, and your language choice.</li>
+            <li><b>Account:</b> full name, email, role (student or employer), company name, university, faculty and year of study, the field you want to work in, and your language choice.</li>
             <li><b>CV:</b> experience, skills, languages and, if you choose, a PDF file.</li>
             <li><b>Calendar:</b> the time you mark as busy, its name and type.</li>
             <li><b>Applications:</b> which jobs you applied to, your note and phone number.</li>
@@ -469,7 +469,7 @@ export function Privacy({ signedIn }) {
           <p>აქ აღწერილია, რა მონაცემებს ვაგროვებთ, რისთვის ვიყენებთ და როგორ შეგიძლია მათი მართვა.</p>
           <h2>1. რა მონაცემებს ვაგროვებთ</h2>
           <ul>
-            <li><b>ანგარიში:</b> სახელი და გვარი, ელფოსტა, როლი (მაძიებელი ან დამსაქმებელი), კომპანიის სახელი, სასურველი სფერო და ენა.</li>
+            <li><b>ანგარიში:</b> სახელი და გვარი, ელფოსტა, როლი (სტუდენტი ან დამსაქმებელი), კომპანიის სახელი, უნივერსიტეტი, ფაკულტეტი და კურსი, სასურველი სფერო და ენა.</li>
             <li><b>სივი:</b> გამოცდილება, უნარები, ენები და, სურვილის შემთხვევაში, PDF ფაილი.</li>
             <li><b>კალენდარი:</b> დრო, რომელსაც დაკავებულად ჩაწერ, მისი სახელწოდება და ტიპი.</li>
             <li><b>განაცხადები:</b> რომელ ვაკანსიაზე გააგზავნე, წერილი და ტელეფონის ნომერი.</li>

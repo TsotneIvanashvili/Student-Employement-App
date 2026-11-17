@@ -6,6 +6,7 @@ import { catName, setLang, tr, useLang } from '../lib/i18n.js'
 import { CalendarMock, Logo, usePageTitle } from './Site.jsx'
 import { blobToDataUrl, keepPendingAvatar, shrinkImage } from '../lib/avatar.js'
 import { Icon, Segmented, btn, btn2, chip, input, tap } from './ui.jsx'
+import { StudyFields } from './StudentProfile.jsx'
 
 // სადემონსტრაციო ანგარიშები. ჯერჯერობით ყველას უჩანს; SHOW_DEMO = false-ის შემდეგ მხოლოდ /login?demo-ზე გამოჩნდება
 const SHOW_DEMO = true
@@ -46,8 +47,8 @@ export default function Auth({ mode, profile, onDone }) {
       <aside className="hidden bg-white p-12 lg:flex lg:min-h-dvh lg:flex-col">
         <Link to="/"><Logo className="text-[24px]" /></Link>
         <div className="mt-auto">
-          <p className="max-w-lg text-[44px] font-bold leading-[1.12] tracking-[-0.02em]">{tr('დამატებითი სამუშაო შენს თავისუფალ დროში', 'Extra work that fits your free time')}</p>
-          <p className="mt-3 max-w-md text-[16px] text-muted">{tr('შეავსე კალენდარი და ნახე მხოლოდ ის ვაკანსიები, რომლებიც შენს გრაფიკს ერგება.', 'Fill in your calendar and see only the jobs that fit your schedule.')}</p>
+          <p className="max-w-lg text-[44px] font-bold leading-[1.12] tracking-[-0.02em]">{tr('სამსახური, რომელიც ლექციებს არ ეჯახება', "Student jobs that don't clash with your lectures")}</p>
+          <p className="mt-3 max-w-md text-[16px] text-muted">{tr('სტუდენტური დასაქმების პორტალი: აირჩიე, როდის ხარ თავისუფალი, და ნახე მხოლოდ შესაფერისი ვაკანსიები.', 'A student job portal: pick when you are free and see only the jobs that fit.')}</p>
         </div>
         <div className="mb-auto mt-12"><CalendarMock /></div>
       </aside>
@@ -166,6 +167,7 @@ function Onboarding({ profile, onDone }) {
     }
   })
   const [field, setField] = useState('general')
+  const [study, setStudy] = useState({ university: '', faculty: '', year: null })
   const [company, setCompany] = useState('')
   const { busy, error, run } = useSubmit()
   const first = (profile.full_name || '').trim().split(/\s+/)[0]
@@ -173,21 +175,26 @@ function Onboarding({ profile, onDone }) {
   const submit = (e) => {
     e.preventDefault()
     run(async () => {
-      const { error } = await supabase.rpc('finish_onboarding', { new_role: role, company: role === 'employer' ? company.trim() : null, new_field: role === 'student' ? field : 'general' })
+      const student = role === 'student'
+      const { error } = await supabase.rpc('finish_onboarding', {
+        new_role: role, company: student ? null : company.trim(), new_field: student ? field : 'general',
+        new_university: student ? study.university.trim() : null, new_faculty: student ? study.faculty.trim() : null, new_year: student ? study.year : null,
+      })
       if (error) throw error
       try {
         localStorage.removeItem('sm_pending_role')
       } catch {}
-      onDone({ role, field: role === 'student' ? field : 'general', company_name: role === 'employer' ? company.trim() : null, onboarded: true })
+      onDone({ role, field: student ? field : 'general', company_name: student ? null : company.trim(), onboarded: true, ...(student ? { university: study.university.trim(), faculty: study.faculty.trim() || null, year: study.year } : {}) })
     })
   }
 
   return (
     <form onSubmit={submit} className="space-y-4" data-onboarding>
       <H1 sub={tr('ერთი ნაბიჯი დარჩა: აირჩიე, ეძებ სამუშაოს თუ ქირაობ.', "One step left: tell us whether you're looking for work or hiring.")}>{first ? tr(`მოგესალმებით, ${first}!`, `Welcome, ${first}!`) : tr('მოგესალმებით!', 'Welcome!')}</H1>
-      <Segmented value={role} onChange={setRole} options={[['student', tr('ვეძებ სამუშაოს', 'I want work')], ['employer', tr('ვქირაობ', "I'm hiring")]]} />
+      <Segmented value={role} onChange={setRole} options={[['student', tr('სტუდენტი ვარ', "I'm a student")], ['employer', tr('ვქირაობ', "I'm hiring")]]} />
       {role === 'student' ? (
         <>
+          <StudyFields value={study} onChange={setStudy} />
           <p className="text-[15px] font-semibold">{tr('რომელ სფეროში გინდა მუშაობა?', 'Which field do you want to work in?')}</p>
           <FieldPicker value={field} onChange={setField} />
         </>
@@ -233,7 +240,7 @@ function Login() {
           <p className="text-center text-[12px] font-semibold uppercase tracking-wide text-quiet">{tr('სადემონსტრაციო ანგარიშები', 'Demo accounts')}</p>
           <p className="mt-1 text-center text-[13px] text-muted">{tr('სცადე რეგისტრაციის გარეშე', 'Try it without signing up')}</p>
           <div className="mt-3 grid grid-cols-2 gap-2">
-            <button disabled={busy} onClick={() => signIn({ email: DEMO.student, password: DEMO_PASSWORD })} className={`${chip} bg-fill`}>{tr('მაძიებელი', 'Job seeker')}</button>
+            <button disabled={busy} onClick={() => signIn({ email: DEMO.student, password: DEMO_PASSWORD })} className={`${chip} bg-fill`}>{tr('სტუდენტი', 'Student')}</button>
             <button disabled={busy} onClick={() => signIn({ email: DEMO.employer, password: DEMO_PASSWORD })} className={`${chip} bg-fill`}>{tr('დამსაქმებელი', 'Employer')}</button>
           </div>
         </div>
@@ -249,7 +256,7 @@ function Register() {
   usePageTitle(tr('რეგისტრაცია', 'Sign up'))
   const [role, setRole] = useState(() => (new URLSearchParams(window.location.search).get('role') === 'employer' ? 'employer' : 'student'))
   const [step, setStep] = useState(0)
-  const [form, setForm] = useState({ email: '', password: '', full_name: '', company_name: '', field: 'general' })
+  const [form, setForm] = useState({ email: '', password: '', full_name: '', company_name: '', field: 'general', university: '', faculty: '', year: null })
   const [sentTo, setSentTo] = useState('')
   const [photo, setPhoto] = useState('') // არასავალდებულო; პირველ შესვლაზე აიტვირთება
   const { busy, error, run } = useSubmit()
@@ -264,7 +271,7 @@ function Register() {
     e.preventDefault()
     if (step === 0) return setStep(1)
     run(async () => {
-      const meta = role === 'student' ? { role, full_name: form.full_name.trim(), field: form.field } : { role, full_name: form.full_name.trim(), company_name: form.company_name.trim() }
+      const meta = role === 'student' ? { role, full_name: form.full_name.trim(), field: form.field, university: form.university.trim(), faculty: form.faculty.trim(), year: form.year ? String(form.year) : '' } : { role, full_name: form.full_name.trim(), company_name: form.company_name.trim() }
       const { data, error } = await supabase.auth.signUp({ email: form.email, password: form.password, options: { data: meta, emailRedirectTo: window.location.origin } })
       if (error) throw error
       // არსებული ელფოსტისას Supabase ცარიელ identities-ს აბრუნებს (ელფოსტას არ ამჟღავნებს)
@@ -283,10 +290,10 @@ function Register() {
       </div>
       {step === 0 ? (
         <>
-          <H1 sub={tr('შეავსე კალენდარი და ნახე მხოლოდ ის ვაკანსიები, რომლებიც შენს გრაფიკს ერგება.', 'Fill in your calendar and see only the jobs that fit your schedule.')}>
-            {tr('დამატებითი სამუშაო შენს თავისუფალ დროში', 'Extra work that fits your free time')}
+          <H1 sub={tr('სტუდენტური დასაქმების პორტალი: აირჩიე, როდის ხარ თავისუფალი, და ნახე მხოლოდ შესაფერისი ვაკანსიები.', 'A student job portal: pick when you are free and see only the jobs that fit.')}>
+            {tr('სამსახური, რომელიც ლექციებს არ ეჯახება', "Student jobs that don't clash with your lectures")}
           </H1>
-          <Segmented value={role} onChange={setRole} options={[['student', tr('ვეძებ სამუშაოს', 'I want work')], ['employer', tr('ვქირაობ', "I'm hiring")]]} />
+          <Segmented value={role} onChange={setRole} options={[['student', tr('სტუდენტი ვარ', "I'm a student")], ['employer', tr('ვქირაობ', "I'm hiring")]]} />
           <GoogleButton role={role} />
           <label className="flex cursor-pointer items-center gap-3.5 rounded-[18px] bg-white p-3 shadow-[0_1px_2px_rgba(21,24,30,.06)] hover:bg-bg">
             {photo ? (
@@ -312,7 +319,9 @@ function Register() {
         <>
           {role === 'student' ? (
             <>
-              <H1 sub={tr('თუ ჯერ არ იცი, აირჩიე „ზოგადი“ და ყველა ვაკანსიას გაჩვენებთ.', "Not sure yet? Pick General and we'll show you everything.")}>{tr('რომელ სფეროში გინდა მუშაობა?', 'Which field do you want to work in?')}</H1>
+              <H1 sub={tr('ShiftMate მხოლოდ სტუდენტებისთვისაა. დამსაქმებელი ამას შენს პროფილზე ნახავს.', 'ShiftMate is for students only. Employers see this on your profile.')}>{tr('სად სწავლობ?', 'Where do you study?')}</H1>
+              <StudyFields value={form} onChange={(v) => setForm({ ...form, ...v })} />
+              <p className="text-[15px] font-semibold">{tr('რომელ სფეროში გინდა მუშაობა?', 'Which field do you want to work in?')}</p>
               <FieldPicker value={form.field} onChange={(f) => setForm({ ...form, field: f })} />
             </>
           ) : (

@@ -143,3 +143,11 @@ export function workBetween(job, from, to) {
   }
   return job.pay_unit === 'day' ? days : Math.round(hours * 10) / 10
 }
+
+// „როდის ხარ თავისუფალი“ ფილტრი: free = { days: [0..6], from: საათი, to: საათი }.
+// ვაკანსია ერგება, თუ ერთი მომავალი ცვლა მაინც მთლიანად ამ დღეებსა და საათებშია. თავისუფალი გრაფიკი ყოველთვის ერგება.
+export function fitsFreeTime(job, free, today = todayISO()) {
+  if (!free?.days?.length) return true
+  if (job.shifts.length === 0) return true
+  return job.shifts.some((s) => (!s.date || s.date >= today) && free.days.includes(s.date ? weekdayOf(s.date) : s.day) && s.start >= free.from && s.end <= free.to)
+}
