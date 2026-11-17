@@ -231,7 +231,13 @@ function StudentApp({ profile, email, patch }) {
   usePageTitle('')
   const hash = useHash()
   const jobId = hash.startsWith('#job/') ? hash.slice(5) : null
-  const [tab, setTab] = useState(() => (sessionStorage.getItem('sm_gcal') ? 'calendar' : 'home')) // Google Calendar-დან დაბრუნება
+  const [tab, setTab] = useState(() => {
+    try {
+      return sessionStorage.getItem('sm_gcal') ? 'calendar' : 'home' // Google Calendar-დან დაბრუნება
+    } catch {
+      return 'home'
+    }
+  })
   const [jobs, setJobs] = useState([])
   const [lessons, setLessons] = useState([])
   const [applications, setApplications] = useState([])

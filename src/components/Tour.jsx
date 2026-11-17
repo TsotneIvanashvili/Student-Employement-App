@@ -9,7 +9,7 @@ export const seekerSteps = () => [
   { tab: 'calendar', target: 'calendar', title: tr('ჩაწერე, როდის ხარ დაკავებული', "Write down when you're busy"), text: tr('დააჭირე დღეს ან საათს, კომპიუტერზე კი მაუსი გადაატარე საათებზე. ყოველ კვირა თავისით მეორდება.', 'Tap a day or hour, or drag across hours with a mouse. It repeats every week.') },
   { tab: 'calendar', target: 'quickadd', title: tr('ან მიწერე AI-ს', 'Or tell the AI'), text: tr('მაგალითად „ორშაბათიდან პარასკევამდე 10-დან 6-მდე ვმუშაობ“, და კალენდარს თავად შეგივსებს.', 'For example "I work Monday to Friday, 10 to 6", and it fills in your calendar.') },
   { tab: 'calendar', target: 'tab-jobs', title: tr('ვაკანსიები', 'Jobs'), text: tr('თითო ვაკანსიაზე ჩანს, რამდენი ცვლა ერგება შენს დროს. თუ აგიყვანენ, ცვლები კალენდარში ჩნდება.', 'Each job shows how many shifts fit your time. If you are hired, the shifts appear in your calendar.') },
-  { tab: 'home', target: 'me', title: tr('პროფილი და სივი', 'Profile and CV'), text: tr('აქ შეავსებ სივს, შეცვლი ენას და ნახავ შეფასებებს.', 'Fill in your CV, change the language and see your ratings here.') },
+  { tab: 'home', target: 'me', title: tr('პროფილი', 'Profile'), text: tr('აქ შეავსებ სივს, შეცვლი ენას და ნახავ შეფასებებს.', 'Fill in your CV, change the language and see your ratings here.') },
   { tab: 'profile', target: 'help', title: tr('ყოველთვის აქ არის', 'Always here'), text: tr('გზამკვლევის თავიდან ნახვა პროფილიდან შეგიძლია.', 'You can replay this guide from your profile.') },
 ]
 
@@ -40,7 +40,8 @@ export default function Tour({ steps, onClose, onTab }) {
 
   useLayoutEffect(() => {
     const el = current.target && findTarget(current.target)
-    if (el) el.scrollIntoView({ block: el.offsetHeight > window.innerHeight * 0.5 ? 'start' : 'center', behavior: 'instant' })
+    const scroll = () => el?.scrollIntoView({ block: el.offsetHeight > window.innerHeight * 0.5 ? 'start' : 'center', behavior: 'instant' })
+    scroll()
     const measure = () => {
       const r = el?.getBoundingClientRect()
       setBox({
@@ -54,7 +55,11 @@ export default function Tour({ steps, onClose, onTab }) {
     const frame = requestAnimationFrame(measure) // ბარათის ნამდვილი სიმაღლე პირველი დახატვის შემდეგ
     window.addEventListener('resize', measure)
     window.addEventListener('scroll', measure, true)
+    // გვერდის შიგთავსი შეიძლება მოგვიანებით ჩაიტვირთოს (პროფილი): მიზანი ისევ ეკრანზე გამოვიტანოთ
+    const grown = new ResizeObserver(() => { scroll(); measure() })
+    grown.observe(document.body)
     return () => {
+      grown.disconnect()
       cancelAnimationFrame(frame)
       window.removeEventListener('resize', measure)
       window.removeEventListener('scroll', measure, true)
