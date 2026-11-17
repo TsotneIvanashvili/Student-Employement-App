@@ -168,7 +168,7 @@ function ProfileEditor({ profile, draft, onSaved, onClose }) {
     year: pick(cv.year, profile.year ?? null),
     about: pick(cv.about, profile.about ?? ''),
     experience: cv.experience?.length ? cv.experience : profile.experience ?? [],
-    languages: union(profile.languages ?? [], cv.languages ?? [], 10),
+    languages: cv.languages?.length ? cv.languages : profile.languages ?? [], // სივის ენები ჩაანაცვლებს: „English B2“ და „ინგლისური B2“ ერთად არ დარჩეს
     skills: union(profile.skills ?? [], cv.skills ?? [], 20),
   }))
   const [lang, setLang] = useState({ name: LANGS[1][0], level: 'B2' })
