@@ -12,7 +12,7 @@ import { Avatar, Badge, Icon, Segmented, btn, btn2, card } from './ui.jsx'
 export function Logo({ className = 'text-[22px]' }) {
   return (
     <span className={`inline-flex items-center gap-2.5 font-bold tracking-[-0.01em] text-ink ${className}`}>
-      <span className="grid h-[2em] w-[2em] place-items-center rounded-[0.63em] bg-brand text-[0.95em] text-on-brand">S</span>
+      <span className="grid h-[2em] w-[2em] place-items-center rounded-[0.63em] bg-brand text-[0.95em] text-on-brand">ს</span>
       <span>საათო</span>
     </span>
   )
