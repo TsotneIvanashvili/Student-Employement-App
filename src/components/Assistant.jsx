@@ -86,7 +86,7 @@ export default function Assistant({ userId, jobs, busy, setLessons, draft, onDra
   const ACTIONS = [
     { icon: 'calendar', tone: 'bg-sky-soft text-sky', title: tr('შეავსე კალენდარი', 'Fill my calendar'), sub: tr('მითხარი განრიგი სიტყვებით', 'Tell me your timetable in words'), run: () => { setInput(fillExample); field.current?.focus() } },
     { icon: 'briefcase', tone: 'bg-brand-soft text-brand-deep', title: tr('მიპოვე სამუშაო', 'Find me work'), sub: tr('შენს თავისუფალ დროზე მორგებული', 'Matched to your free time'), run: () => send(tr('მიპოვე სამუშაო ჩემს თავისუფალ დროს', 'Find jobs for my free time')) },
-    { icon: 'help', tone: 'bg-amber-soft text-amber', title: tr('როგორ მუშაობს?', 'How it works'), sub: tr('კალენდარი, განაცხადი, შეფასება', 'Calendar, applying, ratings'), run: () => send(tr('როგორ მუშაობს ShiftMate?', 'How does ShiftMate work?')) },
+    { icon: 'help', tone: 'bg-amber-soft text-amber', title: tr('როგორ მუშაობს?', 'How it works'), sub: tr('კალენდარი, განაცხადი, შეფასება', 'Calendar, applying, ratings'), run: () => send(tr('როგორ მუშაობს საათო?', 'How does Saato work?')) },
   ]
 
   return (
@@ -104,7 +104,7 @@ export default function Assistant({ userId, jobs, busy, setLessons, draft, onDra
 
       <div className="min-h-[50vh] space-y-2.5 pb-4 text-[15px]">
         <p className="mr-8 rounded-[22px] bg-white px-4 py-3 shadow-card [text-wrap:pretty]">
-          {tr('გამარჯობა! შემიძლია შეგივსო კალენდარი, მოგიძებნო შენს დროზე მორგებული ვაკანსია ან აგიხსნა, როგორ მუშაობს ShiftMate.', 'Hi! I can fill in your calendar, find jobs that fit your time, or explain how ShiftMate works.')}
+          {tr('გამარჯობა! შემიძლია შეგივსო კალენდარი, მოგიძებნო შენს დროზე მორგებული ვაკანსია ან აგიხსნა, როგორ მუშაობს საათო.', 'Hi! I can fill in your calendar, find jobs that fit your time, or explain how Saato works.')}
         </p>
         {messages.length === 0 && (
           <div className="space-y-2.5 pt-1.5">

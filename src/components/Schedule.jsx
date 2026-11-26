@@ -40,7 +40,7 @@ export function StudentSchedule({ busy, setLessons, freeHours, onFillWithAI }) {
       />
       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 px-1 text-[12px] text-muted">
         {['lecture', 'work', 'personal'].map((k) => <Legend key={k} tone={k} text={tr(...TYPE_NAMES[k])} />)}
-        <Legend tone="job" text={tr('ShiftMate-ის სამუშაო', 'ShiftMate job')} />
+        <Legend tone="job" text={tr('საათოს სამუშაო', 'Saato job')} />
       </div>
       {sheet && <LessonSheet {...sheet} onClose={() => setSheet(null)} setLessons={setLessons} />}
     </div>

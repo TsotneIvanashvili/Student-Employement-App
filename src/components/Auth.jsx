@@ -319,7 +319,7 @@ function Register() {
         <>
           {role === 'student' ? (
             <>
-              <H1 sub={tr('ShiftMate მხოლოდ სტუდენტებისთვისაა. დამსაქმებელი ამას შენს პროფილზე ნახავს.', 'ShiftMate is for students only. Employers see this on your profile.')}>{tr('სად სწავლობ?', 'Where do you study?')}</H1>
+              <H1 sub={tr('საათო მხოლოდ სტუდენტებისთვისაა. დამსაქმებელი ამას შენს პროფილზე ნახავს.', 'Saato is for students only. Employers see this on your profile.')}>{tr('სად სწავლობ?', 'Where do you study?')}</H1>
               <StudyFields value={form} onChange={(v) => setForm({ ...form, ...v })} />
               <p className="text-[15px] font-semibold">{tr('რომელ სფეროში გინდა მუშაობა?', 'Which field do you want to work in?')}</p>
               <FieldPicker value={form.field} onChange={(f) => setForm({ ...form, field: f })} />

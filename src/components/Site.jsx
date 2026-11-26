@@ -13,7 +13,7 @@ export function Logo({ className = 'text-[22px]' }) {
   return (
     <span className={`inline-flex items-center gap-2.5 font-bold tracking-[-0.01em] text-ink ${className}`}>
       <span className="grid h-[2em] w-[2em] place-items-center rounded-[0.63em] bg-brand text-[0.95em] text-on-brand">S</span>
-      <span>ShiftMate</span>
+      <span>საათო</span>
     </span>
   )
 }
@@ -21,7 +21,7 @@ export function Logo({ className = 'text-[22px]' }) {
 export function usePageTitle(title) {
   const lang = useLang()
   useEffect(() => {
-    document.title = title ? `${title} · ShiftMate` : tr('ShiftMate — სამუშაო შენს თავისუფალ დროს', 'ShiftMate — work that fits your free time')
+    document.title = title ? `${title} · საათო` : tr('საათო — სამუშაო შენს თავისუფალ დროს', 'Saato — work that fits your free time')
   }, [title, lang])
 }
 
@@ -36,7 +36,7 @@ function Layout({ signedIn, children }) {
     <div className="flex min-h-dvh flex-col bg-bg">
       <header className="glass sticky top-0 z-20 border-b border-line">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
-          <Link to="/" aria-label="ShiftMate"><Logo className="text-[17px] sm:text-[19px]" /></Link>
+          <Link to="/" aria-label="საათო"><Logo className="text-[17px] sm:text-[19px]" /></Link>
           <nav className="hidden items-center gap-7 text-[15px] font-medium text-muted md:flex">
             <Link to="/how" className="text-muted hover:text-ink">{tr('როგორ მუშაობს', 'How it works')}</Link>
             <Link to="/about" className="text-muted hover:text-ink">{tr('ჩვენ შესახებ', 'About')}</Link>
@@ -69,7 +69,7 @@ function Layout({ signedIn, children }) {
             <Link to="/privacy" className="text-muted hover:text-ink">{tr('კონფიდენციალურობა', 'Privacy')}</Link>
           </nav>
         </div>
-        <p className="border-t border-line py-4 text-center text-[13px] text-quiet">© {new Date().getFullYear()} ShiftMate</p>
+        <p className="border-t border-line py-4 text-center text-[13px] text-quiet">© {new Date().getFullYear()} საათო</p>
       </footer>
     </div>
   )
@@ -147,7 +147,7 @@ export function Home({ signedIn }) {
       <section className="mx-auto grid max-w-6xl items-center gap-10 px-4 py-12 sm:px-6 lg:grid-cols-2 lg:py-20">
         <div>
           <h1 className="text-[36px] font-bold leading-[1.1] tracking-[-0.02em] [text-wrap:balance] sm:text-[52px]">{tr('სამსახური, რომელიც ლექციებს არ ეჯახება', "Student jobs that don't clash with your lectures")}</h1>
-          <p className="mt-4 max-w-md text-[17px] text-muted [text-wrap:pretty]">{tr('სტუდენტური დასაქმების პორტალი: აირჩიე, რომელ დღეებსა და საათებში ხარ თავისუფალი, და ShiftMate გაჩვენებს მხოლოდ იმ ვაკანსიებს, რომლებიც ლექციებს არ ეჯახება.', "A student job portal: pick the days and hours you are free, and ShiftMate shows only the jobs that don't clash with your lectures.")}</p>
+          <p className="mt-4 max-w-md text-[17px] text-muted [text-wrap:pretty]">{tr('სტუდენტური დასაქმების პორტალი: აირჩიე, რომელ დღეებსა და საათებში ხარ თავისუფალი, და საათო გაჩვენებს მხოლოდ იმ ვაკანსიებს, რომლებიც ლექციებს არ ეჯახება.', "A student job portal: pick the days and hours you are free, and Saato shows only the jobs that don't clash with your lectures.")}</p>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
             <Link to="/register" className={`${btn} px-6 text-center sm:w-auto`}>{tr('სტუდენტი ვარ', "I'm a student")}</Link>
             <Link to="/register?role=employer" className={`${btn2} px-6 text-center !text-ink sm:w-auto`}>{tr('ვქირაობ', "I'm hiring")}</Link>
@@ -224,7 +224,7 @@ export function Home({ signedIn }) {
 }
 
 const faq = () => [
-  [tr('ShiftMate ფასიანია?', 'Does ShiftMate cost anything?'), tr('ამჟამად რეგისტრაცია, ვაკანსიის განთავსება და განაცხადის გაგზავნა უფასოა. თუ ეს შეიცვლება, წინასწარ შეგატყობინებთ.', 'Signing up, posting jobs and applying are free right now. If that changes, we will tell you in advance.')],
+  [tr('საათო ფასიანია?', 'Does Saato cost anything?'), tr('ამჟამად რეგისტრაცია, ვაკანსიის განთავსება და განაცხადის გაგზავნა უფასოა. თუ ეს შეიცვლება, წინასწარ შეგატყობინებთ.', 'Signing up, posting jobs and applying are free right now. If that changes, we will tell you in advance.')],
   [tr('როგორ ირჩევა, რომელი ვაკანსია „მერგება“?', 'How do you decide which jobs "fit"?'), tr('ცვლა გერგება, თუ მისი არცერთი საათი არ ემთხვევა იმ დროს, რომელიც კალენდარში დაკავებულად გაქვს ჩაწერილი. ვაკანსიის გვერდზე ჩანს, რომელი ცვლა რას ემთხვევა.', 'A shift fits if none of its hours overlap the busy time in your calendar. The job page shows which shift clashes with what.')],
   [tr('ვინ შეიძლება დარეგისტრირდეს?', 'Who can sign up?'), tr('სრულწლოვანი სტუდენტები (რეგისტრაციისას უნივერსიტეტს უთითებ) და ნებისმიერი კომპანია ან ინდივიდუალური მეწარმე, ვინც სტუდენტს ეძებს ნახევარ განაკვეთზე ან ერთჯერად სამუშაოზე.', 'Adult university students (you name your university when you sign up), and any company or sole trader looking for a student for part-time or one-off work.')],
   [tr('როგორ ვიღებ ანაზღაურებას?', 'How do I get paid?'), tr('დამსაქმებელი აყვანისას თანხას დეპოზიტად დებს. სამუშაოს შემდეგ (საათობრივზე ყოველთვიურად) თანხა შენს ბალანსზე ჩაირიცხება, 10%-იანი საკომისიოს გამოკლებით. ჯერ ეს სადემონსტრაციო რეჟიმია: რეალური ფული არ მოძრაობს.', 'The employer puts the pay on deposit when hiring you. After the work (hourly: every month) it lands in your balance, minus a 10% fee. For now this is a demo: no real money moves.')],
@@ -241,7 +241,7 @@ export function How({ signedIn }) {
     <Layout signedIn={signedIn}>
       <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
         <h1 className="text-[34px] font-bold tracking-[-0.02em] sm:text-[42px]">{tr('როგორ მუშაობს', 'How it works')}</h1>
-        <p className="mt-3 text-[17px] text-muted">{tr('ShiftMate აკავშირებს სტუდენტებს და დამსაქმებლებს, ვისაც კონკრეტულ საათებში სჭირდებათ თანამშრომელი.', 'ShiftMate connects students with employers who need someone at specific hours.')}</p>
+        <p className="mt-3 text-[17px] text-muted">{tr('საათო აკავშირებს სტუდენტებს და დამსაქმებლებს, ვისაც კონკრეტულ საათებში სჭირდებათ თანამშრომელი.', 'Saato connects students with employers who need someone at specific hours.')}</p>
         <h2 className="mb-3 mt-10 text-[22px] font-bold">{tr('თუ სამუშაოს ეძებ', 'If you want work')}</h2>
         <Steps steps={seekerSteps()} />
         <h2 className="mb-3 mt-10 text-[22px] font-bold">{tr('თუ თანამშრომელს ეძებ', "If you're hiring")}</h2>
@@ -295,26 +295,26 @@ export function About({ signedIn }) {
       {lang === 'en' ? (
         <>
           <p>Most students need an income but cannot skip their lectures. Most job ads do not say which days and hours the work is, so finding something that fits wastes time.</p>
-          <p>ShiftMate solves this with a calendar: you write when you are busy, the employer writes when they need someone, and you only see jobs that fit your free time.</p>
+          <p>Saato solves this with a calendar: you write when you are busy, the employer writes when they need someone, and you only see jobs that fit your free time.</p>
           <h2>What we believe</h2>
           <ul>
             <li>Work should fit people's lives, not the other way round.</li>
             <li>Days and hours matter as much as pay.</li>
             <li>Your data is yours: only the employers you apply to see your CV.</li>
           </ul>
-          <p>ShiftMate was made in Tbilisi and is at an early stage. Your feedback makes it better.</p>
+          <p>Saato was made in Tbilisi and is at an early stage. Your feedback makes it better.</p>
         </>
       ) : (
         <>
           <p>სტუდენტების უმეტესობას შემოსავალი სჭირდება, მაგრამ ლექციებს ვერ გააცდენს. ვაკანსიების უმეტესობაში კი არ წერია, რომელ დღეებსა და საათებშია სამუშაო, ამიტომ შესაფერისის პოვნა დროის კარგვად იქცევა.</p>
-          <p>ShiftMate ამ პრობლემას კალენდრით წყვეტს: შენ წერ, როდის ხარ დაკავებული, დამსაქმებელი წერს, როდის სჭირდება ადამიანი, და მხოლოდ იმ ვაკანსიებს ხედავ, რომლებიც შენს თავისუფალ დროში ჯდება.</p>
+          <p>საათო ამ პრობლემას კალენდრით წყვეტს: შენ წერ, როდის ხარ დაკავებული, დამსაქმებელი წერს, როდის სჭირდება ადამიანი, და მხოლოდ იმ ვაკანსიებს ხედავ, რომლებიც შენს თავისუფალ დროში ჯდება.</p>
           <h2>რისი გვჯერა</h2>
           <ul>
             <li>სამუშაო უნდა ერგებოდეს ადამიანის ცხოვრებას და არა პირიქით.</li>
             <li>ვაკანსიაში დღეები და საათები ისეთივე მნიშვნელოვანია, როგორც ანაზღაურება.</li>
             <li>შენი მონაცემები შენია: სივს მხოლოდ ის დამსაქმებელი ხედავს, ვისაც თავად უგზავნი.</li>
           </ul>
-          <p>ShiftMate თბილისში შეიქმნა და საწყის ეტაპზეა. შენი აზრი პროდუქტს უკეთესს გახდის.</p>
+          <p>საათო თბილისში შეიქმნა და საწყის ეტაპზეა. შენი აზრი პროდუქტს უკეთესს გახდის.</p>
         </>
       )}
       <Contact />
@@ -328,9 +328,9 @@ export function Terms({ signedIn }) {
     <Article signedIn={signedIn} title={tr('წესები და პირობები', 'Terms and conditions')} updated={tr('16 ნოემბერი 2026', '16 November 2026')}>
       {lang === 'en' ? (
         <>
-          <p>By using ShiftMate you agree to these terms. If you do not agree, please do not use the platform.</p>
-          <h2>1. What ShiftMate is</h2>
-          <p>ShiftMate is an online platform where employers post jobs with their shift days and hours, and students find work that fits around their lectures. ShiftMate is not an employer, a recruitment agency or a party to any employment contract.</p>
+          <p>By using Saato you agree to these terms. If you do not agree, please do not use the platform.</p>
+          <h2>1. What Saato is</h2>
+          <p>Saato is an online platform where employers post jobs with their shift days and hours, and students find work that fits around their lectures. Saato is not an employer, a recruitment agency or a party to any employment contract.</p>
           <h2>2. Your account</h2>
           <ul>
             <li>You must be 18 or older to sign up.</li>
@@ -345,7 +345,7 @@ export function Terms({ signedIn }) {
             <li>The employer uses candidate data only for hiring.</li>
           </ul>
           <h2>4. Employment and pay</h2>
-          <p>The parties agree working conditions and contracts directly. Payments in ShiftMate are currently a <b>demo</b>: balances, deposits and payouts are for illustration only, no real money is charged, held or paid out, and ShiftMate is not responsible for settlements between the parties. In the demo, the employer puts the pay aside as a deposit when hiring, and the worker is credited after the work is confirmed, minus a 10% ShiftMate fee. Each party is responsible for taxes and legal compliance.</p>
+          <p>The parties agree working conditions and contracts directly. Payments in Saato are currently a <b>demo</b>: balances, deposits and payouts are for illustration only, no real money is charged, held or paid out, and Saato is not responsible for settlements between the parties. In the demo, the employer puts the pay aside as a deposit when hiring, and the worker is credited after the work is confirmed, minus a 10% Saato fee. Each party is responsible for taxes and legal compliance.</p>
           <h2>5. Ratings</h2>
           <p>After the employer marks work as done, both parties can rate each other once with 1 to 5 stars and short tags. Ratings must be honest and based on the actual work. Ratings are visible to signed-in users and cannot be edited.</p>
           <h2>6. AI assistant</h2>
@@ -358,7 +358,7 @@ export function Terms({ signedIn }) {
           </ul>
           <p>If these terms are broken we may remove a job post or restrict an account.</p>
           <h2>8. Limitation of liability</h2>
-          <p>The platform is provided "as is". We do not check every user and job, and we do not guarantee that you will find work or someone to hire. To the extent allowed by law, ShiftMate is not liable for disputes or damage between users.</p>
+          <p>The platform is provided "as is". We do not check every user and job, and we do not guarantee that you will find work or someone to hire. To the extent allowed by law, Saato is not liable for disputes or damage between users.</p>
           <h2>9. Closing your account</h2>
           <p>You can delete your account at any time from your profile page.</p>
           <h2>10. Changes and law</h2>
@@ -366,9 +366,9 @@ export function Terms({ signedIn }) {
         </>
       ) : (
         <>
-          <p>ShiftMate-ის გამოყენებით ეთანხმები ამ წესებს. თუ არ ეთანხმები, გთხოვთ, პლატფორმა არ გამოიყენო.</p>
-          <h2>1. რა არის ShiftMate</h2>
-          <p>ShiftMate არის ონლაინ პლატფორმა, სადაც დამსაქმებლები აქვეყნებენ ვაკანსიებს ცვლის დღეებითა და საათებით, ხოლო სტუდენტები პოულობენ ლექციებზე მორგებულ სამუშაოს. ShiftMate არ არის დამსაქმებელი, დასაქმების სააგენტო ან შრომითი ხელშეკრულების მხარე.</p>
+          <p>საათოს გამოყენებით ეთანხმები ამ წესებს. თუ არ ეთანხმები, გთხოვთ, პლატფორმა არ გამოიყენო.</p>
+          <h2>1. რა არის საათო</h2>
+          <p>საათო არის ონლაინ პლატფორმა, სადაც დამსაქმებლები აქვეყნებენ ვაკანსიებს ცვლის დღეებითა და საათებით, ხოლო სტუდენტები პოულობენ ლექციებზე მორგებულ სამუშაოს. საათო არ არის დამსაქმებელი, დასაქმების სააგენტო ან შრომითი ხელშეკრულების მხარე.</p>
           <h2>2. ანგარიში</h2>
           <ul>
             <li>რეგისტრაცია შეუძლია 18 წელს მიღწეულ პირს.</li>
@@ -383,7 +383,7 @@ export function Terms({ signedIn }) {
             <li>დამსაქმებელი კანდიდატის მონაცემებს მხოლოდ დასაქმების მიზნით იყენებს.</li>
           </ul>
           <h2>4. შრომითი ურთიერთობა და ანაზღაურება</h2>
-          <p>სამუშაო პირობებსა და ხელშეკრულებაზე მხარეები პირდაპირ თანხმდებიან. ShiftMate-ში გადახდები ჯერ <b>სადემონსტრაციოა</b>: ბალანსი, დეპოზიტი და ჩარიცხვები მხოლოდ საჩვენებელია, რეალური ფული არ ჩამოიჭრება, არ ინახება და არ ირიცხება, და ShiftMate მხარეებს შორის ანგარიშსწორებაზე პასუხს არ აგებს. დემოში დამსაქმებელი აყვანისას თანხას დეპოზიტად დებს, მუშაკს კი ნამუშევრის დადასტურების შემდეგ ერიცხება, ShiftMate-ის 10%-იანი საკომისიოს გამოკლებით. გადასახადებსა და კანონმდებლობის დაცვაზე პასუხისმგებელია თითოეული მხარე.</p>
+          <p>სამუშაო პირობებსა და ხელშეკრულებაზე მხარეები პირდაპირ თანხმდებიან. საათოში გადახდები ჯერ <b>სადემონსტრაციოა</b>: ბალანსი, დეპოზიტი და ჩარიცხვები მხოლოდ საჩვენებელია, რეალური ფული არ ჩამოიჭრება, არ ინახება და არ ირიცხება, და საათო მხარეებს შორის ანგარიშსწორებაზე პასუხს არ აგებს. დემოში დამსაქმებელი აყვანისას თანხას დეპოზიტად დებს, მუშაკს კი ნამუშევრის დადასტურების შემდეგ ერიცხება, საათოს 10%-იანი საკომისიოს გამოკლებით. გადასახადებსა და კანონმდებლობის დაცვაზე პასუხისმგებელია თითოეული მხარე.</p>
           <h2>5. შეფასებები</h2>
           <p>როცა დამსაქმებელი სამუშაოს დასრულებულად მონიშნავს, ორივე მხარეს შეუძლია ერთხელ შეაფასოს მეორე 1–5 ვარსკვლავით და მოკლე ნიშნებით. შეფასება უნდა იყოს გულწრფელი და რეალურ სამუშაოს ეფუძნებოდეს. შეფასებებს ხედავენ ავტორიზებული მომხმარებლები და მათი შეცვლა შეუძლებელია.</p>
           <h2>6. AI ასისტენტი</h2>
@@ -396,7 +396,7 @@ export function Terms({ signedIn }) {
           </ul>
           <p>წესების დარღვევისას შეგვიძლია ვაკანსია წავშალოთ ან ანგარიში შევზღუდოთ.</p>
           <h2>8. პასუხისმგებლობის შეზღუდვა</h2>
-          <p>პლატფორმა მოწოდებულია „როგორც არის“. ჩვენ არ ვამოწმებთ თითოეულ მომხმარებელსა და ვაკანსიას და არ ვიძლევით გარანტიას, რომ სამუშაოს იპოვი ან თანამშრომელს აიყვან. კანონით დაშვებულ ფარგლებში, ShiftMate არ აგებს პასუხს მომხმარებლებს შორის წარმოშობილ დავებსა და ზიანზე.</p>
+          <p>პლატფორმა მოწოდებულია „როგორც არის“. ჩვენ არ ვამოწმებთ თითოეულ მომხმარებელსა და ვაკანსიას და არ ვიძლევით გარანტიას, რომ სამუშაოს იპოვი ან თანამშრომელს აიყვან. კანონით დაშვებულ ფარგლებში, საათო არ აგებს პასუხს მომხმარებლებს შორის წარმოშობილ დავებსა და ზიანზე.</p>
           <h2>9. ანგარიშის გაუქმება</h2>
           <p>ანგარიშის წაშლა ნებისმიერ დროს შეგიძლია პროფილის გვერდიდან.</p>
           <h2>10. ცვლილებები და სამართალი</h2>

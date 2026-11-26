@@ -122,7 +122,7 @@ export function HireSheet({ app, job, who, onClose, onDone }) {
       <h2 className="text-[20px] font-bold">{tr(`აიყვან ${who}-ს?`, `Hire ${who}?`)}</h2>
       <p className="mt-1 text-[15px] text-muted">
         {fixed
-          ? tr('თანხას ახლავე დებ დეპოზიტად. ShiftMate ინახავს და მუშაკს ჩაერიცხება, როცა სამუშაოს დასრულებას დაადასტურებ.', 'You put the money aside now. ShiftMate holds it and pays the worker when you confirm the work is done.')
+          ? tr('თანხას ახლავე დებ დეპოზიტად. საათო ინახავს და მუშაკს ჩაერიცხება, როცა სამუშაოს დასრულებას დაადასტურებ.', 'You put the money aside now. Saato holds it and pays the worker when you confirm the work is done.')
           : tr('დებ ერთი თვის თანხას. ყოველ თვე ადასტურებ ნამუშევარ საათებს და მუშაკს ერიცხება ჯამი; დეპოზიტი თავიდან ივსება. გამოუყენებელი ნაშთი სამუშაოს ბოლოს გიბრუნდება.', "You put one month's pay aside. Each month you confirm the hours worked and the worker is paid the total; the deposit refills. Whatever is left comes back to you at the end.")}
       </p>
       {!fixed && (
@@ -184,7 +184,7 @@ export function PaySheet({ app, job, escrow, who, onClose, onDone }) {
       </label>
       <dl className="mt-4 space-y-1.5 rounded-2xl bg-bg p-3.5 text-[14px]">
         <div className="flex justify-between"><dt className="text-muted">{`${units} ${unitWord(job.pay_unit, units)} × ${lari(job.pay)}`}</dt><dd className="font-bold tabular-nums">{lari(amount)}</dd></div>
-        <div className="flex justify-between"><dt className="text-muted">{tr('ShiftMate-ის საკომისიო 10%', 'ShiftMate fee 10%')}</dt><dd className="tabular-nums">−{lari(fee)}</dd></div>
+        <div className="flex justify-between"><dt className="text-muted">{tr('საათოს საკომისიო 10%', 'Saato fee 10%')}</dt><dd className="tabular-nums">−{lari(fee)}</dd></div>
         <div className="flex justify-between border-t border-line pt-1.5"><dt className="font-semibold">{tr('მუშაკს ჩაერიცხება', 'The worker receives')}</dt><dd className="font-bold tabular-nums text-mint-dark">{lari(amount - fee)}</dd></div>
         <div className="flex justify-between"><dt className="text-muted">{tr('დეპოზიტში ახლა', 'In the deposit now')}</dt><dd className="tabular-nums">{lari(escrow.held)}</dd></div>
       </dl>

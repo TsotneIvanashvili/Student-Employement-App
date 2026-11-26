@@ -141,7 +141,7 @@ function InstallRow() {
       {help && (
         <Sheet onClose={() => setHelp(false)}>
           <h2 className="text-[20px] font-bold">{tr('დააყენე ტელეფონზე', 'Install on your phone')}</h2>
-          <p className="mt-1 text-[15px] text-muted">{tr('ShiftMate მთავარ ეკრანზე გამოჩნდება და სრულ ეკრანზე გაიხსნება.', 'ShiftMate appears on your home screen and opens full screen.')}</p>
+          <p className="mt-1 text-[15px] text-muted">{tr('საათო მთავარ ეკრანზე გამოჩნდება და სრულ ეკრანზე გაიხსნება.', 'Saato appears on your home screen and opens full screen.')}</p>
           <ol className="mt-4 space-y-3 text-[15px] font-semibold">
             <li>1. {tr('iPhone: Safari-ში დააჭირე Share და აირჩიე Add to Home Screen', 'iPhone: in Safari tap Share, then Add to Home Screen')}</li>
             <li>2. {tr('Android: Chrome-ის მენიუში (⋮) აირჩიე Install app', 'Android: in the Chrome menu (⋮) choose Install app')}</li>

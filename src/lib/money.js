@@ -34,7 +34,7 @@ export const kindText = (k) =>
     deposit: tr('დეპოზიტი', 'Deposit'),
     refund: tr('დეპოზიტის ნაშთი დაბრუნდა', 'Deposit returned'),
     earning: tr('ანაზღაურება', 'Earnings'),
-    fee: tr('ShiftMate-ის საკომისიო', 'ShiftMate fee'),
+    fee: tr('საათოს საკომისიო', 'Saato fee'),
     withdraw: tr('ბარათზე გატანა', 'Withdrawal'),
   })[k]
 

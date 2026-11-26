@@ -4,7 +4,7 @@ import { Icon } from './ui.jsx'
 
 // tab: რომელ გვერდზე უნდა იყოს მომხმარებელი ამ ნაბიჯზე; target: data-tour ატრიბუტი, რომელსაც ნაბიჯი გამოყოფს
 export const seekerSteps = () => [
-  { tab: 'home', target: null, icon: 'calendar', title: tr('მოგესალმები ShiftMate-ში!', 'Welcome to ShiftMate!'), text: tr('ერთ წუთში გაჩვენებ, როგორ იპოვო სამსახური, რომელიც ლექციებს არ ეჯახება.', "In a minute I'll show you how to find a job that doesn't clash with your lectures.") },
+  { tab: 'home', target: null, icon: 'calendar', title: tr('მოგესალმები საათოში!', 'Welcome to Saato!'), text: tr('ერთ წუთში გაჩვენებ, როგორ იპოვო სამსახური, რომელიც ლექციებს არ ეჯახება.', "In a minute I'll show you how to find a job that doesn't clash with your lectures.") },
   { tab: 'home', target: 'matches', title: tr('შენი თავისუფალი კვირა', 'Your free week'), text: tr('მწვანე თავისუფალი დროა, ნაცრისფერი დაკავებული. რიცხვი გეუბნება, რამდენი ვაკანსია ერგება იმ დღეს.', 'Green is free time, grey is busy. The number tells you how many jobs fit that day.') },
   { tab: 'calendar', target: 'calendar', title: tr('ჩაწერე, როდის ხარ დაკავებული', "Write down when you're busy"), text: tr('დააჭირე დღეს ან საათს, კომპიუტერზე კი მაუსი გადაატარე საათებზე. ყოველ კვირა თავისით მეორდება.', 'Tap a day or hour, or drag across hours with a mouse. It repeats every week.') },
   { tab: 'calendar', target: 'quickadd', title: tr('ან მიწერე AI-ს', 'Or tell the AI'), text: tr('მაგალითად „ორშაბათიდან პარასკევამდე 10-დან 6-მდე ვმუშაობ“, და კალენდარს თავად შეგივსებს.', 'For example "I work Monday to Friday, 10 to 6", and it fills in your calendar.') },
@@ -14,7 +14,7 @@ export const seekerSteps = () => [
 ]
 
 export const employerSteps = () => [
-  { tab: 'home', target: null, icon: 'users', title: tr('მოგესალმებით ShiftMate-ში!', 'Welcome to ShiftMate!'), text: tr('ერთ წუთში გაჩვენებთ, როგორ იპოვოთ ხალხი, ვისაც თქვენი ცვლის დროს ნამდვილად სცალია.', "In a minute we'll show you how to find people who are actually free during your shifts.") },
+  { tab: 'home', target: null, icon: 'users', title: tr('მოგესალმებით საათოში!', 'Welcome to Saato!'), text: tr('ერთ წუთში გაჩვენებთ, როგორ იპოვოთ ხალხი, ვისაც თქვენი ცვლის დროს ნამდვილად სცალია.', "In a minute we'll show you how to find people who are actually free during your shifts.") },
   { tab: 'home', target: 'new', title: tr('დაამატეთ ვაკანსია', 'Post a job'), text: tr('აირჩიეთ დღეები და საათები. სტუდენტები ვაკანსიას მაშინ ნახავენ, როცა ეს დრო მათ ერგებათ.', 'Choose the days and hours. Students see it when that time fits them.') },
   { tab: 'home', target: 'tab-inbox', title: tr('ყველა განაცხადი ერთ ადგილას', 'All applications in one place'), text: tr('აქედან აიყვანთ, დაადასტურებთ დასრულებას და შეაფასებთ თანამშრომელს.', 'Hire, confirm the work is done and rate the worker from here.') },
   { tab: 'home', target: 'tab-calendar', title: tr('ცვლების კალენდარი', 'Shift calendar'), text: tr('რომელ დღეს რომელი ცვლაა და ვინ მუშაობს.', 'Which shift is on which day and who is working.') },
